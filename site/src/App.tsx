@@ -5,8 +5,9 @@ import { ScenarioCompare } from './ScenarioCompare'
 import { LoopPlayer } from './LoopPlayer'
 import { HooksView } from './HooksView'
 import { WireView } from './WireView'
+import { SequenceView } from './SequenceView'
 
-type View = 'compare' | 'single' | 'hooks' | 'wire'
+type View = 'compare' | 'single' | 'sequence' | 'hooks' | 'wire'
 
 const KINDS: NodeKind[] = ['input', 'llm', 'tool', 'approval', 'execute', 'decision', 'terminal']
 
@@ -76,6 +77,14 @@ export function App() {
         >
           Single harness
         </button>
+        <button
+          type="button"
+          aria-pressed={view === 'sequence'}
+          className={`btn btn--ghost tab ${view === 'sequence' ? 'tab--active' : ''}`}
+          onClick={() => setView('sequence')}
+        >
+          Sequence
+        </button>
         <span className="nav-sep">Claude Code</span>
         <button
           type="button"
@@ -105,6 +114,8 @@ export function App() {
         <HooksView />
       ) : view === 'wire' ? (
         <WireView />
+      ) : view === 'sequence' ? (
+        <SequenceView />
       ) : view === 'compare' ? (
         <ScenarioCompare />
       ) : (

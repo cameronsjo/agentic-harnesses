@@ -547,3 +547,21 @@ body {
   margin-left: var(--s-md);
   font-size: 0.7rem;
 }
+
+/* ---- sequence view ---- */
+.seq-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+}
+.seq-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--s-lg);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .seq-body {
+    grid-template-columns: 1fr;
+  }
+}
