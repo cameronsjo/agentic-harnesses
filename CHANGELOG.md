@@ -14,6 +14,7 @@ All notable changes to this project are documented here. Format loosely follows
 - Per-harness profiles and cross-cutting comparison docs.
 
 ### Changed
+
 - Visualizer: applied the Artificer design system properly within the existing
   layout — a masthead (kicker / wordmark / lede / meta badges), anchor words
   across prose, system `.card` / `.container--lg` / `.dot` utilities replacing

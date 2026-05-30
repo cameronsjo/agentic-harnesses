@@ -20,7 +20,8 @@ export function App() {
   // React mounts after DOMContentLoaded, so the ref-driven run() is the hook.
   const titleRef = useRef<HTMLSpanElement>(null)
   useEffect(() => {
-    window.Whimsy?.run(titleRef.current, { loops: 3, settle: 'glacial' })
+    const cancel = window.Whimsy?.run(titleRef.current, { loops: 3, settle: 'glacial' })
+    return () => cancel?.()
   }, [])
 
   return (
