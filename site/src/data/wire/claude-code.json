@@ -1,0 +1,93 @@
+{
+  "harness": "claude-code",
+  "note": "What Claude Code assembles into a /v1/messages request and what streams back. Source lines valid at the pinned revision in docs/methodology.md.",
+  "request": [
+    {
+      "id": "sys-stable",
+      "label": "System prompt — stable sections",
+      "kind": "system",
+      "cached": true,
+      "scope": "global",
+      "note": "Identity, tool guidelines, skills, hooks info. Built from cached sections, computed once and held until /clear or /compact. The prefix can use a global cache scope shared across orgs.",
+      "sourceRef": "src/constants/systemPromptSections.ts:20"
+    },
+    {
+      "id": "boundary",
+      "label": "__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__",
+      "kind": "boundary",
+      "note": "Sentinel splitting the cacheable static prefix from per-user volatile content. Everything above is cacheable; everything below is not.",
+      "sourceRef": "src/constants/prompts.ts:114"
+    },
+    {
+      "id": "sys-dynamic",
+      "label": "System prompt — dynamic",
+      "kind": "system",
+      "cached": false,
+      "note": "Per-user / volatile sections that sit after the boundary.",
+      "sourceRef": "src/constants/prompts.ts:114"
+    },
+    {
+      "id": "tools",
+      "label": "Tool JSON schemas",
+      "kind": "tools",
+      "cached": true,
+      "breakpoint": true,
+      "note": "Tool schemas are stable across a session — a prime cache target. The LAST tool block carries one of the two cache breakpoints.",
+      "sourceRef": "src/services/api/claude.ts:3078"
+    },
+    {
+      "id": "memory",
+      "label": "CLAUDE.md (nested_memory)",
+      "kind": "memory",
+      "cached": true,
+      "note": "Hierarchical memory files (managed → user → project → local), @include expanded, injected as nested_memory attachments and cached to avoid re-injection.",
+      "sourceRef": "src/utils/claudemd.ts:18"
+    },
+    {
+      "id": "messages",
+      "label": "Conversation history",
+      "kind": "messages",
+      "cached": false,
+      "note": "Prior turns and their tool_result blocks.",
+      "sourceRef": "src/query.ts:130"
+    },
+    {
+      "id": "last-user",
+      "label": "Last user message",
+      "kind": "messages",
+      "cached": true,
+      "breakpoint": true,
+      "note": "Carries the second cache breakpoint — caching the long stable prefix up to here without exceeding Anthropic's breakpoint budget.",
+      "sourceRef": "src/services/api/claude.ts:3078"
+    }
+  ],
+  "response": [
+    {
+      "id": "text",
+      "label": "assistant text",
+      "kind": "text",
+      "note": "Tokens stream back as they're generated.",
+      "sourceRef": "src/query.ts:659"
+    },
+    {
+      "id": "tool_use",
+      "label": "tool_use block",
+      "kind": "tool_use",
+      "note": "id + name + input. Detected by watching the stream for tool_use blocks — stop_reason='tool_use' is treated as unreliable.",
+      "sourceRef": "src/query.ts:1417"
+    },
+    {
+      "id": "tool_result",
+      "label": "tool_result → next request",
+      "kind": "tool_result",
+      "note": "After the tool runs, a tool_result keyed by tool_use_id is appended and the next request goes out — re-hitting the cached prefix.",
+      "sourceRef": "src/query.ts:130"
+    }
+  ],
+  "caching": {
+    "ttl": "5 minutes default; 1 hour for eligible users (GrowthBook-gated, querySource allowlist, resolved once per session)",
+    "breakpoints": "at most one each on the last tool-schema block and the last user-message block",
+    "references": "microcompaction reuses cached tool inputs by tool_use_id via cache_references",
+    "sourceRef": "src/services/api/claude.ts:358"
+  }
+}

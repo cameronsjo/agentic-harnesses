@@ -1,0 +1,96 @@
+{
+  "harness": "claude-code",
+  "note": "Claude Code lifecycle hook events mapped to the nodes of its agent loop (see ../loops/claude-code.json). Source lines valid at the pinned revision in docs/methodology.md.",
+  "events": [
+    {
+      "event": "SessionStart",
+      "firesAt": "user-input",
+      "position": "before",
+      "when": "the session begins (startup / resume / clear / compact)",
+      "controls": ["additionalContext", "initialUserMessage", "watchPaths"],
+      "blocking": true,
+      "sourceRef": "src/utils/hooks.ts:3867"
+    },
+    {
+      "event": "UserPromptSubmit",
+      "firesAt": "user-input",
+      "position": "at",
+      "when": "a user prompt is submitted, before it reaches the model",
+      "controls": ["additionalContext", "continue / preventContinuation"],
+      "blocking": true,
+      "sourceRef": "src/utils/hooks.ts:3826"
+    },
+    {
+      "event": "PreToolUse",
+      "firesAt": "approval",
+      "position": "before",
+      "when": "a tool is about to run — before the canUseTool permission gate",
+      "controls": ["permissionDecision (allow/deny/ask)", "updatedInput", "additionalContext"],
+      "blocking": true,
+      "sourceRef": "src/services/tools/toolHooks.ts:435"
+    },
+    {
+      "event": "PermissionRequest",
+      "firesAt": "approval",
+      "position": "at",
+      "when": "the permission prompt is shown",
+      "controls": ["decision.behavior", "decision.updatedInput", "decision.updatedPermissions"],
+      "blocking": true,
+      "sourceRef": "src/utils/hooks.ts:3450"
+    },
+    {
+      "event": "PermissionDenied",
+      "firesAt": "approval",
+      "position": "on-deny",
+      "when": "a tool call is denied",
+      "controls": ["retry"],
+      "blocking": false,
+      "sourceRef": "src/utils/hooks.ts:3529"
+    },
+    {
+      "event": "PostToolUse",
+      "firesAt": "execute",
+      "position": "after",
+      "when": "a tool completes successfully",
+      "controls": ["additionalContext", "updatedMCPToolOutput"],
+      "blocking": false,
+      "sourceRef": "src/services/tools/toolHooks.ts:56"
+    },
+    {
+      "event": "PostToolUseFailure",
+      "firesAt": "execute",
+      "position": "on-error",
+      "when": "a tool errors or is interrupted",
+      "controls": ["additionalContext"],
+      "blocking": false,
+      "sourceRef": "src/utils/hooks.ts:3492"
+    },
+    {
+      "event": "Stop",
+      "firesAt": "done",
+      "position": "at",
+      "when": "the turn / REPL is about to end",
+      "controls": ["additionalContext", "preventContinuation"],
+      "blocking": true,
+      "sourceRef": "src/utils/hooks.ts:3639"
+    },
+    {
+      "event": "SessionEnd",
+      "firesAt": "done",
+      "position": "after",
+      "when": "the session exits (1.5s default timeout)",
+      "controls": ["additionalContext"],
+      "blocking": false,
+      "sourceRef": "src/utils/hooks.ts:4097"
+    },
+    {
+      "event": "PreCompact / PostCompact",
+      "firesAt": "llm",
+      "position": "around",
+      "when": "context is compacted between model calls",
+      "controls": ["modified custom instructions", "additionalContext"],
+      "blocking": false,
+      "sourceRef": "src/utils/hooks.ts:3961"
+    }
+  ]
+}

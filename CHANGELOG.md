@@ -12,6 +12,8 @@ All notable changes to this project are documented here. Format loosely follows
 - Loop-spec schema and the node-kind / scenario vocabulary.
 - Interactive loop visualizer (`site/`).
 - Per-harness profiles and cross-cutting comparison docs.
+- Claude Code deep dives: `docs/wire.md` (request/response, prompt caching, system prompt, CLAUDE.md) and `docs/claude-code-events.md` (27 lifecycle events, hook config + control-flow contract).
+- Visualizer views: **Hooks & events** (lifecycle hooks overlaid on the Claude Code loop) and **Across the wire** (animated request assembly + streamed response with cache breakpoints).
 
 ### Changed
 

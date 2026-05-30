@@ -3,8 +3,10 @@ import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
 import { LoopPlayer } from './LoopPlayer'
+import { HooksView } from './HooksView'
+import { WireView } from './WireView'
 
-type View = 'compare' | 'single'
+type View = 'compare' | 'single' | 'hooks' | 'wire'
 
 const KINDS: NodeKind[] = ['input', 'llm', 'tool', 'approval', 'execute', 'decision', 'terminal']
 
@@ -74,14 +76,35 @@ export function App() {
         >
           Single harness
         </button>
+        <span className="nav-sep">Claude Code</span>
+        <button
+          role="tab"
+          aria-selected={view === 'hooks'}
+          className={`btn btn--ghost tab ${view === 'hooks' ? 'tab--active' : ''}`}
+          onClick={() => setView('hooks')}
+        >
+          Hooks &amp; events
+        </button>
+        <button
+          role="tab"
+          aria-selected={view === 'wire'}
+          className={`btn btn--ghost tab ${view === 'wire' ? 'tab--active' : ''}`}
+          onClick={() => setView('wire')}
+        >
+          Across the wire
+        </button>
       </nav>
 
-      <Legend />
+      {(view === 'compare' || view === 'single') && <Legend />}
 
       {specs.length === 0 ? (
         <p className="empty">
           <b className="anchor">No loop specs found.</b> Add files under <code>src/data/loops/</code>.
         </p>
+      ) : view === 'hooks' ? (
+        <HooksView />
+      ) : view === 'wire' ? (
+        <WireView />
       ) : view === 'compare' ? (
         <ScenarioCompare />
       ) : (

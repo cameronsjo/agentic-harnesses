@@ -24,10 +24,14 @@ interface Props {
   spec: LoopSpec
   activeNodeId?: string
   activeEdge?: ActiveEdge | null
+  /** Optional count badge per node id (e.g. number of hooks that fire there). */
+  badges?: Record<string, number>
+  /** When set, nodes become clickable. */
+  onNodeClick?: (id: string) => void
 }
 
 /** Pure renderer: a harness loop as a vertical column of nodes with curved edges. */
-export function LoopGraph({ spec, activeNodeId, activeEdge }: Props) {
+export function LoopGraph({ spec, activeNodeId, activeEdge, badges, onNodeClick }: Props) {
   const rowOf = useMemo(() => {
     const m = new Map<string, number>()
     spec.nodes.forEach((n, i) => m.set(n.id, i))
@@ -151,8 +155,14 @@ export function LoopGraph({ spec, activeNodeId, activeEdge }: Props) {
         const row = rowOf.get(n.id)!
         const active = n.id === activeNodeId
         const color = KIND_COLOR[n.kind]
+        const badge = badges?.[n.id]
+        const clickable = Boolean(onNodeClick)
         return (
-          <g key={n.id}>
+          <g
+            key={n.id}
+            onClick={clickable ? () => onNodeClick!(n.id) : undefined}
+            style={clickable ? { cursor: 'pointer' } : undefined}
+          >
             <rect
               x={nodeX}
               y={yTop(row)}
@@ -177,6 +187,21 @@ export function LoopGraph({ spec, activeNodeId, activeEdge }: Props) {
             >
               {n.label}
             </text>
+            {badge != null && badge > 0 && (
+              <g transform={`translate(${nodeX + NODE_W - 8}, ${yTop(row) + 2})`}>
+                <circle r="10" fill="var(--accent-fill)" stroke="var(--accent-bright)" strokeWidth="1.5" />
+                <text
+                  fill="var(--accent-bright)"
+                  fontSize="11"
+                  fontFamily="var(--font-mono)"
+                  fontWeight={700}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {badge}
+                </text>
+              </g>
+            )}
           </g>
         )
       })}
