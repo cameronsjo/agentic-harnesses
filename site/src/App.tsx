@@ -59,18 +59,18 @@ export function App() {
       </header>
 
       <main id="main" className="stack stack--lg">
-      <nav className="view-nav cluster" role="tablist" aria-label="View">
+      <nav className="view-nav cluster" role="group" aria-label="View">
         <button
-          role="tab"
-          aria-selected={view === 'compare'}
+          type="button"
+          aria-pressed={view === 'compare'}
           className={`btn btn--ghost tab ${view === 'compare' ? 'tab--active' : ''}`}
           onClick={() => setView('compare')}
         >
           Compare all
         </button>
         <button
-          role="tab"
-          aria-selected={view === 'single'}
+          type="button"
+          aria-pressed={view === 'single'}
           className={`btn btn--ghost tab ${view === 'single' ? 'tab--active' : ''}`}
           onClick={() => setView('single')}
         >
@@ -78,16 +78,16 @@ export function App() {
         </button>
         <span className="nav-sep">Claude Code</span>
         <button
-          role="tab"
-          aria-selected={view === 'hooks'}
+          type="button"
+          aria-pressed={view === 'hooks'}
           className={`btn btn--ghost tab ${view === 'hooks' ? 'tab--active' : ''}`}
           onClick={() => setView('hooks')}
         >
           Hooks &amp; events
         </button>
         <button
-          role="tab"
-          aria-selected={view === 'wire'}
+          type="button"
+          aria-pressed={view === 'wire'}
           className={`btn btn--ghost tab ${view === 'wire' ? 'tab--active' : ''}`}
           onClick={() => setView('wire')}
         >
@@ -95,7 +95,7 @@ export function App() {
         </button>
       </nav>
 
-      {(view === 'compare' || view === 'single') && <Legend />}
+      {view !== 'wire' && <Legend />}
 
       {specs.length === 0 ? (
         <p className="empty">
@@ -109,12 +109,12 @@ export function App() {
         <ScenarioCompare />
       ) : (
         <section className="single">
-          <div className="harness-pick cluster" role="tablist" aria-label="Harness">
+          <div className="harness-pick cluster" role="group" aria-label="Harness">
             {specs.map((s) => (
               <button
                 key={s.harness}
-                role="tab"
-                aria-selected={s.harness === spec.harness}
+                type="button"
+                aria-pressed={s.harness === spec.harness}
                 className={`btn btn--ghost tab ${s.harness === spec.harness ? 'tab--active' : ''}`}
                 onClick={() => setHarness(s.harness)}
               >

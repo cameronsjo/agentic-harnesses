@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import wireData from './data/wire/claude-code.json'
+import { usePlayerTimer } from './player'
 
 interface Part {
   id: string
@@ -18,7 +19,6 @@ interface Wire {
 }
 
 const wire = wireData as Wire
-const STEP_MS = 1000
 
 // Ordered timeline: assemble request top-to-bottom, then stream the response.
 const timeline: { phase: 'request' | 'response'; part: Part }[] = [
@@ -28,20 +28,7 @@ const timeline: { phase: 'request' | 'response'; part: Part }[] = [
 
 /** Animated view of what Claude Code sends over the wire and what streams back. */
 export function WireView() {
-  const [step, setStep] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const atEnd = step >= timeline.length - 1
-
-  useEffect(() => {
-    if (!playing) return
-    if (atEnd) {
-      setPlaying(false)
-      return
-    }
-    const t = setTimeout(() => setStep((s) => s + 1), STEP_MS)
-    return () => clearTimeout(t)
-  }, [playing, step, atEnd])
-
+  const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(timeline.length)
   const active = timeline[step]
   const revealedReq = useMemo(
     () => timeline.slice(0, step + 1).filter((t) => t.phase === 'request').length,
@@ -56,13 +43,13 @@ export function WireView() {
     <section className="wire-view">
       <p className="scenario-title">What Claude Code sends over the wire</p>
       <div className="transport cluster">
-        <button className="btn btn--secondary" onClick={() => setStep(0)} disabled={step === 0 && !playing}>
+        <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
           Reset
         </button>
-        <button className="btn" onClick={() => (atEnd ? (setStep(0), setPlaying(true)) : setPlaying((p) => !p))}>
+        <button className="btn" onClick={toggle}>
           {playing ? 'Pause' : atEnd ? 'Replay' : 'Assemble'}
         </button>
-        <button className="btn btn--secondary" onClick={() => setStep((s) => Math.min(s + 1, timeline.length - 1))} disabled={atEnd}>
+        <button className="btn btn--secondary" onClick={stepForward} disabled={atEnd}>
           Step ›
         </button>
         <span className="step-counter">

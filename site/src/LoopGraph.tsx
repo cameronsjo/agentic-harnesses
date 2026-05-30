@@ -161,6 +161,19 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, badges, onNodeClick 
           <g
             key={n.id}
             onClick={clickable ? () => onNodeClick!(n.id) : undefined}
+            onKeyDown={
+              clickable
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onNodeClick!(n.id)
+                    }
+                  }
+                : undefined
+            }
+            tabIndex={clickable ? 0 : undefined}
+            role={clickable ? 'button' : undefined}
+            aria-label={clickable ? `${n.label} — ${badge ?? 0} events` : undefined}
             style={clickable ? { cursor: 'pointer' } : undefined}
           >
             <rect
