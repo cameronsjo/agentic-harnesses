@@ -17,17 +17,12 @@ body {
 .masthead {
   margin-bottom: var(--s-xl);
 }
+/* Wordmark on the left, theme toggle on the right — one row. */
 .masthead-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s-md);
-}
-.kicker {
-  margin: 0;
-  color: var(--fg-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 .masthead-title {
   margin: 0;
@@ -131,6 +126,12 @@ body {
   background: var(--bg);
   border-left: 2px solid var(--success);
 }
+/* Single view renders the loop graph at full size (the graph pane scrolls if
+   needed); in the four-up compare columns the graph scales down to fit. */
+.compare-col svg {
+  max-width: 100%;
+  height: auto;
+}
 .compare-col-head {
   display: flex;
   align-items: center;
@@ -164,10 +165,17 @@ body {
 /* ---- single view ---- */
 .harness-meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--s-md);
   margin: var(--s-sm) 0 var(--s-md);
   flex-wrap: wrap;
+}
+/* .loop-style carries compare-column sizing (min-height + bottom margin to keep
+   columns level). In this single-row context that box throws the badge/link off
+   — neutralize it so the three items share one baseline. */
+.harness-meta .loop-style {
+  min-height: 0;
+  margin-bottom: 0;
 }
 .repo-link {
   color: var(--accent);

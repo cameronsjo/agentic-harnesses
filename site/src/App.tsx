@@ -24,24 +24,23 @@ export function App() {
   }, [])
 
   return (
-    <div className="app container--lg surface-tool">
+    <div className="app container container--lg surface-tool">
       <a className="skip-link" href="#main">
         Skip to content
       </a>
 
       <header className="masthead stack stack--sm">
         <div className="masthead-top">
-          <p className="kicker t-label-sm">Four agentic coding harnesses · reconstructed from source</p>
+          <h1 className="masthead-title t-headline-md">
+            <span className="whimsy" ref={titleRef}>
+              agentic harness loops
+            </span>
+          </h1>
           <button className="theme-toggle" data-theme-toggle aria-label="Toggle theme">
             <span className="dot" />
             <span data-theme-label>Dark</span>
           </button>
         </div>
-        <h1 className="masthead-title t-headline-md">
-          <span className="whimsy" ref={titleRef}>
-            Agentic Harness Loops
-          </span>
-        </h1>
         <p className="lede t-body-lg">
           Four coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
           <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
