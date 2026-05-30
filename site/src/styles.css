@@ -7,38 +7,45 @@ body {
   font-family: var(--font-mono);
 }
 
+/* Width, centering, inline padding come from .container--lg; keep only the
+   vertical rhythm here so the shell doesn't fight the system container. */
 .app {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: var(--s-lg) var(--s-lg) var(--s-2xl);
+  padding-block: var(--s-lg) var(--s-2xl);
 }
 
-/* ---- header ---- */
-.app-header {
+/* ---- masthead ---- */
+.masthead {
+  margin-bottom: var(--s-xl);
+}
+/* Wordmark on the left, theme toggle on the right — one row. */
+.masthead-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s-md);
-  margin-bottom: var(--s-lg);
 }
-.title-block h1 {
-  font-family: var(--font-mono);
-  font-size: 1.5rem;
-  margin: 0 0 var(--s-xs);
+.masthead-title {
+  margin: 0;
   letter-spacing: -0.01em;
 }
-.subtitle {
+/* The wordmark shimmer (.whimsy) clips a flowing gradient to the glyphs; keep
+   it at the headline's own size and let it own the weight. */
+.masthead-title .whimsy {
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+.lede {
   margin: 0;
-  color: var(--fg-secondary);
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  max-width: 60ch;
+  max-width: 64ch;
+}
+.masthead-meta {
+  gap: var(--s-xs);
+  margin-top: var(--s-xs);
 }
 
 /* ---- nav / tabs ---- */
-.view-nav {
-  margin-bottom: var(--s-md);
-}
+/* Vertical spacing between nav, legend, and content is owned by the
+   `main.stack stack--lg` wrapper — no ad-hoc margins here. */
 .tab {
   border-radius: var(--radius-sm);
 }
@@ -55,8 +62,6 @@ body {
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  margin-bottom: var(--s-lg);
-  font-size: 0.8rem;
   color: var(--fg-secondary);
 }
 .legend-item {
@@ -64,12 +69,8 @@ body {
   align-items: center;
   gap: 6px;
 }
-.legend-chip {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  display: inline-block;
-}
+/* Legend swatches reuse the system .dot shape; KIND_COLOR is applied inline
+   so the legend squint-matches the colors LoopGraph paints on the nodes. */
 
 /* ---- transport / scenario ---- */
 .scenario-tabs {
@@ -83,6 +84,13 @@ body {
   color: var(--fg-secondary);
   font-size: 0.85rem;
   margin-left: var(--s-sm);
+}
+/* "turn complete" caption — content, not chrome. Sits by the step counter and
+   shimmers once (Whimsy.celebrate adds .whimsy) when playback reaches the
+   terminal node, then auto-clears back to this resting style. */
+.turn-complete {
+  margin-left: var(--s-sm);
+  color: var(--fg-secondary);
 }
 .scenario-title {
   font-family: var(--font-sans);
@@ -105,16 +113,24 @@ body {
   overflow-x: auto;
   padding-bottom: var(--s-md);
 }
+/* .card supplies bg / radius / padding / transparent border; keep only the
+   fixed column width and the border transition here. */
 .compare-col {
   flex: 0 0 290px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--s-md);
   transition: border-color var(--dur-fast) var(--ease);
 }
+/* `card--success` isn't in the vendored system (only active/attention/urgent),
+   so the "done" state reuses the system's own card-variant grammar:
+   gold/rose/vermillion → success, via a left rule on var(--bg). */
 .compare-col--done {
-  border-color: var(--success);
+  background: var(--bg);
+  border-left: 2px solid var(--success);
+}
+/* Single view renders the loop graph at full size (the graph pane scrolls if
+   needed); in the four-up compare columns the graph scales down to fit. */
+.compare-col svg {
+  max-width: 100%;
+  height: auto;
 }
 .compare-col-head {
   display: flex;
@@ -149,10 +165,17 @@ body {
 /* ---- single view ---- */
 .harness-meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--s-md);
   margin: var(--s-sm) 0 var(--s-md);
   flex-wrap: wrap;
+}
+/* .loop-style carries compare-column sizing (min-height + bottom margin to keep
+   columns level). In this single-row context that box throws the badge/link off
+   — neutralize it so the three items share one baseline. */
+.harness-meta .loop-style {
+  min-height: 0;
+  margin-bottom: 0;
 }
 .repo-link {
   color: var(--accent);
@@ -168,11 +191,8 @@ body {
   gap: var(--s-lg);
   align-items: start;
 }
+/* .card supplies bg / border / radius / padding; keep only the layout. */
 .graph-pane {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--s-md);
   display: flex;
   justify-content: center;
   overflow-x: auto;
@@ -184,12 +204,8 @@ body {
   flex-direction: column;
   gap: var(--s-md);
 }
-.node-card {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--s-md);
-}
+/* .card + .card--active supply surface, padding, and the gold left rule —
+   the inspector always shows the live node, so it reads as active. */
 .node-card-head {
   display: flex;
   align-items: center;

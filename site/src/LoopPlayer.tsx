@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LoopSpec } from './types'
 import { KIND_LABEL } from './types'
 import { scenario } from './data'
+import { Anchored } from './Anchored'
 import { LoopGraph, type ActiveEdge } from './LoopGraph'
 
 const STEP_MS = 950
@@ -22,10 +23,15 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
 
+  // The "turn complete" caption and the play→end latch (see the effects below).
+  const captionRef = useRef<HTMLSpanElement>(null)
+  const wasPlaying = useRef(false)
+
   // Reset to the start whenever the scenario or harness changes.
   useEffect(() => {
     setStep(0)
     setPlaying(false)
+    wasPlaying.current = false
   }, [scenarioId, spec.harness])
 
   useEffect(() => {
@@ -43,6 +49,20 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const node = spec.nodes.find((n) => n.id === activeNodeId)
   const atEnd = step >= sc.steps.length - 1
 
+  // The one whimsical operation: reaching the terminal node IS the turn ending.
+  // Shimmer the caption once, but only when playback drove us to the end — not
+  // on a manual Step/Reset. wasPlaying latches while playing so the play→end
+  // edge can be told apart from a manual arrival.
+  useEffect(() => {
+    if (playing) wasPlaying.current = true
+  }, [playing])
+  useEffect(() => {
+    if (atEnd && wasPlaying.current) {
+      wasPlaying.current = false
+      window.Whimsy?.celebrate(captionRef.current, 2200)
+    }
+  }, [atEnd])
+
   return (
     <div className="player">
       <div className="scenario-tabs cluster" role="tablist" aria-label="Scenarios">
@@ -59,10 +79,12 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         ))}
       </div>
 
-      <p className="scenario-title">{sc.title}</p>
+      <p className="scenario-title">
+        <Anchored text={sc.title} />
+      </p>
 
       <div className="player-body">
-        <div className="graph-pane">
+        <div className="card graph-pane">
           <LoopGraph spec={spec} activeNodeId={activeNodeId} activeEdge={activeEdge} />
         </div>
 
@@ -88,21 +110,34 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
           <div className="step-counter">
             step <b>{step + 1}</b> / {sc.steps.length}
+            {atEnd && (
+              <span className="turn-complete" ref={captionRef}>
+                turn complete
+              </span>
+            )}
           </div>
 
           {node && (
-            <div className="node-card">
+            <div className="card card--active node-card">
               <div className="node-card-head">
                 <span className={`dot dot--${dotFor(node.kind)}`} />
                 <b>{node.label}</b>
               </div>
               <div className="node-kind">{KIND_LABEL[node.kind]}</div>
               {node.sourceRef && <code className="source-ref">{node.sourceRef}</code>}
-              {node.note && <p className="node-note">{node.note}</p>}
+              {node.note && (
+                <p className="node-note">
+                  <Anchored text={node.note} />
+                </p>
+              )}
             </div>
           )}
 
-          {sc.note && <p className="scenario-note">{sc.note}</p>}
+          {sc.note && (
+            <p className="scenario-note">
+              <Anchored text={sc.note} />
+            </p>
+          )}
         </aside>
       </div>
     </div>

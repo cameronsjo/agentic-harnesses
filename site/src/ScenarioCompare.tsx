@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { specs, sharedScenarios } from './data'
+import { Anchored } from './Anchored'
 import { LoopGraph, type ActiveEdge } from './LoopGraph'
 
 const STEP_MS = 950
@@ -13,6 +14,10 @@ export function ScenarioCompare() {
   const [scenarioId, setScenarioId] = useState(sharedScenarios[0]?.id ?? 'edit-file')
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
+
+  // The "turn complete" caption and the play→end latch (see the effects below).
+  const captionRef = useRef<HTMLSpanElement>(null)
+  const wasPlaying = useRef(false)
 
   // Per-harness resolved scenario for the current id.
   const columns = useMemo(
@@ -29,6 +34,7 @@ export function ScenarioCompare() {
   useEffect(() => {
     setStep(0)
     setPlaying(false)
+    wasPlaying.current = false
   }, [scenarioId])
 
   useEffect(() => {
@@ -42,6 +48,19 @@ export function ScenarioCompare() {
   }, [playing, step, maxSteps])
 
   const atEnd = step >= maxSteps - 1
+
+  // One whimsical operation for the whole comparison: every harness has reached
+  // its terminal. Shimmer the caption once on the play→end edge — when the
+  // global step first hits maxSteps-1 while playing — never on manual Step/Reset.
+  useEffect(() => {
+    if (playing) wasPlaying.current = true
+  }, [playing])
+  useEffect(() => {
+    if (atEnd && wasPlaying.current) {
+      wasPlaying.current = false
+      window.Whimsy?.celebrate(captionRef.current, 2200)
+    }
+  }, [atEnd])
 
   return (
     <section className="compare">
@@ -75,11 +94,18 @@ export function ScenarioCompare() {
           </button>
           <span className="step-counter">
             step <b>{step + 1}</b> / {maxSteps}
+            {atEnd && (
+              <span className="turn-complete" ref={captionRef}>
+                turn complete
+              </span>
+            )}
           </span>
         </div>
       </div>
 
-      <p className="scenario-title">{sharedScenarios.find((s) => s.id === scenarioId)?.title}</p>
+      <p className="scenario-title">
+        <Anchored text={sharedScenarios.find((s) => s.id === scenarioId)?.title ?? ''} />
+      </p>
 
       <div className="compare-grid">
         {columns.map(({ spec, sc }) => {
@@ -90,7 +116,7 @@ export function ScenarioCompare() {
           const node = spec.nodes.find((n) => n.id === activeNodeId)
           const done = step >= sc.steps.length - 1
           return (
-            <div key={spec.harness} className={`compare-col ${done ? 'compare-col--done' : ''}`}>
+            <div key={spec.harness} className={`card compare-col ${done ? 'compare-col--done' : ''}`}>
               <header className="compare-col-head">
                 <b>{spec.displayName}</b>
                 <span className="lang-badge">{spec.language}</span>

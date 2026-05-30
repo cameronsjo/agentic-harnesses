@@ -6,7 +6,14 @@ const NODE_W = 200
 const NODE_H = 40
 const ROW_H = 74
 const TOP = 16
-const SIDE = 64 // room for arcs on each side
+
+// Loopback geometry. Non-adjacent edges arc out into a side gutter; when several
+// share a side they fan into separate lanes so the curves (and their labels)
+// don't stack on top of each other or collide with the node boxes.
+const LANE_BASE = 48 // control-point distance of the first arc beyond the node edge
+const LANE_STEP = 42 // extra distance for each additional concurrent arc on that side
+const LABEL_ROOM = 30 // padding beyond the outermost arc so its label clears the edge
+const MIN_SIDE = 24 // gutter when a side carries no arcs
 
 export interface ActiveEdge {
   from: string
@@ -17,24 +24,47 @@ interface Props {
   spec: LoopSpec
   activeNodeId?: string
   activeEdge?: ActiveEdge | null
-  width?: number
 }
 
 /** Pure renderer: a harness loop as a vertical column of nodes with curved edges. */
-export function LoopGraph({ spec, activeNodeId, activeEdge, width = NODE_W + SIDE * 2 }: Props) {
+export function LoopGraph({ spec, activeNodeId, activeEdge }: Props) {
   const rowOf = useMemo(() => {
     const m = new Map<string, number>()
     spec.nodes.forEach((n, i) => m.set(n.id, i))
     return m
   }, [spec])
 
-  const nodeX = (width - NODE_W) / 2
+  // Assign each non-adjacent edge a lane on its side (right = forward, left = backward),
+  // then size each gutter to hold its widest lane plus room for the label.
+  const { laneOf, leftPad, rightPad } = useMemo(() => {
+    const laneOf = new Map<number, number>()
+    let left = 0
+    let right = 0
+    spec.edges.forEach((e, i) => {
+      const fr = rowOf.get(e.from)
+      const tr = rowOf.get(e.to)
+      if (fr == null || tr == null || tr === fr + 1) return
+      if (tr > fr) laneOf.set(i, right++)
+      else laneOf.set(i, left++)
+    })
+    const sidePad = (count: number) =>
+      count === 0 ? MIN_SIDE : LANE_BASE + (count - 1) * LANE_STEP + LABEL_ROOM
+    return { laneOf, leftPad: sidePad(left), rightPad: sidePad(right) }
+  }, [spec, rowOf])
+
+  const width = leftPad + NODE_W + rightPad
+  const nodeX = leftPad
   const centerX = nodeX + NODE_W / 2
   const yTop = (row: number) => TOP + row * ROW_H
   const yMid = (row: number) => yTop(row) + NODE_H / 2
   const height = TOP + spec.nodes.length * ROW_H
 
-  const edgePath = (e: LoopEdge): { d: string; mx: number; my: number } | null => {
+  // Unique marker ids per harness — four graphs render at once in Compare view,
+  // and SVG ids are document-scoped, so shared ids would all resolve to the first.
+  const arrowId = `arrow-${spec.harness}`
+  const arrowActiveId = `arrow-active-${spec.harness}`
+
+  const edgePath = (e: LoopEdge, idx: number): { d: string; mx: number; my: number } | null => {
     const fr = rowOf.get(e.from)
     const tr = rowOf.get(e.to)
     if (fr == null || tr == null) return null
@@ -47,16 +77,19 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, width = NODE_W + SID
     }
 
     const forward = tr > fr
+    const lane = laneOf.get(idx) ?? 0
+    const ctrlDist = LANE_BASE + lane * LANE_STEP
     // Forward non-adjacent → arc on the right; backward → arc on the left.
     const edgeX = forward ? nodeX + NODE_W : nodeX
-    const ctrlX = forward ? nodeX + NODE_W + SIDE * 0.85 : nodeX - SIDE * 0.85
+    const ctrlX = forward ? edgeX + ctrlDist : edgeX - ctrlDist
     const y1 = yMid(fr)
     const y2 = yMid(tr)
-    const cy = (y1 + y2) / 2
+    // Label rides the curve's apex (x at t=0.5 is ¼·edge + ¾·ctrl), out in the gutter.
+    const apexX = 0.25 * edgeX + 0.75 * ctrlX
     return {
       d: `M ${edgeX} ${y1} C ${ctrlX} ${y1}, ${ctrlX} ${y2}, ${edgeX} ${y2}`,
-      mx: ctrlX,
-      my: cy,
+      mx: apexX,
+      my: (y1 + y2) / 2,
     }
   }
 
@@ -72,17 +105,17 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, width = NODE_W + SID
       aria-label={`${spec.displayName} loop graph`}
     >
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker id={arrowId} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--dia-edge-strong)" />
         </marker>
-        <marker id="arrow-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <marker id={arrowActiveId} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-bright)" />
         </marker>
       </defs>
 
       {/* edges first, under the nodes */}
       {spec.edges.map((e, i) => {
-        const p = edgePath(e)
+        const p = edgePath(e, i)
         if (!p) return null
         const active = isActiveEdge(e)
         const label = e.on ?? e.label
@@ -93,7 +126,7 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, width = NODE_W + SID
               fill="none"
               stroke={active ? 'var(--accent-bright)' : 'var(--dia-edge)'}
               strokeWidth={active ? 2.5 : 1.5}
-              markerEnd={active ? 'url(#arrow-active)' : 'url(#arrow)'}
+              markerEnd={active ? `url(#${arrowActiveId})` : `url(#${arrowId})`}
               opacity={active ? 1 : 0.65}
             />
             {label && (
@@ -151,4 +184,4 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, width = NODE_W + SID
   )
 }
 
-export { NODE_W, SIDE }
+export { NODE_W }
