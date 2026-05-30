@@ -3,8 +3,12 @@ import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
 import { LoopPlayer } from './LoopPlayer'
+import { HooksView } from './HooksView'
+import { WireView } from './WireView'
+import { SequenceView } from './SequenceView'
+import { TabPicker } from './controls'
 
-type View = 'compare' | 'single'
+type View = 'compare' | 'single' | 'sequence' | 'hooks' | 'wire'
 
 const KINDS: NodeKind[] = ['input', 'llm', 'tool', 'approval', 'execute', 'decision', 'terminal']
 
@@ -37,10 +41,7 @@ export function App() {
               agentic harness loops
             </span>
           </h1>
-          <button className="theme-toggle" data-theme-toggle aria-label="Toggle theme">
-            <span className="dot" />
-            <span data-theme-label>Dark</span>
-          </button>
+          <ThemeToggle />
         </div>
         <p className="lede t-body-lg">
           Four coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
@@ -57,48 +58,73 @@ export function App() {
       </header>
 
       <main id="main" className="stack stack--lg">
-      <nav className="view-nav cluster" role="tablist" aria-label="View">
+      <nav className="view-nav cluster" role="group" aria-label="View">
         <button
-          role="tab"
-          aria-selected={view === 'compare'}
+          type="button"
+          aria-pressed={view === 'compare'}
           className={`btn btn--ghost tab ${view === 'compare' ? 'tab--active' : ''}`}
           onClick={() => setView('compare')}
         >
           Compare all
         </button>
         <button
-          role="tab"
-          aria-selected={view === 'single'}
+          type="button"
+          aria-pressed={view === 'single'}
           className={`btn btn--ghost tab ${view === 'single' ? 'tab--active' : ''}`}
           onClick={() => setView('single')}
         >
           Single harness
         </button>
+        <button
+          type="button"
+          aria-pressed={view === 'sequence'}
+          className={`btn btn--ghost tab ${view === 'sequence' ? 'tab--active' : ''}`}
+          onClick={() => setView('sequence')}
+        >
+          Sequence
+        </button>
+        <span className="nav-sep">Claude Code</span>
+        <button
+          type="button"
+          aria-pressed={view === 'hooks'}
+          className={`btn btn--ghost tab ${view === 'hooks' ? 'tab--active' : ''}`}
+          onClick={() => setView('hooks')}
+        >
+          Hooks &amp; events
+        </button>
+        <button
+          type="button"
+          aria-pressed={view === 'wire'}
+          className={`btn btn--ghost tab ${view === 'wire' ? 'tab--active' : ''}`}
+          onClick={() => setView('wire')}
+        >
+          Across the wire
+        </button>
       </nav>
 
-      <Legend />
+      {view !== 'wire' && <Legend />}
 
       {specs.length === 0 ? (
         <p className="empty">
           <b className="anchor">No loop specs found.</b> Add files under <code>src/data/loops/</code>.
         </p>
+      ) : view === 'hooks' ? (
+        <HooksView />
+      ) : view === 'wire' ? (
+        <WireView />
+      ) : view === 'sequence' ? (
+        <SequenceView />
       ) : view === 'compare' ? (
         <ScenarioCompare />
       ) : (
         <section className="single">
-          <div className="harness-pick cluster" role="tablist" aria-label="Harness">
-            {specs.map((s) => (
-              <button
-                key={s.harness}
-                role="tab"
-                aria-selected={s.harness === spec.harness}
-                className={`btn btn--ghost tab ${s.harness === spec.harness ? 'tab--active' : ''}`}
-                onClick={() => setHarness(s.harness)}
-              >
-                {s.displayName}
-              </button>
-            ))}
-          </div>
+          <TabPicker
+            className="harness-pick"
+            ariaLabel="Harness"
+            items={specs.map((s) => ({ id: s.harness, label: s.displayName }))}
+            active={spec.harness}
+            onSelect={setHarness}
+          />
           <div className="harness-meta">
             <span className="lang-badge">{spec.language}</span>
             <span className="loop-style">{spec.loopStyle}</span>
@@ -115,10 +141,50 @@ export function App() {
       </main>
 
       <footer className="app-footer">
-        Every node <b className="anchor">cites <code>file:line</code></b> in <b className="anchor">pinned source</b>.
+        Live repos (OpenCode · pi · code_puppy) <b className="anchor">cite <code>file:line</code></b> at{' '}
+        <b className="anchor">pinned SHAs</b>. Claude Code is from a{' '}
+        <b className="anchor">leaked/recovered snapshot</b> — file-level refs, <b className="anchor">leak + speculation</b>.
         Built with the <b className="anchor">Artificer design system</b>.
       </footer>
     </div>
+  )
+}
+
+const THEME_KEY = 'artificer.theme'
+
+function readTheme(): 'light' | 'dark' {
+  const attr = document.documentElement.getAttribute('data-theme')
+  if (attr === 'light' || attr === 'dark') return attr
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+}
+
+/**
+ * Owns the theme toggle in React. The vendored artificer-theme.js binds on
+ * DOMContentLoaded — before this SPA mounts — so its click handler never
+ * attaches. We drive the same `data-theme` attribute + `artificer.theme` key here.
+ */
+function ThemeToggle() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(readTheme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    try {
+      localStorage.setItem(THEME_KEY, theme)
+    } catch {
+      // localStorage unavailable (private mode etc.) — theme still applies for the session.
+    }
+  }, [theme])
+
+  return (
+    <button
+      type="button"
+      className="theme-toggle"
+      aria-label="Toggle light or dark theme"
+      onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+    >
+      <span className="dot" />
+      <span>{theme === 'light' ? 'Light' : 'Dark'}</span>
+    </button>
   )
 }
 

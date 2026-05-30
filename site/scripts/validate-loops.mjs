@@ -51,8 +51,10 @@ for (const file of files) {
 }
 
 // Scenario-ID parity: the side-by-side comparison depends on all harnesses sharing scenarios.
+// Only meaningful once every spec passed schema validation — a failed spec is skipped above,
+// which would otherwise make a complete set look like a parity mismatch.
 const harnesses = Object.keys(scenarioSets)
-if (harnesses.length > 1) {
+if (!failed && harnesses.length > 1) {
   const reference = JSON.stringify(scenarioSets[harnesses[0]])
   for (const h of harnesses.slice(1)) {
     if (JSON.stringify(scenarioSets[h]) !== reference) {

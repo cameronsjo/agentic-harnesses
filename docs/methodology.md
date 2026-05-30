@@ -4,7 +4,12 @@ How this comparison was produced, and how to reproduce it.
 
 ## Principle
 
-Every claim about a harness's loop is grounded in its source code, not its marketing. Each node in a loop spec (`site/src/data/loops/<harness>.json`) carries a `sourceRef` (`path:line`) pointing at the exact code that implements that step. The prose profiles in `docs/harnesses/` follow the same discipline.
+Every claim about a harness's loop is grounded in its source code, not its marketing. Each node in a loop spec (`site/src/data/loops/<harness>.json`) carries a `sourceRef`, and the prose profiles in `docs/harnesses/` follow the same discipline.
+
+**Two reference styles, by source provenance:**
+
+- **OpenCode, pi, code_puppy** are live open-source repos pinned to exact SHAs (below). Their refs are `path:line` and are reproducible — check out the SHA and the line is there.
+- **Claude Code** is studied from a **leaked / recovered** source snapshot that is already somewhat old. Its refs are deliberately **file-level only** (no line numbers), and its internals should be read as **"based on the Claude Code leak + informed speculation"** — indicative of how the shipped CLI behaves, not an authoritative or current account. Anthropic has not published this source; treat specifics as best-effort reconstruction.
 
 ## Pinned sources
 
@@ -35,5 +40,5 @@ For each harness: the agent loop entrypoint (turn/session loop), the model-call 
 ## Caveats
 
 - These are large, fast-moving codebases pinned to a single revision. Behavior may have changed since.
-- Claude Code's source is reconstructed from a source map, so symbol names and structure are faithful but not guaranteed byte-identical to Anthropic's tree.
-- Line numbers in `sourceRef`s are valid only at the pinned revision above.
+- **Claude Code is the leaked/recovered snapshot — leak + speculation.** Symbol names and structure are best-effort reconstruction, not guaranteed to match Anthropic's tree, and the snapshot is older than current Claude Code. File-level refs only; no line numbers. Don't quote it as authoritative.
+- Line numbers in the other three harnesses' `sourceRef`s are valid only at the pinned SHA above.

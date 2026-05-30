@@ -1,15 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { LoopSpec } from './types'
 import { KIND_LABEL } from './types'
 import { scenario } from './data'
 import { Anchored } from './Anchored'
-import { LoopGraph, type ActiveEdge } from './LoopGraph'
-
-const STEP_MS = 950
-
-function edgeBetween(fromId?: string, toId?: string): ActiveEdge | null {
-  return fromId && toId ? { from: fromId, to: toId } : null
-}
+import { LoopGraph } from './LoopGraph'
+import { edgeBetween, usePlayerTimer } from './player'
+import { TabPicker, TransportBar } from './controls'
 
 interface Props {
   spec: LoopSpec
@@ -20,34 +16,16 @@ interface Props {
 /** Single-harness player: scenario tabs + transport controls + the live node inspector. */
 export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const sc = scenario(spec, scenarioId) ?? spec.scenarios[0]
-  const [step, setStep] = useState(0)
-  const [playing, setPlaying] = useState(false)
+  const player = usePlayerTimer(sc.steps.length, `${spec.harness}:${scenarioId}`)
+  const { step, playing, atEnd } = player
 
   // The "turn complete" caption and the play→end latch (see the effects below).
   const captionRef = useRef<HTMLSpanElement>(null)
   const wasPlaying = useRef(false)
 
-  // Reset to the start whenever the scenario or harness changes.
-  useEffect(() => {
-    setStep(0)
-    setPlaying(false)
-    wasPlaying.current = false
-  }, [scenarioId, spec.harness])
-
-  useEffect(() => {
-    if (!playing) return
-    if (step >= sc.steps.length - 1) {
-      setPlaying(false)
-      return
-    }
-    const t = setTimeout(() => setStep((s) => s + 1), STEP_MS)
-    return () => clearTimeout(t)
-  }, [playing, step, sc.steps.length])
-
   const activeNodeId = sc.steps[step]
   const activeEdge = edgeBetween(sc.steps[step - 1], sc.steps[step])
   const node = spec.nodes.find((n) => n.id === activeNodeId)
-  const atEnd = step >= sc.steps.length - 1
 
   // The one whimsical operation: reaching the terminal node IS the turn ending.
   // Shimmer the caption once, but only when playback drove us to the end — not
@@ -65,19 +43,12 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
   return (
     <div className="player">
-      <div className="scenario-tabs cluster" role="tablist" aria-label="Scenarios">
-        {spec.scenarios.map((s) => (
-          <button
-            key={s.id}
-            role="tab"
-            aria-selected={s.id === scenarioId}
-            className={`btn btn--ghost tab ${s.id === scenarioId ? 'tab--active' : ''}`}
-            onClick={() => onScenarioChange?.(s.id)}
-          >
-            {s.id}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        ariaLabel="Scenarios"
+        items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
+        active={scenarioId}
+        onSelect={(id) => onScenarioChange?.(id)}
+      />
 
       <p className="scenario-title">
         <Anchored text={sc.title} />
@@ -89,24 +60,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         </div>
 
         <aside className="inspector">
-          <div className="transport cluster">
-            <button className="btn btn--secondary" onClick={() => setStep(0)} disabled={step === 0 && !playing}>
-              Reset
-            </button>
-            <button
-              className="btn"
-              onClick={() => (atEnd ? (setStep(0), setPlaying(true)) : setPlaying((p) => !p))}
-            >
-              {playing ? 'Pause' : atEnd ? 'Replay' : 'Play'}
-            </button>
-            <button
-              className="btn btn--secondary"
-              onClick={() => setStep((s) => Math.min(s + 1, sc.steps.length - 1))}
-              disabled={atEnd}
-            >
-              Step ›
-            </button>
-          </div>
+          <TransportBar player={player} playLabel="Play" />
 
           <div className="step-counter">
             step <b>{step + 1}</b> / {sc.steps.length}

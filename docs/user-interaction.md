@@ -6,7 +6,7 @@ How each harness takes input, streams output, handles interrupts, and lets a hum
 
 All four are conversational, but they differ in how a user injects guidance *while the agent is working*:
 
-- **Claude Code** — slash commands (`src/commands/`), permission prompts, and a `plan` mode that restricts the agent to planning. Input is normalized through the engine (`QueryEngine.ts:560`).
+- **Claude Code** — slash commands (`src/commands/`), permission prompts, and a `plan` mode that restricts the agent to planning. Input is normalized through the engine (`QueryEngine.ts`).
 - **OpenCode** — input drives the macro step loop; an event bus (`permission.asked` and friends) carries interactive prompts and replies between the agent and the UI.
 - **pi** — an `EventStream` carries **steering injections**: the user can push messages that the inner loop drains between tool batches.
 - **code_puppy** — a REPL outer loop (`_runtime.py:404`) drains **steering injections** and plugin retries between framework runs; mid-run guidance lands at the next loop turn.

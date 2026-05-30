@@ -15,7 +15,7 @@ The split is philosophical: Claude Code describes tools *as data*; code_puppy de
 
 | Harness | Dispatch site | Concurrency |
 |---|---|---|
-| Claude Code | `runTools(batch)` (`query.ts:1382`) | whole batch of `tool_use` blocks per turn |
+| Claude Code | `runTools(batch)` (`query.ts`) | whole batch of `tool_use` blocks per turn |
 | OpenCode | AI SDK calls `execute` inline (`tools.ts:93`) | inline during the stream |
 | pi | `executeToolCalls` (`agent-loop.ts:373`) | **parallel by default**, order-preserving; sequential opt-in |
 | code_puppy | pydantic-ai matches by name, invokes with `RunContext` | framework-driven; permission prompts serialized by module-level locks |
@@ -24,7 +24,7 @@ The split is philosophical: Claude Code describes tools *as data*; code_puppy de
 
 The single most interesting axis. Four harnesses, four placements:
 
-**Claude Code — one gate in the loop.** `canUseTool` is threaded through the whole loop and wrapped (`QueryEngine.ts:252`) to record denials. *Every* tool passes through it; a `plan` permission mode lets the agent reason without executing. Uniform by construction.
+**Claude Code — one gate in the loop.** `canUseTool` is threaded through the whole loop and wrapped (`QueryEngine.ts`) to record denials. *Every* tool passes through it; a `plan` permission mode lets the agent reason without executing. Uniform by construction.
 
 **OpenCode — gate inside each tool, opt-in.** A genuine ruleset (`Permission.ask`, `permission/index.ts:171`) exists, but tools invoke it themselves via `ctx.ask` — `edit.ts`, `write.ts`, `shell.ts` ask selectively; every MCP tool asks unconditionally (`tools.ts:135`). A rule `deny` becomes an error result; an interactive **reject** sets `ctx.blocked` so the step stops and the loop breaks. Coverage is only as complete as the tools choose to make it.
 

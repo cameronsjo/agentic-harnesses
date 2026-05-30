@@ -6,7 +6,7 @@ The agent loop is the engine of a coding harness: the cycle that calls the model
 
 ## Claude Code — owned async-generator loop
 
-`query()` → `queryLoop()` is a `while (true)` (`src/query.ts:307`) that streams one assistant turn (`callModel`, `src/query.ts:659`), accumulates `tool_use` blocks, and branches (`src/query.ts:1417`): tool calls → `runTools` (`:1382`) → feed `tool_result`s back; none → `end_turn`. The harness owns every part — retries spin up a fresh executor to avoid orphaned `tool_result`s, and an abort drains synthetic results.
+`query()` → `queryLoop()` is a `while (true)` (`src/query.ts`) that streams one assistant turn (`callModel`, `src/query.ts`), accumulates `tool_use` blocks, and branches: tool calls → `runTools` → feed `tool_result`s back; none → `end_turn` (all in `src/query.ts`). The harness owns every part — retries spin up a fresh executor to avoid orphaned `tool_result`s, and an abort drains synthetic results.
 
 ```
 user ─▶ stream model ─▶ tool_use? ─no─▶ end_turn

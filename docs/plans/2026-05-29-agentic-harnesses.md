@@ -40,12 +40,12 @@ A JSON Schema (`site/src/data/loops/schema.json`) defines it; each harness gets 
   "loopStyle": "async-generator streaming",
   "nodes": [
     { "id": "user-input",    "label": "User message",        "kind": "input",
-      "sourceRef": "src/QueryEngine.ts:560", "note": "messagesFromUserInput" },
+      "sourceRef": "src/QueryEngine.ts", "note": "messagesFromUserInput" },
     { "id": "llm",           "label": "LLM streaming call",  "kind": "llm",      "sourceRef": "..." },
     { "id": "tool-dispatch", "label": "Dispatch tool_use",   "kind": "tool",     "sourceRef": "..." },
-    { "id": "approval",      "label": "canUseTool gate",     "kind": "approval", "sourceRef": "src/QueryEngine.ts:252" },
+    { "id": "approval",      "label": "canUseTool gate",     "kind": "approval", "sourceRef": "src/QueryEngine.ts" },
     { "id": "execute",       "label": "Run tool",            "kind": "execute",  "sourceRef": "..." },
-    { "id": "stop-check",    "label": "stop_reason?",        "kind": "decision", "sourceRef": "src/QueryEngine.ts:765" },
+    { "id": "stop-check",    "label": "stop_reason?",        "kind": "decision", "sourceRef": "src/QueryEngine.ts" },
     { "id": "done",          "label": "end_turn",            "kind": "terminal" }
   ],
   "edges": [
