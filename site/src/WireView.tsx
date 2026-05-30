@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import wireData from './data/wire/claude-code.json'
 import { usePlayerTimer } from './player'
+import { CurlWalkthrough } from './CurlWalkthrough'
 
 interface Part {
   id: string
@@ -28,6 +29,7 @@ const timeline: { phase: 'request' | 'response'; part: Part }[] = [
 
 /** Animated view of what Claude Code sends over the wire and what streams back. */
 export function WireView() {
+  const [mode, setMode] = useState<'curl' | 'layers'>('curl')
   const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(timeline.length)
   const active = timeline[step]
   const revealedReq = useMemo(
@@ -41,6 +43,60 @@ export function WireView() {
 
   return (
     <section className="wire-view">
+      <div className="wire-mode cluster" role="group" aria-label="Wire view mode">
+        <button
+          type="button"
+          aria-pressed={mode === 'curl'}
+          className={`btn btn--ghost tab ${mode === 'curl' ? 'tab--active' : ''}`}
+          onClick={() => setMode('curl')}
+        >
+          curl walkthrough
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'layers'}
+          className={`btn btn--ghost tab ${mode === 'layers' ? 'tab--active' : ''}`}
+          onClick={() => setMode('layers')}
+        >
+          request layers
+        </button>
+      </div>
+
+      {mode === 'curl' ? (
+        <CurlWalkthrough />
+      ) : (
+        <LayersView
+          active={active}
+          revealedReq={revealedReq}
+          revealedResp={revealedResp}
+          step={step}
+          playing={playing}
+          atEnd={atEnd}
+          toggle={toggle}
+          stepForward={stepForward}
+          reset={reset}
+        />
+      )}
+    </section>
+  )
+}
+
+interface LayersProps {
+  active: { phase: 'request' | 'response'; part: Part } | undefined
+  revealedReq: number
+  revealedResp: number
+  step: number
+  playing: boolean
+  atEnd: boolean
+  toggle: () => void
+  stepForward: () => void
+  reset: () => void
+}
+
+/** The original layered request/response assembly view. */
+function LayersView({ active, revealedReq, revealedResp, step, playing, atEnd, toggle, stepForward, reset }: LayersProps) {
+  return (
+    <>
       <p className="scenario-title">What Claude Code sends over the wire</p>
       <div className="transport cluster">
         <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
@@ -123,6 +179,6 @@ export function WireView() {
           )}
         </aside>
       </div>
-    </section>
+    </>
   )
 }

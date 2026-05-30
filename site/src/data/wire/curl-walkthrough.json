@@ -1,0 +1,33 @@
+{
+  "scenario": "edit-file",
+  "note": "An illustrative hand-run of the Claude Code loop as raw curl calls — one user prompt, two /v1/messages round-trips. Request bodies are sketched; the shapes (cache_control placement, tool_use/tool_result, stop_reason, usage cache fields) are real. Source lines valid at the pinned revision in docs/methodology.md.",
+  "lines": [
+    { "kind": "comment", "text": "# Turn 1 — assemble the first request and fire it" },
+    { "kind": "cmd", "text": "curl https://api.anthropic.com/v1/messages \\" },
+    { "kind": "cmd", "text": "  -H 'x-api-key: $ANTHROPIC_API_KEY' \\" },
+    { "kind": "cmd", "text": "  -H 'anthropic-version: 2023-06-01' \\" },
+    { "kind": "cmd", "text": "  -H 'anthropic-beta: prompt-caching-2024-07-31' \\" },
+    { "kind": "cmd", "text": "  -d @turn-1.json" },
+    {
+      "kind": "body",
+      "text": "{\n  \"model\": \"claude-...\",\n  \"system\": [ {\"type\":\"text\",\"text\":\"You are Claude Code...\", \"cache_control\":{\"type\":\"ephemeral\"}}, \"__DYNAMIC_BOUNDARY__\", {...volatile...} ],\n  \"tools\":   [ ...,  {\"name\":\"Edit\", ..., \"cache_control\":{\"type\":\"ephemeral\"}} ],\n  \"messages\":[ {\"role\":\"user\", \"content\":[ {nested_memory: CLAUDE.md}, {\"type\":\"text\",\"text\":\"edit foo.ts to handle the empty case\"} ], \"cache_control\":{\"type\":\"ephemeral\"}} ]\n}",
+      "ref": "src/services/api/claude.ts",
+      "annotation": "Two cache breakpoints: last tool block + last user block. System prefix cached globally."
+    },
+    { "kind": "comment", "text": "# → response streams back as SSE" },
+    { "kind": "recv", "text": "event: message_start   usage:{ input_tokens: 412, cache_creation_input_tokens: 7980 }", "annotation": "first call writes the cache" },
+    { "kind": "recv", "text": "event: content_block_delta   text: \"I'll update the function.\"" },
+    { "kind": "recv", "text": "event: content_block_start   { type: tool_use, id: toolu_01A.., name: \"Edit\" }" },
+    { "kind": "recv", "text": "event: content_block_delta   input «{ \"file_path\":\"foo.ts\", \"old_string\":\"…\", \"new_string\":\"…\" }»" },
+    { "kind": "recv", "text": "event: message_delta   { stop_reason: \"tool_use\" }", "ref": "src/query.ts", "annotation": "but Claude Code detects tool_use from the stream, not this field" },
+    { "kind": "note", "text": "stop_reason = tool_use → the model wants a tool. Gate it (canUseTool), then run it locally." },
+    { "kind": "run", "text": "$ Edit(foo.ts)  → applied.   tool_result(toolu_01A..): \"ok — 1 edit\"", "ref": "src/query.ts" },
+    { "kind": "comment", "text": "# Turn 2 — append the assistant turn + tool_result, fire again" },
+    { "kind": "cmd", "text": "curl https://api.anthropic.com/v1/messages  ...  -d @turn-2.json" },
+    { "kind": "note", "text": "Identical system + tools + CLAUDE.md prefix as turn 1 → cache HIT. messages now end with the assistant's tool_use and the matching tool_result." },
+    { "kind": "recv", "text": "event: message_start   usage:{ input_tokens: 38, cache_read_input_tokens: 8392 }", "ref": "src/services/api/claude.ts", "annotation": "the prefix was read from cache, not re-billed" },
+    { "kind": "recv", "text": "event: content_block_delta   text: \"Done — the function now handles the empty case.\"" },
+    { "kind": "recv", "text": "event: message_delta   { stop_reason: \"end_turn\" }" },
+    { "kind": "note", "text": "end_turn, no tool_use → the loop exits. One user prompt, two API round-trips, one cached prefix." }
+  ]
+}

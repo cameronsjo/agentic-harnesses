@@ -439,3 +439,111 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- wire: mode toggle ---- */
+.wire-mode {
+  gap: var(--s-xs);
+  margin-bottom: var(--s-md);
+}
+
+/* ---- curl walkthrough (terminal) ---- */
+.curl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+}
+.terminal {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg);
+}
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+}
+.term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bg-inactive);
+}
+.term-title {
+  margin-left: var(--s-sm);
+  font-size: 0.74rem;
+  color: var(--fg-secondary);
+}
+.terminal-body {
+  padding: var(--s-md);
+  max-height: 60vh;
+  overflow-y: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.tline {
+  padding: 1px 0;
+}
+.tline--active {
+  background: var(--bg-raised);
+  border-radius: var(--radius-sm);
+}
+.tline-text {
+  margin: 0;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--fg);
+}
+.tline--comment .tline-text {
+  color: var(--fg-disabled);
+}
+.tline--cmd .tline-text {
+  color: var(--accent-bright);
+}
+.tline--body .tline-text {
+  color: var(--fg-secondary);
+  background: var(--bg-raised);
+  border-left: 3px solid var(--attention);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin: 4px 0;
+  font-size: 0.76rem;
+}
+.tline--recv .tline-text {
+  color: var(--fg);
+}
+.tline--recv .tline-text::before {
+  content: '← ';
+  color: var(--success);
+}
+.tline--run .tline-text {
+  color: var(--success);
+}
+.tline--note .tline-text {
+  color: var(--attention);
+  font-style: italic;
+}
+.tcursor {
+  color: var(--accent-bright);
+  animation: tblink 1s steps(2, start) infinite;
+}
+@keyframes tblink {
+  to { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tcursor { animation: none; }
+}
+.tline-annot {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--fg-secondary);
+  padding-left: var(--s-md);
+}
+.tline-ref {
+  margin-left: var(--s-md);
+  font-size: 0.7rem;
+}
