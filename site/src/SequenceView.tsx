@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { specs, sharedScenarios } from './data'
 import { KIND_COLOR } from './types'
 import { usePlayerTimer } from './player'
+import { TabPicker, TransportBar } from './controls'
 import { PARTICIPANTS, projectScenario, type Participant } from './sequence'
 
 const MARGIN = 70
@@ -12,7 +13,11 @@ const TOP = HEAD_H + 40
 const ROW_H = 54
 const WIDTH = MARGIN * 2 + (PARTICIPANTS.length - 1) * LANE_GAP
 
-const laneX = (p: Participant) => MARGIN + PARTICIPANTS.findIndex((x) => x.id === p) * LANE_GAP
+// Lane x-positions are fixed by participant order — resolve once, not per render.
+const LANE_X = Object.fromEntries(
+  PARTICIPANTS.map((p, i) => [p.id, MARGIN + i * LANE_GAP]),
+) as Record<Participant, number>
+const laneX = (p: Participant) => LANE_X[p]
 
 /** A message-passing-over-time view of a loop scenario: lifelines + animated arrows. */
 export function SequenceView() {
@@ -25,71 +30,46 @@ export function SequenceView() {
     return spec && sc ? projectScenario(spec, sc) : []
   }, [spec, scenarioId])
 
-  const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(
-    messages.length,
-    `${harness}:${scenarioId}`,
-  )
+  // Floor at 1 so a scenario that projects to no messages can't underflow the timer
+  // (mirrors ScenarioCompare's maxSteps guard). active stays undefined and renders nothing.
+  const player = usePlayerTimer(Math.max(1, messages.length), `${harness}:${scenarioId}`)
+  const { step } = player
 
   if (!spec) return <p className="empty">No specs.</p>
 
   const active = messages[step]
   const height = TOP + messages.length * ROW_H + 20
+  // Namespace the SVG markers per diagram, matching LoopGraph's url(#id) collision guard.
+  const mid = `${harness}-${scenarioId}`
 
   return (
     <section className="seq-view">
       <div className="compare-controls">
         <div className="cluster" style={{ gap: 'var(--s-md)', flexWrap: 'wrap' }}>
-          <div className="scenario-tabs cluster" role="group" aria-label="Harness">
-            {specs.map((s) => (
-              <button
-                key={s.harness}
-                type="button"
-                aria-pressed={s.harness === spec.harness}
-                className={`btn btn--ghost tab ${s.harness === spec.harness ? 'tab--active' : ''}`}
-                onClick={() => setHarness(s.harness)}
-              >
-                {s.displayName}
-              </button>
-            ))}
-          </div>
-          <div className="scenario-tabs cluster" role="group" aria-label="Scenario">
-            {sharedScenarios.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                aria-pressed={s.id === scenarioId}
-                className={`btn btn--ghost tab ${s.id === scenarioId ? 'tab--active' : ''}`}
-                onClick={() => setScenarioId(s.id)}
-              >
-                {s.id}
-              </button>
-            ))}
-          </div>
+          <TabPicker
+            ariaLabel="Harness"
+            items={specs.map((s) => ({ id: s.harness, label: s.displayName }))}
+            active={spec.harness}
+            onSelect={setHarness}
+          />
+          <TabPicker
+            ariaLabel="Scenario"
+            items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
+            active={scenarioId}
+            onSelect={setScenarioId}
+          />
         </div>
-        <div className="transport cluster">
-          <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
-            Reset
-          </button>
-          <button className="btn" onClick={toggle}>
-            {playing ? 'Pause' : atEnd ? 'Replay' : 'Play'}
-          </button>
-          <button className="btn btn--secondary" onClick={stepForward} disabled={atEnd}>
-            Step ›
-          </button>
-          <span className="step-counter">
-            msg <b>{step + 1}</b> / {messages.length}
-          </span>
-        </div>
+        <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
       </div>
 
       <div className="seq-body">
         <div className="graph-pane">
           <svg viewBox={`0 0 ${WIDTH} ${height}`} width={WIDTH} height={height} role="img" aria-label="sequence diagram">
             <defs>
-              <marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <marker id={`seq-arrow-${mid}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-bright)" />
               </marker>
-              <marker id="seq-arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <marker id={`seq-arrow-dim-${mid}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--dia-edge)" />
               </marker>
             </defs>
@@ -114,13 +94,13 @@ export function SequenceView() {
               const y = TOP + i * ROW_H
               const isActive = i === step
               const color = isActive ? 'var(--accent-bright)' : 'var(--dia-edge)'
-              const marker = isActive ? 'url(#seq-arrow)' : 'url(#seq-arrow-dim)'
+              const marker = isActive ? `url(#seq-arrow-${mid})` : `url(#seq-arrow-dim-${mid})`
               const kindColor = KIND_COLOR[m.kind]
 
               if (m.self) {
                 const x = laneX(m.from)
                 return (
-                  <g key={m.id} opacity={isActive ? 1 : 0.55}>
+                  <g key={i} opacity={isActive ? 1 : 0.55}>
                     <path d={`M ${x} ${y} h 34 v 18 h -30`} fill="none" stroke={color} strokeWidth={isActive ? 2.5 : 1.5} markerEnd={marker} />
                     <rect x={x + 6} y={y - 5} width={4} height={4} fill={kindColor} />
                     <text x={x + 42} y={y + 4} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="11" fontFamily="var(--font-mono)">
@@ -134,7 +114,7 @@ export function SequenceView() {
               const x2 = laneX(m.to)
               const midX = (x1 + x2) / 2
               return (
-                <g key={m.id} opacity={isActive ? 1 : 0.55}>
+                <g key={i} opacity={isActive ? 1 : 0.55}>
                   <line x1={x1} y1={y} x2={x2} y2={y} stroke={color} strokeWidth={isActive ? 2.5 : 1.5} strokeDasharray={m.return ? '5 4' : undefined} markerEnd={marker} />
                   <rect x={midX - 3} y={y - 14} width={6} height={6} rx={1} fill={kindColor} />
                   <text x={midX} y={y - 6} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="11" fontFamily="var(--font-mono)" textAnchor="middle">

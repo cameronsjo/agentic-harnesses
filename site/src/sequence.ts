@@ -10,7 +10,6 @@ export const PARTICIPANTS: { id: Participant; label: string }[] = [
 ]
 
 export interface SeqMessage {
-  id: number
   from: Participant
   to: Participant
   label: string
@@ -28,7 +27,6 @@ export interface SeqMessage {
  */
 export function projectScenario(spec: LoopSpec, scenario: Scenario): SeqMessage[] {
   const msgs: SeqMessage[] = []
-  let id = 0
   const push = (
     from: Participant,
     to: Participant,
@@ -36,7 +34,7 @@ export function projectScenario(spec: LoopSpec, scenario: Scenario): SeqMessage[
     kind: NodeKind,
     extra: { self?: boolean; return?: boolean; note?: string; sourceRef?: string } = {},
   ) => {
-    msgs.push({ id: id++, from, to, label, kind, self: extra.self ?? false, return: extra.return ?? false, note: extra.note, sourceRef: extra.sourceRef })
+    msgs.push({ from, to, label, kind, self: extra.self ?? false, return: extra.return ?? false, note: extra.note, sourceRef: extra.sourceRef })
   }
 
   for (const stepId of scenario.steps) {

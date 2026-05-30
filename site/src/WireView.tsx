@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import wireData from './data/wire/claude-code.json'
 import { usePlayerTimer } from './player'
+import { TabPicker, TransportBar } from './controls'
 import { CurlWalkthrough } from './CurlWalkthrough'
 
 interface Part {
@@ -27,91 +28,46 @@ const timeline: { phase: 'request' | 'response'; part: Part }[] = [
   ...wire.response.map((part) => ({ phase: 'response' as const, part })),
 ]
 
+const WIRE_MODES = [
+  { id: 'curl', label: 'curl walkthrough' },
+  { id: 'layers', label: 'request layers' },
+]
+
 /** Animated view of what Claude Code sends over the wire and what streams back. */
 export function WireView() {
   const [mode, setMode] = useState<'curl' | 'layers'>('curl')
-  const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(timeline.length)
-  const active = timeline[step]
-  const revealedReq = useMemo(
-    () => timeline.slice(0, step + 1).filter((t) => t.phase === 'request').length,
-    [step],
-  )
-  const revealedResp = useMemo(
-    () => timeline.slice(0, step + 1).filter((t) => t.phase === 'response').length,
-    [step],
-  )
 
   return (
     <section className="wire-view">
-      <div className="wire-mode cluster" role="group" aria-label="Wire view mode">
-        <button
-          type="button"
-          aria-pressed={mode === 'curl'}
-          className={`btn btn--ghost tab ${mode === 'curl' ? 'tab--active' : ''}`}
-          onClick={() => setMode('curl')}
-        >
-          curl walkthrough
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'layers'}
-          className={`btn btn--ghost tab ${mode === 'layers' ? 'tab--active' : ''}`}
-          onClick={() => setMode('layers')}
-        >
-          request layers
-        </button>
-      </div>
+      <TabPicker
+        className="wire-mode"
+        ariaLabel="Wire view mode"
+        items={WIRE_MODES}
+        active={mode}
+        onSelect={(id) => setMode(id as 'curl' | 'layers')}
+      />
 
-      {mode === 'curl' ? (
-        <CurlWalkthrough />
-      ) : (
-        <LayersView
-          active={active}
-          revealedReq={revealedReq}
-          revealedResp={revealedResp}
-          step={step}
-          playing={playing}
-          atEnd={atEnd}
-          toggle={toggle}
-          stepForward={stepForward}
-          reset={reset}
-        />
-      )}
+      {mode === 'curl' ? <CurlWalkthrough /> : <LayersView />}
     </section>
   )
 }
 
-interface LayersProps {
-  active: { phase: 'request' | 'response'; part: Part } | undefined
-  revealedReq: number
-  revealedResp: number
-  step: number
-  playing: boolean
-  atEnd: boolean
-  toggle: () => void
-  stepForward: () => void
-  reset: () => void
-}
+/**
+ * The layered request/response assembly view. Owns its own timer so it only runs
+ * while this mode is mounted — switching to the curl walkthrough and back starts fresh.
+ * The timeline is requests-then-responses, so the revealed counts are pure arithmetic.
+ */
+function LayersView() {
+  const player = usePlayerTimer(timeline.length)
+  const { step } = player
+  const active = timeline[step]
+  const revealedReq = Math.min(step + 1, wire.request.length)
+  const revealedResp = Math.max(0, step + 1 - wire.request.length)
 
-/** The original layered request/response assembly view. */
-function LayersView({ active, revealedReq, revealedResp, step, playing, atEnd, toggle, stepForward, reset }: LayersProps) {
   return (
     <>
       <p className="scenario-title">What Claude Code sends over the wire</p>
-      <div className="transport cluster">
-        <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
-          Reset
-        </button>
-        <button className="btn" onClick={toggle}>
-          {playing ? 'Pause' : atEnd ? 'Replay' : 'Assemble'}
-        </button>
-        <button className="btn btn--secondary" onClick={stepForward} disabled={atEnd}>
-          Step ›
-        </button>
-        <span className="step-counter">
-          step <b>{step + 1}</b> / {timeline.length}
-        </span>
-      </div>
+      <TransportBar player={player} playLabel="Assemble" total={timeline.length} counterLabel="step" />
 
       <div className="wire-body">
         <div className="wire-columns">

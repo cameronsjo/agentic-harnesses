@@ -5,6 +5,7 @@ import { scenario } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
 import { edgeBetween, usePlayerTimer } from './player'
+import { TabPicker, TransportBar } from './controls'
 
 interface Props {
   spec: LoopSpec
@@ -15,10 +16,8 @@ interface Props {
 /** Single-harness player: scenario tabs + transport controls + the live node inspector. */
 export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const sc = scenario(spec, scenarioId) ?? spec.scenarios[0]
-  const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(
-    sc.steps.length,
-    `${spec.harness}:${scenarioId}`,
-  )
+  const player = usePlayerTimer(sc.steps.length, `${spec.harness}:${scenarioId}`)
+  const { step, playing, atEnd } = player
 
   // The "turn complete" caption and the play→end latch (see the effects below).
   const captionRef = useRef<HTMLSpanElement>(null)
@@ -44,19 +43,12 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
   return (
     <div className="player">
-      <div className="scenario-tabs cluster" role="group" aria-label="Scenarios">
-        {spec.scenarios.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            aria-pressed={s.id === scenarioId}
-            className={`btn btn--ghost tab ${s.id === scenarioId ? 'tab--active' : ''}`}
-            onClick={() => onScenarioChange?.(s.id)}
-          >
-            {s.id}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        ariaLabel="Scenarios"
+        items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
+        active={scenarioId}
+        onSelect={(id) => onScenarioChange?.(id)}
+      />
 
       <p className="scenario-title">
         <Anchored text={sc.title} />
@@ -68,17 +60,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         </div>
 
         <aside className="inspector">
-          <div className="transport cluster">
-            <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
-              Reset
-            </button>
-            <button className="btn" onClick={toggle}>
-              {playing ? 'Pause' : atEnd ? 'Replay' : 'Play'}
-            </button>
-            <button className="btn btn--secondary" onClick={stepForward} disabled={atEnd}>
-              Step ›
-            </button>
-          </div>
+          <TransportBar player={player} playLabel="Play" />
 
           <div className="step-counter">
             step <b>{step + 1}</b> / {sc.steps.length}

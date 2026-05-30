@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import data from './data/wire/curl-walkthrough.json'
 import { usePlayerTimer } from './player'
+import { TransportBar } from './controls'
 
 interface Line {
   kind: string
@@ -13,7 +14,8 @@ const lines = (data as { lines: Line[] }).lines
 
 /** A hand-run of the loop as raw curl calls — step through the request/response round-trips. */
 export function CurlWalkthrough() {
-  const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(lines.length)
+  const player = usePlayerTimer(lines.length)
+  const { step } = player
   const activeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -22,20 +24,7 @@ export function CurlWalkthrough() {
 
   return (
     <div className="curl">
-      <div className="transport cluster">
-        <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
-          Reset
-        </button>
-        <button className="btn" onClick={toggle}>
-          {playing ? 'Pause' : atEnd ? 'Replay' : 'Run ▸'}
-        </button>
-        <button className="btn btn--secondary" onClick={stepForward} disabled={atEnd}>
-          Step ›
-        </button>
-        <span className="step-counter">
-          line <b>{step + 1}</b> / {lines.length}
-        </span>
-      </div>
+      <TransportBar player={player} playLabel="Run ▸" total={lines.length} counterLabel="line" />
 
       <div className="terminal" role="log" aria-live="polite">
         <div className="terminal-bar">

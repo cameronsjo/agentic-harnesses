@@ -32,7 +32,7 @@ export function usePlayerTimer(length: number, resetKey?: unknown) {
     }
     const t = setTimeout(() => setStep((s) => s + 1), STEP_MS)
     return () => clearTimeout(t)
-  }, [playing, step, atEnd])
+  }, [playing, step, atEnd, length])
 
   const toggle = () => (atEnd ? (setStep(0), setPlaying(true)) : setPlaying((p) => !p))
   const stepForward = () => setStep((s) => Math.min(s + 1, length - 1))
@@ -41,5 +41,5 @@ export function usePlayerTimer(length: number, resetKey?: unknown) {
     setPlaying(false)
   }
 
-  return { step, setStep, playing, atEnd, toggle, stepForward, reset }
+  return { step, playing, atEnd, toggle, stepForward, reset }
 }

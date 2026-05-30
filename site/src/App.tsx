@@ -6,6 +6,7 @@ import { LoopPlayer } from './LoopPlayer'
 import { HooksView } from './HooksView'
 import { WireView } from './WireView'
 import { SequenceView } from './SequenceView'
+import { TabPicker } from './controls'
 
 type View = 'compare' | 'single' | 'sequence' | 'hooks' | 'wire'
 
@@ -117,19 +118,13 @@ export function App() {
         <ScenarioCompare />
       ) : (
         <section className="single">
-          <div className="harness-pick cluster" role="group" aria-label="Harness">
-            {specs.map((s) => (
-              <button
-                key={s.harness}
-                type="button"
-                aria-pressed={s.harness === spec.harness}
-                className={`btn btn--ghost tab ${s.harness === spec.harness ? 'tab--active' : ''}`}
-                onClick={() => setHarness(s.harness)}
-              >
-                {s.displayName}
-              </button>
-            ))}
-          </div>
+          <TabPicker
+            className="harness-pick"
+            ariaLabel="Harness"
+            items={specs.map((s) => ({ id: s.harness, label: s.displayName }))}
+            active={spec.harness}
+            onSelect={setHarness}
+          />
           <div className="harness-meta">
             <span className="lang-badge">{spec.language}</span>
             <span className="loop-style">{spec.loopStyle}</span>

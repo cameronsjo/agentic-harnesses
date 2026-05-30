@@ -3,6 +3,7 @@ import { specs, sharedScenarios } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
 import { edgeBetween, usePlayerTimer } from './player'
+import { TabPicker, TransportBar } from './controls'
 
 /** The headline feature: every harness runs the SAME scenario, stepped in lockstep. */
 export function ScenarioCompare() {
@@ -23,7 +24,8 @@ export function ScenarioCompare() {
   )
 
   const maxSteps = useMemo(() => Math.max(1, ...columns.map((c) => c.sc.steps.length)), [columns])
-  const { step, playing, atEnd, toggle, stepForward, reset } = usePlayerTimer(maxSteps, scenarioId)
+  const player = usePlayerTimer(maxSteps, scenarioId)
+  const { step, playing, atEnd } = player
 
   // One whimsical operation for the whole comparison: every harness has reached
   // its terminal. Shimmer the caption once on the play→end edge — when the
@@ -41,38 +43,13 @@ export function ScenarioCompare() {
   return (
     <section className="compare">
       <div className="compare-controls">
-        <div className="scenario-tabs cluster" role="group" aria-label="Scenario">
-          {sharedScenarios.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              aria-pressed={s.id === scenarioId}
-              className={`btn btn--ghost tab ${s.id === scenarioId ? 'tab--active' : ''}`}
-              onClick={() => setScenarioId(s.id)}
-            >
-              {s.id}
-            </button>
-          ))}
-        </div>
-        <div className="transport cluster">
-          <button className="btn btn--secondary" onClick={reset} disabled={step === 0 && !playing}>
-            Reset
-          </button>
-          <button className="btn" onClick={toggle}>
-            {playing ? 'Pause' : atEnd ? 'Replay' : 'Play all'}
-          </button>
-          <button className="btn btn--secondary" onClick={stepForward} disabled={atEnd}>
-            Step ›
-          </button>
-          <span className="step-counter">
-            step <b>{step + 1}</b> / {maxSteps}
-            {atEnd && (
-              <span className="turn-complete" ref={captionRef}>
-                turn complete
-              </span>
-            )}
-          </span>
-        </div>
+        <TabPicker
+          ariaLabel="Scenario"
+          items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
+          active={scenarioId}
+          onSelect={setScenarioId}
+        />
+        <TransportBar player={player} playLabel="Play all" total={maxSteps} counterLabel="step" />
       </div>
 
       <p className="scenario-title">
