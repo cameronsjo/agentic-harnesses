@@ -138,7 +138,9 @@ export function App() {
       </main>
 
       <footer className="app-footer">
-        Every node <b className="anchor">cites <code>file:line</code></b> in <b className="anchor">pinned source</b>.
+        Live repos (OpenCode · pi · code_puppy) <b className="anchor">cite <code>file:line</code></b> at{' '}
+        <b className="anchor">pinned SHAs</b>. Claude Code is from a{' '}
+        <b className="anchor">leaked/recovered snapshot</b> — file-level refs, <b className="anchor">leak + speculation</b>.
         Built with the <b className="anchor">Artificer design system</b>.
       </footer>
     </div>

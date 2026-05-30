@@ -2,11 +2,11 @@
 
 The [loop docs](loops.md) cover control flow *inside* a harness. This one covers what actually leaves it — the HTTP request to the model API and the response that comes back. Focused on **Claude Code** (the richest), with a four-way comparison table at the end.
 
-Every claim cites `file:line` at the [pinned revision](methodology.md). Paths are relative to `claude-code-src/`.
+> **Source caveat.** This deep dive is **based on the Claude Code leak + informed speculation** — a leaked/recovered, somewhat-old source snapshot. References are **file-level only** (paths relative to `claude-code-src/`); read the specifics as indicative of how the shipped CLI behaves, not as an authoritative or current account. See [methodology](methodology.md).
 
 ## The API client
 
-Claude Code calls the model through the Anthropic SDK — `new Anthropic()` (`src/services/api/client.ts:315`) — but the same client targets **four providers**: the first-party API, AWS Bedrock, Azure Foundry, and Google Vertex, with auth (API key / OAuth / cloud credentials) selected per provider. Every request carries an attribution header with `cc_version`, `cc_entrypoint`, and `cc_workload` (`src/constants/system.ts:91`) so Anthropic can see it's Claude Code traffic.
+Claude Code calls the model through the Anthropic SDK — `new Anthropic()` (`src/services/api/client.ts`) — but the same client targets **four providers**: the first-party API, AWS Bedrock, Azure Foundry, and Google Vertex, with auth (API key / OAuth / cloud credentials) selected per provider. Every request carries an attribution header with `cc_version`, `cc_entrypoint`, and `cc_workload` (`src/constants/system.ts`) so Anthropic can see it's Claude Code traffic.
 
 ## Anatomy of a request
 
@@ -20,24 +20,24 @@ A single `/v1/messages` call assembles four things. What's worth understanding i
 ```
 
 ### System prompt — modular, cache-aware sections
-The system prompt isn't one string; it's built from sections via a `systemPromptSection()` factory (`src/constants/prompts.ts`), each computed once and cached until `/clear` or `/compact` (`src/constants/systemPromptSections.ts:20`). Sections cover the base identity, tool guidelines, working directory, memory (CLAUDE.md), skills, and hooks info. The base line itself varies by entrypoint (`getCLISyspromptPrefix()`, `src/constants/system.ts:30`) — "You are Claude Code…" interactively, an Agent-SDK variant headless.
+The system prompt isn't one string; it's built from sections via a `systemPromptSection()` factory (`src/constants/prompts.ts`), each computed once and cached until `/clear` or `/compact` (`src/constants/systemPromptSections.ts`). Sections cover the base identity, tool guidelines, working directory, memory (CLAUDE.md), skills, and hooks info. The base line itself varies by entrypoint (`getCLISyspromptPrefix()`, `src/constants/system.ts`) — "You are Claude Code…" interactively, an Agent-SDK variant headless.
 
-The key construct is a sentinel: `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` (`src/constants/prompts.ts:114`). Everything before it is stable and cacheable (and can even use a **global** cache scope shared across orgs); everything after is per-user/volatile. The boundary is *where* the static/dynamic split is drawn so the prefix can be cached aggressively.
+The key construct is a sentinel: `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` (`src/constants/prompts.ts`). Everything before it is stable and cacheable (and can even use a **global** cache scope shared across orgs); everything after is per-user/volatile. The boundary is *where* the static/dynamic split is drawn so the prefix can be cached aggressively.
 
 ### Tools
 Tool JSON schemas are sent on every request and are stable across a session, which makes them a prime cache target — the **last tool schema block** is one of the two cache breakpoints.
 
 ### Context files — CLAUDE.md, hierarchically
-`getMemoryFiles()` (`src/utils/claudemd.ts`) discovers memory files in priority order — managed global, user global (`~/.claude/CLAUDE.md`), project (`CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/*.md`), then local (`CLAUDE.local.md`) — loading lowest-priority first so the closest file wins. The `@include` directive (`@path`, `@./rel`, `@~/home`) expands files inline with circular-reference protection (`src/utils/claudemd.ts:18`), restricted to text extensions. Loaded files are injected as `nested_memory` attachments on user messages and cached to avoid re-injection; an `InstructionsLoaded` [hook](claude-code-events.md) fires for each.
+`getMemoryFiles()` (`src/utils/claudemd.ts`) discovers memory files in priority order — managed global, user global (`~/.claude/CLAUDE.md`), project (`CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/*.md`), then local (`CLAUDE.local.md`) — loading lowest-priority first so the closest file wins. The `@include` directive (`@path`, `@./rel`, `@~/home`) expands files inline with circular-reference protection (`src/utils/claudemd.ts`), restricted to text extensions. Loaded files are injected as `nested_memory` attachments on user messages and cached to avoid re-injection; an `InstructionsLoaded` [hook](claude-code-events.md) fires for each.
 
 ## Prompt caching — the sophisticated part
 
-Caching is where Claude Code does the most work. `getCacheControl({ scope, querySource })` (`src/services/api/claude.ts:358`) returns an `{ type: 'ephemeral', ttl?, scope? }` marker:
+Caching is where Claude Code does the most work. `getCacheControl({ scope, querySource })` (`src/services/api/claude.ts`) returns an `{ type: 'ephemeral', ttl?, scope? }` marker:
 
-- **TTL.** Default ephemeral is 5 minutes; a **1-hour** TTL is granted only to eligible users (Anthropic staff or Claude.ai subscribers not in overage), gated behind a GrowthBook flag with a `querySource` allowlist (`src/services/api/claude.ts:393`). The eligibility is resolved once and cached in bootstrap state so it can't flip mid-session (`:415`).
-- **Placement.** At most one cache marker each on the **last user-message block** and the **last tool-schema block** (`src/services/api/claude.ts:3078`) — caching the long stable prefix without exceeding Anthropic's breakpoint budget.
+- **TTL.** Default ephemeral is 5 minutes; a **1-hour** TTL is granted only to eligible users (Anthropic staff or Claude.ai subscribers not in overage), gated behind a GrowthBook flag with a `querySource` allowlist (`src/services/api/claude.ts`). The eligibility is resolved once and cached in bootstrap state so it can't flip mid-session.
+- **Placement.** At most one cache marker each on the **last user-message block** and the **last tool-schema block** (`src/services/api/claude.ts`) — caching the long stable prefix without exceeding Anthropic's breakpoint budget.
 - **Global scope.** The system-prompt prefix (before the dynamic boundary) can use `scope: 'global'` for cross-organization cache reuse.
-- **Cache references.** Microcompaction reuses cached tool inputs by `tool_use_id` via `cache_references` (`src/services/api/claude.ts:3181`) rather than resending them — caching keyed on tool-call identity, not full content.
+- **Cache references.** Microcompaction reuses cached tool inputs by `tool_use_id` via `cache_references` (`src/services/api/claude.ts`) rather than resending them — caching keyed on tool-call identity, not full content.
 
 ## Tool calls over the wire
 
@@ -49,7 +49,7 @@ The other three reach the same Anthropic endpoint (and others) through abstracti
 
 | Dimension | Claude Code | OpenCode | pi | code_puppy |
 |---|---|---|---|---|
-| **Client** | Anthropic SDK (`client.ts:315`) | custom Effect protocol layer | Anthropic SDK, wrapped | pydantic-ai `AnthropicModel` |
+| **Client** | Anthropic SDK (`client.ts`) | custom Effect protocol layer | Anthropic SDK, wrapped | pydantic-ai `AnthropicModel` |
 | **Tool response** | native `tool_use` | schema-validated (Anthropic *or* OpenAI) | `tool_use` → normalized + name-mapped | pydantic-ai abstraction |
 | **Cache TTL** | 5m/1h, eligibility-gated + allowlist | 5m/1h, max 4 breakpoints | 5m/1h, `PI_CACHE_RETENTION` env | wrapper (`ClaudeCacheAsyncClient`) |
 | **Cache placement** | last user msg + last tool block; global-scope prefix | per-block, capped at 4 | per-block | system blocks |

@@ -9,7 +9,7 @@
       "when": "the session begins (startup / resume / clear / compact)",
       "controls": ["additionalContext", "initialUserMessage", "watchPaths"],
       "blocking": true,
-      "sourceRef": "src/utils/hooks.ts:3867"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "UserPromptSubmit",
@@ -18,7 +18,7 @@
       "when": "a user prompt is submitted, before it reaches the model",
       "controls": ["additionalContext", "continue / preventContinuation"],
       "blocking": true,
-      "sourceRef": "src/utils/hooks.ts:3826"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "PreToolUse",
@@ -27,7 +27,7 @@
       "when": "a tool is about to run — before the canUseTool permission gate",
       "controls": ["permissionDecision (allow/deny/ask)", "updatedInput", "additionalContext"],
       "blocking": true,
-      "sourceRef": "src/services/tools/toolHooks.ts:435"
+      "sourceRef": "src/services/tools/toolHooks.ts"
     },
     {
       "event": "PermissionRequest",
@@ -36,7 +36,7 @@
       "when": "the permission prompt is shown",
       "controls": ["decision.behavior", "decision.updatedInput", "decision.updatedPermissions"],
       "blocking": true,
-      "sourceRef": "src/utils/hooks.ts:3450"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "PermissionDenied",
@@ -45,7 +45,7 @@
       "when": "a tool call is denied",
       "controls": ["retry"],
       "blocking": false,
-      "sourceRef": "src/utils/hooks.ts:3529"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "PostToolUse",
@@ -54,7 +54,7 @@
       "when": "a tool completes successfully",
       "controls": ["additionalContext", "updatedMCPToolOutput"],
       "blocking": false,
-      "sourceRef": "src/services/tools/toolHooks.ts:56"
+      "sourceRef": "src/services/tools/toolHooks.ts"
     },
     {
       "event": "PostToolUseFailure",
@@ -63,7 +63,7 @@
       "when": "a tool errors or is interrupted",
       "controls": ["additionalContext"],
       "blocking": false,
-      "sourceRef": "src/utils/hooks.ts:3492"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "Stop",
@@ -72,7 +72,7 @@
       "when": "the turn / REPL is about to end",
       "controls": ["additionalContext", "preventContinuation"],
       "blocking": true,
-      "sourceRef": "src/utils/hooks.ts:3639"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "SessionEnd",
@@ -81,7 +81,7 @@
       "when": "the session exits (1.5s default timeout)",
       "controls": ["additionalContext"],
       "blocking": false,
-      "sourceRef": "src/utils/hooks.ts:4097"
+      "sourceRef": "src/utils/hooks.ts"
     },
     {
       "event": "PreCompact / PostCompact",
@@ -90,7 +90,7 @@
       "when": "context is compacted between model calls",
       "controls": ["modified custom instructions", "additionalContext"],
       "blocking": false,
-      "sourceRef": "src/utils/hooks.ts:3961"
+      "sourceRef": "src/utils/hooks.ts"
     }
   ]
 }

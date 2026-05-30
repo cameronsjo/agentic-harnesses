@@ -7,7 +7,7 @@
 **Version analyzed:** 2.1.88
 **Loop spec:** [`claude-code.json`](../../site/src/data/loops/claude-code.json)
 
-> Studied from a faithful reconstruction of `@anthropic-ai/claude-code@2.1.88`, recovered from a published source map. Symbol names and structure are faithful but not guaranteed byte-identical to Anthropic's tree. Line numbers are valid at the analyzed revision (see [methodology](../methodology.md)).
+> **Source caveat — leak + speculation.** Studied from a **leaked / recovered** snapshot of `@anthropic-ai/claude-code` (a published source map allowed recovery), which is already somewhat old. Symbol names and structure are best-effort reconstruction, not guaranteed to match Anthropic's tree or current Claude Code. References are **file-level only** (no line numbers); read the internals below as indicative, not authoritative. See [methodology](../methodology.md).
 
 ## Core Approach
 
@@ -15,12 +15,12 @@ Claude Code is Anthropic's first-party CLI agent. Its agent loop is an **async g
 
 ## Loop Architecture
 
-- **Entry:** `query()` (`src/query.ts:219`) yields from `queryLoop()` (`src/query.ts:241`).
-- **The loop:** `while (true)` at `src/query.ts:307`, closed at `:1728`.
-- **Model call:** `callModel` is consumed with `for await` (`src/query.ts:659`); `tool_use` blocks are accumulated as they stream. The code explicitly notes that `stop_reason === 'tool_use'` is *unreliable* and instead tracks tool-use by inspecting streamed blocks (`src/query.ts:554`).
-- **Branch:** after the stream, the loop checks whether any `tool_use` blocks were emitted (`src/query.ts:1417`). None → the turn terminates.
-- **Tools:** `runTools(toolUseBlocks, …)` (`src/query.ts:1382`) drives the whole batch; updates are consumed with `for await` (`src/query.ts:1384`).
-- **Resilience:** retries use a *fresh executor* to avoid orphaned `tool_result`s with stale `tool_use_id`s (`src/query.ts:731`, `:910`); an aborted run drains synthetic results so every `tool_use` keeps a matching `tool_result` (`src/query.ts:1013`); `max_tokens` triggers an escalation/recovery path (`src/query.ts:1204`).
+- **Entry:** `query()` (`src/query.ts`) yields from `queryLoop()` (`src/query.ts`).
+- **The loop:** a `while (true)` in `src/query.ts`.
+- **Model call:** `callModel` is consumed with `for await` (`src/query.ts`); `tool_use` blocks are accumulated as they stream. The code explicitly notes that `stop_reason === 'tool_use'` is *unreliable* and instead tracks tool-use by inspecting streamed blocks (`src/query.ts`).
+- **Branch:** after the stream, the loop checks whether any `tool_use` blocks were emitted (`src/query.ts`). None → the turn terminates.
+- **Tools:** `runTools(toolUseBlocks, …)` (`src/query.ts`) drives the whole batch; updates are consumed with `for await` (`src/query.ts`).
+- **Resilience:** retries use a *fresh executor* to avoid orphaned `tool_result`s with stale `tool_use_id`s; an aborted run drains synthetic results so every `tool_use` keeps a matching `tool_result`; `max_tokens` triggers an escalation/recovery path (all in `src/query.ts`).
 
 ```
 user msg ──▶ stream model ──▶ tool_use blocks? ──no──▶ end_turn
@@ -35,18 +35,18 @@ Native **Anthropic `tool_use` / `tool_result`** content blocks. Tools are typed 
 
 ## Permission / Approval Model
 
-The distinguishing feature. A `canUseTool` function is threaded through the entire loop and **wrapped** in the engine (`src/QueryEngine.ts:252`) to record `permissionDenials`. Behavior depends on a **permission mode** carried in `appState.toolPermissionContext` (`src/QueryEngine.ts:571`) — including a `plan` mode (`src/QueryEngine.ts:576`) where the agent plans without executing. On a denial, an error `tool_result` is fed back to the model rather than crashing the turn, so the conversation continues with the tool's effect withheld.
+The distinguishing feature. A `canUseTool` function is threaded through the entire loop and **wrapped** in the engine (`src/QueryEngine.ts`) to record `permissionDenials`. Behavior depends on a **permission mode** carried in `appState.toolPermissionContext` (`src/QueryEngine.ts`) — including a `plan` mode (`src/QueryEngine.ts`) where the agent plans without executing. On a denial, an error `tool_result` is fed back to the model rather than crashing the turn, so the conversation continues with the tool's effect withheld.
 
 ## User Interaction
 
 - **Streaming output** — the generator yields assistant text and tool activity as it arrives.
-- **Interrupts** — an abort controller is checked inside the executor (`src/query.ts:1013`); interrupting mid-tool yields synthetic results instead of leaving dangling tool calls.
-- **Slash commands, plan mode, headless mode** — first-class (`src/commands/`, permission modes, headless latency checkpoints at `src/QueryEngine.ts:554`).
+- **Interrupts** — an abort controller is checked inside the executor (`src/query.ts`); interrupting mid-tool yields synthetic results instead of leaving dangling tool calls.
+- **Slash commands, plan mode, headless mode** — first-class (`src/commands/`, permission modes, headless latency checkpoints at `src/QueryEngine.ts`).
 - **Rich TUI** — React + Ink components (`src/components/`, `src/ink/`).
 
 ## Context & Memory
 
-Microcompaction keyed purely by `tool_use_id` (`src/query.ts:370`), reactive compaction retries (`src/query.ts:1162`), and prompt-too-long handling (`src/query.ts:1175`). Tasks/subagents run with their own context (`src/Task.ts`, `agentId` checks in the loop).
+Microcompaction keyed purely by `tool_use_id` (`src/query.ts`), reactive compaction retries (`src/query.ts`), and prompt-too-long handling (`src/query.ts`). Tasks/subagents run with their own context (`src/Task.ts`, `agentId` checks in the loop).
 
 ## Extensibility
 

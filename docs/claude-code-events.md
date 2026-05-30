@@ -2,11 +2,13 @@
 
 Claude Code exposes its loop as a series of **lifecycle events**, and lets you attach **hooks** that run at each one — to inject context, gate tool calls, observe, or block. This is the deepest extension surface of any harness in this comparison, and it's Claude-Code-specific (the others have their own models — see [tool handling](tool-handling.md)).
 
-This doc is the reference; the [visualizer](../site/) overlays these events onto the [Claude Code loop](harnesses/claude-code.md) so you can see *where* each one fires. Every claim cites `file:line` at the [pinned revision](methodology.md).
+This doc is the reference; the [visualizer](../site/) overlays these events onto the [Claude Code loop](harnesses/claude-code.md) so you can see *where* each one fires.
+
+> **Source caveat.** Claude Code is studied from a **leaked / recovered** source snapshot that is already somewhat old. References here are **file-level only** and should be read as *"based on the Claude Code leak + informed speculation"* — indicative, not authoritative. See [methodology](methodology.md).
 
 ## Where hooks fit
 
-A hook is a program (or prompt, or HTTP call) Claude Code runs **at** a lifecycle event, passing it a JSON payload on stdin and reading a result from its exit code and stdout. The canonical list of events is the `HOOK_EVENTS` array (`src/entrypoints/sdk/coreTypes.ts:25`) — **27** of them.
+A hook is a program (or prompt, or HTTP call) Claude Code runs **at** a lifecycle event, passing it a JSON payload on stdin and reading a result from its exit code and stdout. The canonical list of events is the `HOOK_EVENTS` array (`src/entrypoints/sdk/coreTypes.ts`) — **27** of them.
 
 ```
 SessionStart ─▶ [ UserPromptSubmit ─▶ model ─▶ PreToolUse ─▶ (permission) ─▶ tool ─▶ PostToolUse ─▶ … ─▶ Stop ] ─▶ SessionEnd
@@ -25,7 +27,7 @@ SessionStart ─▶ [ UserPromptSubmit ─▶ model ─▶ PreToolUse ─▶ (pe
 | **PermissionRequest** | during the permission prompt | `tool_name`, `tool_input` | `decision.behavior`, `decision.updatedInput`, `decision.updatedPermissions` | ✅ |
 | **PermissionDenied** | after a denial | + `reason` | `retry` | ❌ |
 
-`PreToolUse` is the interesting one: it fires **before** `canUseTool` (the loop's permission gate — see [the loop](harnesses/claude-code.md#permission--approval-model)), and its `permissionDecision` can pre-empt the gate entirely. Dispatch is `runPreToolUseHooks` (`src/services/tools/toolHooks.ts:435`); the behavior is resolved at `:510`.
+`PreToolUse` is the interesting one: it fires **before** `canUseTool` (the loop's permission gate — see [the loop](harnesses/claude-code.md#permission--approval-model)), and its `permissionDecision` can pre-empt the gate entirely. Dispatch is `runPreToolUseHooks` in `src/services/tools/toolHooks.ts`, which resolves the resulting permission behavior.
 
 ### Session lifecycle
 | Event | When | Key input | Can control | Blocking |

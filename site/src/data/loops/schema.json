@@ -41,8 +41,8 @@
           },
           "sourceRef": {
             "type": "string",
-            "description": "path:line into the harness source implementing this step. Valid at the pinned revision in docs/methodology.md.",
-            "pattern": "^.+:[0-9]+$"
+            "description": "Reference into the harness source. For live repos (opencode/pi/code_puppy) this is path:line at the pinned SHA. For Claude Code it is file-level only — the source is an old leaked/recovered snapshot, so exact lines are deliberately omitted (see docs/methodology.md).",
+            "pattern": "^.+$"
           },
           "note": { "type": "string", "description": "Short explanation of what happens at this node." }
         }

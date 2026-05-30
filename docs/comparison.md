@@ -17,7 +17,7 @@ Side-by-side comparison of four agentic coding harnesses, grounded in source (se
 |---|---|---|---|---|
 | **Loop style** | async-generator streaming (`queryLoop`, `while(true)`) | two-layer Effect-TS step loop | dual nested `while` over an EventStream | delegated inner loop + REPL outer loop |
 | **Who owns the turn loop** | the harness | harness (macro) + Vercel AI SDK (step) | the harness | pydantic-ai `Agent.run` |
-| **Loop entrypoint** | `src/query.ts:241` | `prompt.ts:1252` | `agent-loop.ts:182` | `_runtime.py:349` (call site) |
+| **Loop entrypoint** | `src/query.ts` | `prompt.ts:1252` | `agent-loop.ts:182` | `_runtime.py:349` (call site) |
 | **Continuation signal** | no `tool_use` blocks → `end_turn` | last step has no pending tool calls | no pending tool calls / follow-ups | framework returns; outer loop drains steers |
 | **Output** | streamed (yielded) | streamed via AI SDK | streamed via EventStream | streamed via `event_stream_handler` |
 | **Interrupt handling** | abort signal → synthetic `tool_result`s | `ctx.blocked` → step returns `stop` | steering injections | steering injections between runs |
@@ -28,10 +28,10 @@ Side-by-side comparison of four agentic coding harnesses, grounded in source (se
 |---|---|---|---|---|
 | **Tool registration** | typed `Tool` objects (`src/tools/`) | AI SDK `tool({execute})` from registry + MCP | own tool abstraction | `@agent.tool` Python functions |
 | **Schema source** | hand-authored input schemas | AI SDK tool schemas | per-tool schema + `validateToolArguments` | generated from function signatures |
-| **Dispatch** | `runTools(batch)` (`query.ts:1382`) | SDK calls `execute` inline during stream | `executeToolCalls` (`agent-loop.ts:373`) | pydantic-ai matches by name, invokes with `RunContext` |
+| **Dispatch** | `runTools(batch)` (`query.ts`) | SDK calls `execute` inline during stream | `executeToolCalls` (`agent-loop.ts:373`) | pydantic-ai matches by name, invokes with `RunContext` |
 | **Concurrency** | batch per turn | inline during stream | **parallel by default**, order-preserving | framework-driven; prompts serialized by locks |
 | **Where permission lives** | **one loop-level gate** | **inside each tool** (opt-in `ctx.ask`) | **nowhere interactive** | **inside each mutating tool** (callbacks) |
-| **Real gate exists?** | ✅ `canUseTool` (`QueryEngine.ts:252`) | ✅ ruleset (`permission/index.ts:171`) | ⚠️ allow-lists + `beforeToolCall` hook only | ✅ `on_file_permission` / `get_user_approval` |
+| **Real gate exists?** | ✅ `canUseTool` (`QueryEngine.ts`) | ✅ ruleset (`permission/index.ts:171`) | ⚠️ allow-lists + `beforeToolCall` hook only | ✅ `on_file_permission` / `get_user_approval` |
 | **On denial** | error `tool_result` → model continues | `DeniedError` → error result; interactive reject breaks loop | hook `block:true` → error result | rejection result fed back to model |
 | **Bypass** | permission modes (incl. `plan`) | rule `allow` / `experimental.continue_loop_on_deny` | default (no extension = no gate) | YOLO mode / non-interactive stdin |
 
