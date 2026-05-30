@@ -33,6 +33,12 @@ body {
   margin: 0;
   letter-spacing: -0.01em;
 }
+/* The wordmark shimmer (.whimsy) clips a flowing gradient to the glyphs; keep
+   it at the headline's own size and let it own the weight. */
+.masthead-title .whimsy {
+  font-size: inherit;
+  letter-spacing: inherit;
+}
 .lede {
   margin: 0;
   max-width: 64ch;
@@ -83,6 +89,13 @@ body {
   color: var(--fg-secondary);
   font-size: 0.85rem;
   margin-left: var(--s-sm);
+}
+/* "turn complete" caption — content, not chrome. Sits by the step counter and
+   shimmers once (Whimsy.celebrate adds .whimsy) when playback reaches the
+   terminal node, then auto-clears back to this resting style. */
+.turn-complete {
+  margin-left: var(--s-sm);
+  color: var(--fg-secondary);
 }
 .scenario-title {
   font-family: var(--font-sans);

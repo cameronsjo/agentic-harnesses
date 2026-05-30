@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LoopSpec } from './types'
 import { KIND_LABEL } from './types'
 import { scenario } from './data'
@@ -27,6 +27,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   useEffect(() => {
     setStep(0)
     setPlaying(false)
+    wasPlaying.current = false
   }, [scenarioId, spec.harness])
 
   useEffect(() => {
@@ -43,6 +44,22 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const activeEdge = edgeBetween(sc.steps[step - 1], sc.steps[step])
   const node = spec.nodes.find((n) => n.id === activeNodeId)
   const atEnd = step >= sc.steps.length - 1
+
+  // The one whimsical operation: reaching the terminal node IS the turn ending.
+  // Shimmer the caption once, but only when playback drove us to the end — not
+  // on a manual Step/Reset. wasPlaying latches while playing so the play→end
+  // edge can be told apart from a manual arrival.
+  const captionRef = useRef<HTMLSpanElement>(null)
+  const wasPlaying = useRef(false)
+  useEffect(() => {
+    if (playing) wasPlaying.current = true
+  }, [playing])
+  useEffect(() => {
+    if (atEnd && wasPlaying.current) {
+      wasPlaying.current = false
+      window.Whimsy?.celebrate(captionRef.current, 2200)
+    }
+  }, [atEnd])
 
   return (
     <div className="player">
@@ -91,6 +108,11 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
           <div className="step-counter">
             step <b>{step + 1}</b> / {sc.steps.length}
+            {atEnd && (
+              <span className="turn-complete" ref={captionRef}>
+                turn complete
+              </span>
+            )}
           </div>
 
           {node && (

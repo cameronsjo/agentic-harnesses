@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
@@ -15,6 +15,14 @@ export function App() {
 
   const spec = specs.find((s) => s.harness === harness) ?? specs[0]
 
+  // The one persistent whimsy moment: the wordmark breathes the ultrathink
+  // shimmer (spectrum) for three hue-cycles on load, then drifts glacially.
+  // React mounts after DOMContentLoaded, so the ref-driven run() is the hook.
+  const titleRef = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    window.Whimsy?.run(titleRef.current, { loops: 3, settle: 'glacial' })
+  }, [])
+
   return (
     <div className="app container--lg surface-tool">
       <a className="skip-link" href="#main">
@@ -29,7 +37,11 @@ export function App() {
             <span data-theme-label>Dark</span>
           </button>
         </div>
-        <h1 className="masthead-title t-headline-md">Agentic Harness Loops</h1>
+        <h1 className="masthead-title t-headline-md">
+          <span className="whimsy" ref={titleRef}>
+            Agentic Harness Loops
+          </span>
+        </h1>
         <p className="lede t-body-lg">
           Four coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
           <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
