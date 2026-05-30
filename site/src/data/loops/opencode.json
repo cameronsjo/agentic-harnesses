@@ -1,0 +1,122 @@
+{
+  "harness": "opencode",
+  "displayName": "OpenCode",
+  "language": "TypeScript",
+  "repo": "https://github.com/anomalyco/opencode",
+  "version": "b2a06351 (analyzed revision)",
+  "loopStyle": "Effect-TS step loop (while(true) over process(); AI SDK streamText executes tools inline per step)",
+  "entrypoint": "packages/opencode/src/session/prompt.ts:1252",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "User message",
+      "kind": "input",
+      "sourceRef": "packages/opencode/src/session/prompt.ts:1220",
+      "note": "prompt() creates a user message (createUserMessage), applies any per-call tool allow/deny rules to session.permission, then enters loop() → runLoop()."
+    },
+    {
+      "id": "loop-step",
+      "label": "runLoop step (while true)",
+      "kind": "decision",
+      "sourceRef": "packages/opencode/src/session/prompt.ts:1252",
+      "note": "The macro agent loop. Each iteration rebuilds messages, checks the last assistant finish reason: if it finished without tool calls (and isn't an orphaned interrupt) the loop breaks; otherwise it prepares tools and runs another model step. step is capped by agent.steps (maxSteps)."
+    },
+    {
+      "id": "resolve-tools",
+      "label": "Resolve tool set",
+      "kind": "tool",
+      "sourceRef": "packages/opencode/src/session/tools.ts:75",
+      "note": "SessionTools.resolve builds AI SDK tool({execute}) objects from the registry plus MCP tools. Each tool's execute is an Effect that may call ctx.ask (the permission gate) before doing work."
+    },
+    {
+      "id": "llm",
+      "label": "process() → streamText",
+      "kind": "llm",
+      "sourceRef": "packages/opencode/src/session/llm.ts:272",
+      "note": "handle.process() runs one model generation. The AI SDK streamText (no stopWhen/maxSteps set) streams one assistant turn; tools with execute are dispatched inline by the SDK. fullStream parts are adapted into LLMEvents."
+    },
+    {
+      "id": "stream-handle",
+      "label": "Drain LLMEvent stream",
+      "kind": "decision",
+      "sourceRef": "packages/opencode/src/session/processor.ts:792",
+      "note": "process() pipes llm.stream through handleEvent and runDrain. tool-call / tool-result / tool-error / step-finish events are folded into the message state until the step ends."
+    },
+    {
+      "id": "approval",
+      "label": "ctx.ask → permission.ask",
+      "kind": "approval",
+      "sourceRef": "packages/opencode/src/permission/index.ts:171",
+      "note": "Per-tool ruleset gate invoked from inside a tool's execute (e.g. edit.ts:98, write.ts:54, shell.ts:281) and for every MCP tool (tools.ts:135). Evaluates rules: deny → DeniedError (error tool-result, loop continues); allow → proceed silently; otherwise publish permission.asked on the bus and block on a Deferred until the UI replies once/always/reject."
+    },
+    {
+      "id": "execute",
+      "label": "Run tool execute()",
+      "kind": "execute",
+      "sourceRef": "packages/opencode/src/session/tools.ts:93",
+      "note": "After ctx.ask resolves allow, the tool body runs (item.execute), fires tool.execute.before/after plugin hooks, and returns output. The AI SDK emits a tool-result part captured by completeToolCall."
+    },
+    {
+      "id": "tool-error",
+      "label": "Tool error / denial",
+      "kind": "decision",
+      "sourceRef": "packages/opencode/src/session/processor.ts:521",
+      "note": "If execute throws (including a permission DeniedError/RejectedError), the SDK emits tool-error; failToolCall records the error as the tool result. A RejectedError (interactive reject) sets ctx.blocked so process() returns 'stop'; a config DeniedError does not block."
+    },
+    {
+      "id": "step-result",
+      "label": "process() result",
+      "kind": "decision",
+      "sourceRef": "packages/opencode/src/session/processor.ts:845",
+      "note": "process() returns 'compact' (needs compaction), 'stop' (blocked or errored), or 'continue'. runLoop branches: stop → break; compact → schedule compaction and continue; continue → next iteration re-prompts the model with the tool results."
+    },
+    {
+      "id": "done",
+      "label": "Loop exits",
+      "kind": "terminal",
+      "sourceRef": "packages/opencode/src/session/prompt.ts:1290",
+      "note": "When the last assistant turn finished with no pending tool calls (or process returned stop), the while(true) breaks and runLoop returns the final assistant message."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "loop-step" },
+    { "from": "loop-step", "to": "resolve-tools", "on": "needs model step" },
+    { "from": "loop-step", "to": "done", "on": "finished, no tool calls" },
+    { "from": "resolve-tools", "to": "llm" },
+    { "from": "llm", "to": "stream-handle" },
+    { "from": "stream-handle", "to": "approval", "on": "tool-call" },
+    { "from": "stream-handle", "to": "step-result", "on": "no tool / step-finish" },
+    { "from": "approval", "to": "execute", "on": "allow" },
+    { "from": "approval", "to": "tool-error", "on": "deny / reject", "label": "tool-result: error" },
+    { "from": "execute", "to": "stream-handle", "label": "tool-result" },
+    { "from": "tool-error", "to": "stream-handle", "label": "error tool-result" },
+    { "from": "step-result", "to": "loop-step", "on": "continue / compact" },
+    { "from": "step-result", "to": "done", "on": "stop" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with no tools",
+      "steps": ["user-input", "loop-step", "resolve-tools", "llm", "stream-handle", "step-result", "loop-step", "done"],
+      "note": "First step produces a text-only assistant turn. process() returns 'continue', but the next loop iteration sees the assistant finished with no tool calls and breaks."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to edit a file",
+      "steps": ["user-input", "loop-step", "resolve-tools", "llm", "stream-handle", "approval", "execute", "stream-handle", "step-result", "loop-step", "resolve-tools", "llm", "stream-handle", "step-result", "loop-step", "done"],
+      "note": "The model calls edit; edit.ts:98 invokes ctx.ask for the 'edit' permission. Once allowed, the edit runs and its tool-result is folded in. The loop re-prompts; the model finishes without further tools and the loop exits."
+    },
+    {
+      "id": "denied-tool",
+      "title": "Tool call is denied",
+      "steps": ["user-input", "loop-step", "resolve-tools", "llm", "stream-handle", "approval", "tool-error", "stream-handle", "step-result", "done"],
+      "note": "ctx.ask → permission.ask returns a DeniedError (matching deny rule) or the user replies reject. The tool's execute throws, the SDK emits tool-error, and failToolCall records it as an error tool-result. A reject sets ctx.blocked → process() returns 'stop' and the loop breaks; a config deny instead continues the loop with the error fed back to the model (continue_loop_on_deny flips reject behavior to continue too)."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues several tool calls in one turn",
+      "steps": ["user-input", "loop-step", "resolve-tools", "llm", "stream-handle", "approval", "execute", "stream-handle", "approval", "execute", "stream-handle", "step-result", "loop-step", "resolve-tools", "llm", "stream-handle", "step-result", "loop-step", "done"],
+      "note": "A single streamText step emits multiple tool-call parts; the AI SDK executes each (each gated by its own ctx.ask) and emits the tool-results within the same step. process() returns 'continue', the loop re-prompts with all results, and the model finishes."
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "harness": "pi",
+  "displayName": "pi",
+  "language": "TypeScript",
+  "repo": "https://github.com/earendil-works/pi",
+  "version": "dbb9911a",
+  "loopStyle": "dual while-loop over an EventStream (outer follow-up / inner tool-call)",
+  "entrypoint": "packages/agent/src/agent-loop.ts:170",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "Prompt / steering message",
+      "kind": "input",
+      "sourceRef": "packages/agent/src/agent-loop.ts:182",
+      "note": "Prompts (and any queued steering messages drained from config.getSteeringMessages) are pushed into the conversation context before the next assistant response. Agent.prompt() seeds this via runAgentLoop."
+    },
+    {
+      "id": "llm",
+      "label": "Stream assistant response",
+      "kind": "llm",
+      "sourceRef": "packages/agent/src/agent-loop.ts:193",
+      "note": "streamAssistantResponse converts AgentMessage[] to provider Message[] and calls streamSimple (packages/ai/src/stream.ts:58), accumulating a partial AssistantMessage from start/text/toolcall deltas until done."
+    },
+    {
+      "id": "stop-check",
+      "label": "Any toolCall content?",
+      "kind": "decision",
+      "sourceRef": "packages/agent/src/agent-loop.ts:203",
+      "note": "After the stream completes, the loop filters the assistant message for content blocks of type 'toolCall'. None (and no queued messages) → the turn ends. An error/aborted stopReason also exits immediately at :196."
+    },
+    {
+      "id": "tool-dispatch",
+      "label": "executeToolCalls(batch)",
+      "kind": "tool",
+      "sourceRef": "packages/agent/src/agent-loop.ts:373",
+      "note": "executeToolCalls drives the whole batch of toolCall blocks, choosing parallel (default) or sequential execution if any tool declares executionMode 'sequential' or config.toolExecution is 'sequential'."
+    },
+    {
+      "id": "prepare",
+      "label": "Validate + beforeToolCall hook",
+      "kind": "approval",
+      "sourceRef": "packages/agent/src/agent-loop.ts:580",
+      "note": "prepareToolCall resolves the tool, validates arguments against its schema, then runs the optional config.beforeToolCall hook. There is NO built-in user-approval prompt; the hook (wired to the extension runner) may return {block, reason} to refuse a call. block/validation failure becomes an 'immediate' error tool result fed back to the model."
+    },
+    {
+      "id": "execute",
+      "label": "tool.execute()",
+      "kind": "execute",
+      "sourceRef": "packages/agent/src/agent-loop.ts:636",
+      "note": "executePreparedToolCall invokes tool.execute() with the abort signal and an onPartial callback that emits tool_execution_update events; the result is wrapped into a toolResult message and pushed back into context."
+    },
+    {
+      "id": "follow-up",
+      "label": "Follow-up messages?",
+      "kind": "decision",
+      "sourceRef": "packages/agent/src/agent-loop.ts:257",
+      "note": "When no more tool calls remain, the outer while(true) polls config.getFollowUpMessages. If any are queued, they become pendingMessages and the inner loop runs again; otherwise the loop breaks."
+    },
+    {
+      "id": "done",
+      "label": "agent_end",
+      "kind": "terminal",
+      "sourceRef": "packages/agent/src/agent-loop.ts:268",
+      "note": "The outer loop breaks and emits agent_end on the EventStream, which resolves with the accumulated AgentMessage[] for the run."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "llm" },
+    { "from": "llm", "to": "stop-check" },
+    { "from": "stop-check", "to": "tool-dispatch", "on": "tool_use" },
+    { "from": "stop-check", "to": "follow-up", "on": "end_turn" },
+    { "from": "tool-dispatch", "to": "prepare" },
+    { "from": "prepare", "to": "execute", "on": "allow" },
+    { "from": "prepare", "to": "llm", "on": "block", "label": "tool_result: error" },
+    { "from": "execute", "to": "prepare", "on": "more in batch", "label": "next tool" },
+    { "from": "execute", "to": "llm", "label": "tool_result" },
+    { "from": "follow-up", "to": "user-input", "on": "queued", "label": "inject pending" },
+    { "from": "follow-up", "to": "done", "on": "none" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with no tools",
+      "steps": ["user-input", "llm", "stop-check", "follow-up", "done"],
+      "note": "The assistant stream ends with no toolCall blocks; the inner loop exits, no follow-ups are queued, and agent_end fires after a single model call."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to edit a file",
+      "steps": ["user-input", "llm", "stop-check", "tool-dispatch", "prepare", "execute", "llm", "stop-check", "follow-up", "done"],
+      "note": "The model emits an edit toolCall, prepareToolCall validates args (and runs beforeToolCall, which by default does nothing unless an extension is installed), tool.execute applies the edit, the toolResult feeds back, and the model finishes."
+    },
+    {
+      "id": "denied-tool",
+      "title": "A tool call is blocked",
+      "steps": ["user-input", "llm", "stop-check", "tool-dispatch", "prepare", "llm", "stop-check", "follow-up", "done"],
+      "note": "pi has no interactive approval gate. A call is only refused if an extension's tool_call handler returns {block: true} (runner.ts:819) or argument validation fails — prepareToolCall then returns an 'immediate' error toolResult (agent-loop.ts:599) that is fed back to the model instead of executing. Coarse-grained allow/denylists (agent-session.ts:171-173) also remove tools entirely before the model ever sees them; that filtering happens up front, not per call."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues several tool calls in one turn",
+      "steps": ["user-input", "llm", "stop-check", "tool-dispatch", "prepare", "execute", "prepare", "execute", "llm", "stop-check", "follow-up", "done"],
+      "note": "A single assistant turn emits multiple toolCall blocks; executeToolCallsParallel prepares each, runs them concurrently (or sequentially if any tool is sequential), preserves order, and returns the combined toolResults to the model."
+    }
+  ]
+}

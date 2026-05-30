@@ -1,0 +1,122 @@
+{
+  "harness": "code-puppy",
+  "displayName": "Code Puppy",
+  "language": "Python",
+  "repo": "https://github.com/mpfaffenberger/code_puppy",
+  "version": "ccde401a",
+  "loopStyle": "delegated to pydantic-ai Agent.run(); harness owns the outer REPL + retries",
+  "entrypoint": "code_puppy/agents/_runtime.py:349",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "Read user task (REPL)",
+      "kind": "input",
+      "sourceRef": "code_puppy/cli_runner.py:601",
+      "note": "The interactive while-True REPL (cli_runner.py:584) reads a task via prompt_toolkit, then dispatches it as an asyncio task to agent.run_with_mcp (cli_runner.py:1025)."
+    },
+    {
+      "id": "run-with-mcp",
+      "label": "run_with_mcp orchestration",
+      "kind": "execute",
+      "sourceRef": "code_puppy/agents/_runtime.py:287",
+      "note": "Harness-owned wrapper: sanitizes the prompt, fires user_prompt_submit hooks, builds the pydantic-ai agent if needed, prepends the system prompt on turn 1, and installs signal/key-listener cancellation around the run."
+    },
+    {
+      "id": "agent-run",
+      "label": "pydantic_agent.run() [framework loop]",
+      "kind": "llm",
+      "sourceRef": "code_puppy/agents/_runtime.py:349",
+      "note": "The ACTUAL model-call/tool-dispatch/feed-results loop lives INSIDE pydantic-ai's Agent.run (pydantic-ai-slim 1.56.0), not in code_puppy. The harness calls it once per turn with message_history, usage_limits, and an event_stream_handler; pydantic-ai internally calls the model, dispatches @agent.tool functions, appends ToolReturnParts, and repeats until the model stops requesting tools."
+    },
+    {
+      "id": "tool-call",
+      "label": "Dispatch @agent.tool function",
+      "kind": "tool",
+      "sourceRef": "code_puppy/tools/file_modifications.py:651",
+      "note": "Tools are plain Python functions registered on the pydantic-ai Agent via the @agent.tool decorator (register_tools_for_agent, tools/__init__.py:253). pydantic-ai generates JSON schema from the function signature, matches the model's structured tool call by name, validates args, and invokes the function with a RunContext. The protocol is OpenAI/Anthropic function-calling normalized by pydantic-ai — code_puppy never parses tool_use blocks itself."
+    },
+    {
+      "id": "permission",
+      "label": "on_file_permission / shell approval",
+      "kind": "approval",
+      "sourceRef": "code_puppy/tools/file_modifications.py:455",
+      "note": "Approval is per-tool and in-band, not a loop-level gate. Mutating file tools call the on_file_permission callback (callbacks.py:345), which the file_permission_handler plugin routes to get_user_approval (register_callbacks.py:239). Shell commands prompt directly via get_user_approval_async (command_runner.py:1168). YOLO mode (get_yolo_mode) and non-interactive stdin short-circuit the prompt."
+    },
+    {
+      "id": "execute",
+      "label": "Run the tool body",
+      "kind": "execute",
+      "sourceRef": "code_puppy/tools/file_modifications.py:465",
+      "note": "On approval the tool performs its effect (write/replace/delete, shell exec, read, grep) and returns a dict/typed result. pydantic-ai turns that return value into a tool result and feeds it back into the same Agent.run loop."
+    },
+    {
+      "id": "deny-result",
+      "label": "Return rejection result",
+      "kind": "execute",
+      "sourceRef": "code_puppy/tools/file_modifications.py:463",
+      "note": "On denial the tool returns a rejection dict (_create_rejection_response) — optionally carrying the user's feedback text (USER REJECTED: ...) — instead of raising. pydantic-ai feeds that string back to the model as the tool result, so the turn continues with the effect withheld."
+    },
+    {
+      "id": "result-render",
+      "label": "Stream / render assistant text",
+      "kind": "execute",
+      "sourceRef": "code_puppy/agents/event_stream_handler.py:95",
+      "note": "When streaming is enabled, the event_stream_handler consumes pydantic-ai PartStart/PartDelta/PartEnd events and renders text/thinking/tool activity live; a StreamingTextDetector falls back to a one-shot render if nothing streamed (_runtime.py:437)."
+    },
+    {
+      "id": "steer-retry",
+      "label": "Drain steers / hook retries",
+      "kind": "decision",
+      "sourceRef": "code_puppy/agents/_runtime.py:404",
+      "note": "After Agent.run returns, a harness-level while-True drains queued 'steer' injections and plugin-requested hook retries, issuing follow-up Agent.run calls (capped) before the turn is considered done. This is code_puppy's own outer loop around the framework's inner loop."
+    },
+    {
+      "id": "done",
+      "label": "Turn complete",
+      "kind": "terminal",
+      "sourceRef": "code_puppy/agents/_runtime.py:573",
+      "note": "run_with_mcp awaits the agent task, extracts the response text, prunes interrupted tool calls from history, tears down the key listener/signal handler, and returns control to the REPL for the next user task."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "run-with-mcp" },
+    { "from": "run-with-mcp", "to": "agent-run" },
+    { "from": "agent-run", "to": "tool-call", "on": "tool_call" },
+    { "from": "agent-run", "to": "result-render", "on": "no tool call", "label": "assistant text" },
+    { "from": "tool-call", "to": "permission", "on": "mutating tool" },
+    { "from": "tool-call", "to": "execute", "on": "read-only / YOLO", "label": "no prompt" },
+    { "from": "permission", "to": "execute", "on": "allow" },
+    { "from": "permission", "to": "deny-result", "on": "deny", "label": "rejection result" },
+    { "from": "execute", "to": "agent-run", "label": "tool result" },
+    { "from": "deny-result", "to": "agent-run", "label": "tool result: rejected" },
+    { "from": "result-render", "to": "steer-retry" },
+    { "from": "steer-retry", "to": "agent-run", "on": "steer / hook retry", "label": "follow-up run" },
+    { "from": "steer-retry", "to": "done", "on": "no more" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with no tools",
+      "steps": ["user-input", "run-with-mcp", "agent-run", "result-render", "steer-retry", "done"],
+      "note": "pydantic-ai's Agent.run returns after a single model call with no tool calls; the harness renders the streamed text and, with no steers/retries queued, completes the turn."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to edit a file",
+      "steps": ["user-input", "run-with-mcp", "agent-run", "tool-call", "permission", "execute", "agent-run", "result-render", "steer-retry", "done"],
+      "note": "The model emits a function call for a file-edit tool; pydantic-ai dispatches it, the tool calls on_file_permission, the user approves, the write runs, the result feeds back into the same Agent.run, and the model finishes."
+    },
+    {
+      "id": "denied-tool",
+      "title": "User denies a file edit",
+      "steps": ["user-input", "run-with-mcp", "agent-run", "tool-call", "permission", "deny-result", "agent-run", "result-render", "steer-retry", "done"],
+      "note": "Denial is handled inside the tool: it returns a rejection result (optionally with feedback) rather than raising. pydantic-ai feeds that string back to the model as the tool result, so the model continues the turn with the edit withheld. There is no loop-level deny path — it is just an ordinary tool return."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues several tool calls",
+      "steps": ["user-input", "run-with-mcp", "agent-run", "tool-call", "permission", "execute", "tool-call", "permission", "execute", "agent-run", "result-render", "steer-retry", "done"],
+      "note": "pydantic-ai dispatches multiple tool calls within one Agent.run; each mutating tool independently invokes its own approval prompt (serialized by the module-level approval locks in tools/common.py), then all tool results feed back to the model."
+    }
+  ]
+}

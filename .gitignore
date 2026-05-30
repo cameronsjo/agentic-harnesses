@@ -1,0 +1,18 @@
+# Cloned harness sources — analyzed in place, never committed (see docs/methodology.md)
+sources/
+
+# Web visualizer build artifacts
+site/node_modules/
+site/dist/
+site/.vite/
+
+# Node / tooling
+node_modules/
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp

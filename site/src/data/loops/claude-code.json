@@ -1,0 +1,97 @@
+{
+  "harness": "claude-code",
+  "displayName": "Claude Code",
+  "language": "TypeScript",
+  "repo": "https://github.com/ponponon/claude_code_src",
+  "version": "2.1.88 (source-map recovery)",
+  "loopStyle": "async-generator streaming loop (queryLoop, while(true))",
+  "entrypoint": "src/query.ts:241",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "User message",
+      "kind": "input",
+      "sourceRef": "src/QueryEngine.ts:560",
+      "note": "messagesFromUserInput are normalized and enter the engine; queryLoop is invoked with the conversation so far."
+    },
+    {
+      "id": "llm",
+      "label": "Stream model response",
+      "kind": "llm",
+      "sourceRef": "src/query.ts:659",
+      "note": "callModel streams the assistant turn. tool_use blocks are accumulated into toolUseBlocks as they arrive (stop_reason='tool_use' is treated as unreliable)."
+    },
+    {
+      "id": "stop-check",
+      "label": "Any tool_use blocks?",
+      "kind": "decision",
+      "sourceRef": "src/query.ts:1417",
+      "note": "After the stream completes, branch on whether the assistant emitted tool calls. No tool calls → the turn ends."
+    },
+    {
+      "id": "tool-dispatch",
+      "label": "runTools(batch)",
+      "kind": "tool",
+      "sourceRef": "src/query.ts:1382",
+      "note": "runTools receives the whole batch of tool_use blocks plus canUseTool and the tool context, and drives execution."
+    },
+    {
+      "id": "approval",
+      "label": "canUseTool gate",
+      "kind": "approval",
+      "sourceRef": "src/QueryEngine.ts:252",
+      "note": "canUseTool is wrapped to record permission denials. Depending on the permission mode it may auto-allow or prompt the user; a denial becomes an error tool_result fed back to the model."
+    },
+    {
+      "id": "execute",
+      "label": "Execute tool",
+      "kind": "execute",
+      "sourceRef": "src/query.ts:1384",
+      "note": "The streaming executor runs the allowed tool and yields a tool_result. The executor checks the abort signal so an interrupt produces synthetic results rather than orphaned tool_use blocks."
+    },
+    {
+      "id": "done",
+      "label": "end_turn",
+      "kind": "terminal",
+      "sourceRef": "src/query.ts:1728",
+      "note": "With no tool calls to run, the while(true) loop completes and queryLoop returns a terminal value for this turn."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "llm" },
+    { "from": "llm", "to": "stop-check" },
+    { "from": "stop-check", "to": "tool-dispatch", "on": "tool_use" },
+    { "from": "stop-check", "to": "done", "on": "end_turn" },
+    { "from": "tool-dispatch", "to": "approval" },
+    { "from": "approval", "to": "execute", "on": "allow" },
+    { "from": "approval", "to": "llm", "on": "deny", "label": "tool_result: error" },
+    { "from": "execute", "to": "tool-dispatch", "on": "more in batch", "label": "next tool" },
+    { "from": "execute", "to": "llm", "label": "tool_result" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with no tools",
+      "steps": ["user-input", "llm", "stop-check", "done"],
+      "note": "The assistant stream ends with end_turn and no tool_use blocks, so the loop exits after a single model call."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to edit a file",
+      "steps": ["user-input", "llm", "stop-check", "tool-dispatch", "approval", "execute", "llm", "stop-check", "done"],
+      "note": "Model requests an edit tool, canUseTool allows it (or the user approves), the edit runs, the tool_result feeds back, and the model finishes."
+    },
+    {
+      "id": "denied-tool",
+      "title": "User denies a tool call",
+      "steps": ["user-input", "llm", "stop-check", "tool-dispatch", "approval", "llm", "stop-check", "done"],
+      "note": "canUseTool records a denial; an error tool_result is fed back to the model, which then completes the turn without the tool's effect."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues several tool calls in one turn",
+      "steps": ["user-input", "llm", "stop-check", "tool-dispatch", "approval", "execute", "tool-dispatch", "approval", "execute", "llm", "stop-check", "done"],
+      "note": "A single assistant turn emits multiple tool_use blocks; runTools drives them as a batch, each gated by canUseTool, before the combined tool_results return to the model."
+    }
+  ]
+}

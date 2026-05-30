@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cameronsjo/agentic-harnesses/loop-spec.schema.json",
+  "title": "Agentic Harness Loop Spec",
+  "description": "A source-grounded structured description of one coding harness's agent loop. Drives both the prose docs and the interactive visualizer.",
+  "type": "object",
+  "required": ["harness", "displayName", "language", "loopStyle", "nodes", "edges", "scenarios"],
+  "additionalProperties": false,
+  "properties": {
+    "harness": {
+      "type": "string",
+      "description": "Stable slug, matches the filename and docs/harnesses/<harness>.md.",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "displayName": { "type": "string" },
+    "language": { "type": "string", "description": "Implementation language, e.g. 'TypeScript' or 'Python'." },
+    "repo": { "type": "string", "description": "Source repository URL." },
+    "version": { "type": "string", "description": "Version or revision analyzed." },
+    "loopStyle": {
+      "type": "string",
+      "description": "One-line characterization of the loop architecture, e.g. 'async-generator streaming'."
+    },
+    "entrypoint": {
+      "type": "string",
+      "description": "Optional file:line of the loop entrypoint in the harness source."
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "label": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["input", "llm", "tool", "approval", "execute", "decision", "terminal"],
+            "description": "Fixed vocabulary so node types are comparable and colorable across harnesses."
+          },
+          "sourceRef": {
+            "type": "string",
+            "description": "path:line into the harness source implementing this step. Valid at the pinned revision in docs/methodology.md.",
+            "pattern": "^.+:[0-9]+$"
+          },
+          "note": { "type": "string", "description": "Short explanation of what happens at this node." }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string", "description": "Source node id." },
+          "to": { "type": "string", "description": "Target node id." },
+          "on": { "type": "string", "description": "Condition that selects this edge, e.g. 'tool_use', 'end_turn', 'allow', 'deny'." },
+          "label": { "type": "string", "description": "Optional display label, e.g. 'tool_result'." }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Walkthroughs animated by the visualizer. Scenario ids must stay in parity across all harnesses.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "steps"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": ["edit-file", "denied-tool", "multi-tool", "plain-answer"],
+            "description": "Shared scenario vocabulary — the basis of the side-by-side comparison view."
+          },
+          "title": { "type": "string" },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "description": "Ordered list of node ids the loop traverses for this scenario."
+          },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}
