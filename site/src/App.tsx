@@ -16,20 +16,35 @@ export function App() {
   const spec = specs.find((s) => s.harness === harness) ?? specs[0]
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <div className="title-block">
-          <h1>Agentic Harness Loops</h1>
-          <p className="subtitle">
-            How four coding agents run their loop, dispatch tools, and gate them — reconstructed from source.
-          </p>
+    <div className="app container--lg surface-tool">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+
+      <header className="masthead stack stack--sm">
+        <div className="masthead-top">
+          <p className="kicker t-label-sm">Four agentic coding harnesses · reconstructed from source</p>
+          <button className="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+            <span className="dot" />
+            <span data-theme-label>Dark</span>
+          </button>
         </div>
-        <button className="theme-toggle" data-theme-toggle aria-label="Toggle theme">
-          <span className="dot" />
-          <span data-theme-label>Dark</span>
-        </button>
+        <h1 className="masthead-title t-headline-md">Agentic Harness Loops</h1>
+        <p className="lede t-body-lg">
+          Four coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
+          <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
+          <b className="anchor">gates the dangerous ones</b> — all{' '}
+          <b className="anchor">reconstructed from pinned source</b>.
+        </p>
+        <div className="masthead-meta cluster" aria-label="About this build">
+          <span className="badge badge--ghost">v1</span>
+          <span className="badge badge--ghost">{specs.length} harnesses</span>
+          <span className="badge badge--ghost">source-pinned</span>
+          <span className="badge badge--ghost">WCAG AAA</span>
+        </div>
       </header>
 
+      <main id="main" className="stack stack--lg">
       <nav className="view-nav cluster" role="tablist" aria-label="View">
         <button
           role="tab"
@@ -52,7 +67,9 @@ export function App() {
       <Legend />
 
       {specs.length === 0 ? (
-        <p className="empty">No loop specs found. Add files under <code>src/data/loops/</code>.</p>
+        <p className="empty">
+          <b className="anchor">No loop specs found.</b> Add files under <code>src/data/loops/</code>.
+        </p>
       ) : view === 'compare' ? (
         <ScenarioCompare />
       ) : (
@@ -83,9 +100,11 @@ export function App() {
         </section>
       )}
 
+      </main>
+
       <footer className="app-footer">
-        Reconstructed from pinned sources · every node cites <code>file:line</code> · styled with the Artificer
-        design system.
+        Every node <b className="anchor">cites <code>file:line</code></b> in <b className="anchor">pinned source</b>.
+        Built with the <b className="anchor">Artificer design system</b>.
       </footer>
     </div>
   )
@@ -96,8 +115,8 @@ function Legend() {
     <div className="legend cluster" aria-label="Node kinds">
       {KINDS.map((k) => (
         <span key={k} className="legend-item">
-          <span className="legend-chip" style={{ background: KIND_COLOR[k] }} />
-          {KIND_LABEL[k]}
+          <span className="dot" style={{ background: KIND_COLOR[k] }} />
+          <span className="t-label-sm">{KIND_LABEL[k]}</span>
         </span>
       ))}
     </div>

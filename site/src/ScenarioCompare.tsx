@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { specs, sharedScenarios } from './data'
+import { Anchored } from './Anchored'
 import { LoopGraph, type ActiveEdge } from './LoopGraph'
 
 const STEP_MS = 950
@@ -79,7 +80,9 @@ export function ScenarioCompare() {
         </div>
       </div>
 
-      <p className="scenario-title">{sharedScenarios.find((s) => s.id === scenarioId)?.title}</p>
+      <p className="scenario-title">
+        <Anchored text={sharedScenarios.find((s) => s.id === scenarioId)?.title ?? ''} />
+      </p>
 
       <div className="compare-grid">
         {columns.map(({ spec, sc }) => {
@@ -90,7 +93,7 @@ export function ScenarioCompare() {
           const node = spec.nodes.find((n) => n.id === activeNodeId)
           const done = step >= sc.steps.length - 1
           return (
-            <div key={spec.harness} className={`compare-col ${done ? 'compare-col--done' : ''}`}>
+            <div key={spec.harness} className={`card compare-col ${done ? 'compare-col--done' : ''}`}>
               <header className="compare-col-head">
                 <b>{spec.displayName}</b>
                 <span className="lang-badge">{spec.language}</span>
