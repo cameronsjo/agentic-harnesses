@@ -15,6 +15,10 @@ export function ScenarioCompare() {
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
 
+  // The "turn complete" caption and the play→end latch (see the effects below).
+  const captionRef = useRef<HTMLSpanElement>(null)
+  const wasPlaying = useRef(false)
+
   // Per-harness resolved scenario for the current id.
   const columns = useMemo(
     () =>
@@ -48,8 +52,6 @@ export function ScenarioCompare() {
   // One whimsical operation for the whole comparison: every harness has reached
   // its terminal. Shimmer the caption once on the play→end edge — when the
   // global step first hits maxSteps-1 while playing — never on manual Step/Reset.
-  const captionRef = useRef<HTMLSpanElement>(null)
-  const wasPlaying = useRef(false)
   useEffect(() => {
     if (playing) wasPlaying.current = true
   }, [playing])

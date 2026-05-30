@@ -23,6 +23,10 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
 
+  // The "turn complete" caption and the play→end latch (see the effects below).
+  const captionRef = useRef<HTMLSpanElement>(null)
+  const wasPlaying = useRef(false)
+
   // Reset to the start whenever the scenario or harness changes.
   useEffect(() => {
     setStep(0)
@@ -49,8 +53,6 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   // Shimmer the caption once, but only when playback drove us to the end — not
   // on a manual Step/Reset. wasPlaying latches while playing so the play→end
   // edge can be told apart from a manual arrival.
-  const captionRef = useRef<HTMLSpanElement>(null)
-  const wasPlaying = useRef(false)
   useEffect(() => {
     if (playing) wasPlaying.current = true
   }, [playing])
