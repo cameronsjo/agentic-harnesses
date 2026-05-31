@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
@@ -90,6 +90,22 @@ export function App() {
   // Legend belongs to graph contexts; the wire view draws its own request anatomy.
   const showLegend = harness === null || activeTab !== 'wire'
 
+  // Roving-tabindex arrow nav for the view tablist (WAI-ARIA tabs, automatic
+  // activation): ←/→ cycle, Home/End jump to the ends, and focus follows selection.
+  const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    let next: number
+    const cur = availableTabs.indexOf(activeTab)
+    if (e.key === 'ArrowRight') next = (cur + 1) % availableTabs.length
+    else if (e.key === 'ArrowLeft') next = (cur - 1 + availableTabs.length) % availableTabs.length
+    else if (e.key === 'Home') next = 0
+    else if (e.key === 'End') next = availableTabs.length - 1
+    else return
+    e.preventDefault()
+    setTab(availableTabs[next])
+    const btns = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+    btns?.[next]?.focus()
+  }
+
   return (
     <div className="app container container--lg surface-tool" data-nav-open={navOpen ? '' : undefined}>
       <a className="skip-link" href="#main">
@@ -148,10 +164,14 @@ export function App() {
               {availableTabs.map((t) => (
                 <button
                   key={t}
+                  id={`tab-${t}`}
                   type="button"
                   role="tab"
                   aria-selected={activeTab === t}
+                  aria-controls="view-panel"
+                  tabIndex={activeTab === t ? 0 : -1}
                   onClick={() => setTab(t)}
+                  onKeyDown={onTabKeyDown}
                 >
                   {TAB_LABELS[t]}
                 </button>
@@ -168,31 +188,42 @@ export function App() {
             </p>
           ) : harness === null ? (
             <ScenarioCompare scenarioId={scenarioId} onScenarioChange={setScenarioId} />
-          ) : !spec ? (
-            <p className="empty">
-              <b className="anchor">Harness not found.</b>
-            </p>
-          ) : activeTab === 'hooks' ? (
-            <HooksView />
-          ) : activeTab === 'wire' ? (
-            <WireView />
-          ) : activeTab === 'sequence' ? (
-            <SequenceView spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
           ) : (
-            <>
-              {/* Harness-level metadata for the Loop view — the sidenav owns
-                  selection now, so this is just the badges + source-pinned repo link. */}
-              <div className="harness-meta">
-                <span className="lang-badge">{spec.language}</span>
-                <span className="loop-style">{spec.loopStyle}</span>
-                {spec.repo && (
-                  <a className="repo-link" href={spec.repo} target="_blank" rel="noreferrer">
-                    {spec.repo.replace('https://github.com/', '')}
-                  </a>
-                )}
-              </div>
-              <LoopPlayer spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
-            </>
+            // A harness is selected → the content region IS the active tab's panel.
+            // tabpanel needs no tabIndex: its views already contain focusable controls.
+            <div
+              id="view-panel"
+              role="tabpanel"
+              aria-labelledby={`tab-${activeTab}`}
+              className="stack stack--lg"
+            >
+              {!spec ? (
+                <p className="empty">
+                  <b className="anchor">Harness not found.</b>
+                </p>
+              ) : activeTab === 'hooks' ? (
+                <HooksView />
+              ) : activeTab === 'wire' ? (
+                <WireView />
+              ) : activeTab === 'sequence' ? (
+                <SequenceView spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+              ) : (
+                <>
+                  {/* Harness-level metadata for the Loop view — the sidenav owns
+                      selection now, so this is just the badges + source-pinned repo link. */}
+                  <div className="harness-meta">
+                    <span className="lang-badge">{spec.language}</span>
+                    <span className="loop-style">{spec.loopStyle}</span>
+                    {spec.repo && (
+                      <a className="repo-link" href={spec.repo} target="_blank" rel="noreferrer">
+                        {spec.repo.replace('https://github.com/', '')}
+                      </a>
+                    )}
+                  </div>
+                  <LoopPlayer spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+                </>
+              )}
+            </div>
           )}
         </main>
       </div>
