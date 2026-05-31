@@ -111,6 +111,19 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
     </svg>
   )
 
+  // Scenario picker + transport, shared by the inline controls bar and the modal side.
+  const controls = (
+    <>
+      <TabPicker
+        ariaLabel="Scenario"
+        items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
+        active={scenarioId}
+        onSelect={onScenarioChange}
+      />
+      <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
+    </>
+  )
+
   const messageCard = active && (
     <div className="node-card">
       <div className="node-card-head">
@@ -126,15 +139,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
 
   return (
     <section className="seq-view">
-      <div className="compare-controls">
-        <TabPicker
-          ariaLabel="Scenario"
-          items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
-          active={scenarioId}
-          onSelect={onScenarioChange}
-        />
-        <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
-      </div>
+      <div className="compare-controls">{controls}</div>
 
       <div className="seq-body">
         <div className="graph-pane">
@@ -161,13 +166,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
         <div className="graph-modal__layout">
           <div className="graph-modal__diagram">{diagram}</div>
           <aside className="graph-modal__side">
-            <TabPicker
-              ariaLabel="Scenario"
-              items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
-              active={scenarioId}
-              onSelect={onScenarioChange}
-            />
-            <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
+            {controls}
             {messageCard}
           </aside>
         </div>
