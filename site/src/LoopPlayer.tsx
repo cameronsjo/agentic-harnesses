@@ -78,11 +78,10 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         <div className="card graph-pane">
           <button
             type="button"
-            className="btn btn--ghost btn--icon graph-expand"
-            aria-label="Expand diagram"
+            className="btn btn--secondary graph-expand"
             onClick={() => setExpanded(true)}
           >
-            ⤢
+            <span aria-hidden="true">⤢</span> Expand
           </button>
           {graph}
         </div>

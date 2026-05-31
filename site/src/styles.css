@@ -334,7 +334,8 @@ body {
 }
 
 /* ---- expand-to-modal (GraphModal) ---- */
-/* Trigger parked in the graph pane's corner; dim until hover/focus. */
+/* Trigger parked in the graph pane's corner — always visible (.btn--secondary
+   gives it a solid chip so it reads as a control), just made compact. */
 .graph-pane {
   position: relative;
 }
@@ -343,12 +344,9 @@ body {
   top: var(--s-sm);
   right: var(--s-sm);
   z-index: 1;
-  opacity: 0.55;
-  transition: opacity var(--dur-fast) var(--ease);
-}
-.graph-pane:hover .graph-expand,
-.graph-expand:focus-visible {
-  opacity: 1;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
 }
 /* Large, near-fullscreen panel (Artificer .scrim/.modal supply the overlay + chrome). */
 .graph-modal {
@@ -382,12 +380,18 @@ body {
   align-items: start;
 }
 .graph-modal__diagram {
-  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
 }
-/* Scale the diagram up to fill the modal column (overrides the SVG's intrinsic
-   width/height attributes); aspect ratio held by the viewBox. */
+/* Fit the diagram WITHIN the modal (contain) rather than filling its width: cap
+   the height so a tall graph scales down to the viewport instead of forcing a
+   scroll, and clamp width so a wide one fits too. viewBox holds the aspect ratio. */
 .graph-modal__diagram svg {
-  width: 100%;
+  max-width: 100%;
+  max-height: 78vh;
+  width: auto;
   height: auto;
 }
 .graph-modal__side {
@@ -410,6 +414,10 @@ body {
   }
   .graph-modal__layout {
     grid-template-columns: 1fr;
+  }
+  /* Leave room for the stacked controls below the diagram on a phone. */
+  .graph-modal__diagram svg {
+    max-height: 58dvh;
   }
 }
 .inspector {
