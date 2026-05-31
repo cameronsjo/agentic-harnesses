@@ -212,18 +212,19 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, badges, onNodeClick 
             />
             {/* kind color chip on the left edge */}
             <rect x={nodeX} y={yTop(row)} width={6} height={NODE_H} rx={3} fill={color} />
-            <text
-              x={centerX + 3}
-              y={yMid(row)}
-              fill={active ? 'var(--fg)' : 'var(--dia-node-fg)'}
-              fontSize="13"
-              fontFamily="var(--font-mono)"
-              fontWeight={active ? 700 : 400}
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              {n.label}
-            </text>
+            {/* Label via foreignObject so it wraps INSIDE the box (SVG <text>
+                won't wrap): overflow-wrap breaks long identifiers like
+                run_conversation(user_message), and an explicit \n in the label
+                data hard-breaks into lines. */}
+            <foreignObject x={nodeX} y={yTop(row)} width={NODE_W} height={NODE_H}>
+              <div className={`loop-node-label${active ? ' loop-node-label--active' : ''}`}>
+                {n.label.split('\n').map((line, i) => (
+                  <span key={i} className="loop-node-line">
+                    {line}
+                  </span>
+                ))}
+              </div>
+            </foreignObject>
             {badge != null && badge > 0 && (
               <g transform={`translate(${nodeX + NODE_W - 8}, ${yTop(row) + 2})`}>
                 <circle r="10" fill="var(--accent-fill)" stroke="var(--accent-bright)" strokeWidth="1.5" />
