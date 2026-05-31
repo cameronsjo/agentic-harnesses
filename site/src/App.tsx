@@ -239,11 +239,29 @@ export function App() {
         <HarnessNav harness={harness} onSelect={selectHarness} />
       </aside>
 
-      <footer className="app-footer">
-        Live repos (OpenCode · pi · code_puppy) <b className="anchor">cite <code>file:line</code></b> at{' '}
-        <b className="anchor">pinned SHAs</b>. Claude Code is from a{' '}
-        <b className="anchor">leaked/recovered snapshot</b> — file-level refs, <b className="anchor">leak + speculation</b>.
-        Built with the <b className="anchor">Artificer design system</b>.
+      <footer className="app-footer stack stack--sm">
+        <p>
+          <b className="anchor">Independent &amp; unofficial.</b> Every harness here is a
+          reconstruction. The public ones <b className="anchor">cite <code>file:line</code></b> at
+          a <b className="anchor">pinned SHA</b>; Claude Code is pieced together from a{' '}
+          <b className="anchor">recovered snapshot</b> (leak&nbsp;+&nbsp;speculation). Reconstructions
+          can be incomplete, simplified, or out of date, and may not match current behavior.
+        </p>
+        <p>
+          Built with <b className="anchor">Claude</b> and <b className="anchor">Claude&nbsp;Code</b>, on
+          the <b className="anchor">Artificer design system</b>. In the interest of full disclosure:
+          this was written by — and with — a genuine Claude&nbsp;Code partisan. The diagrams still
+          aim to treat every harness on equal terms. Spot a bias or an error?{' '}
+          <a className="repo-link" href="https://github.com/cameronsjo/agentic-harnesses/issues">
+            Open an issue
+          </a>.
+        </p>
+        <p className="t-label-sm footer-fine">
+          No affiliation with, sponsorship by, or endorsement from any project shown. The author
+          works at the same company as Code&nbsp;Puppy&rsquo;s maintainer but does not work on
+          Code&nbsp;Puppy, and has no other ties to the harnesses here. Project names and marks
+          belong to their respective owners.
+        </p>
       </footer>
     </div>
   )

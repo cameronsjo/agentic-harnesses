@@ -489,6 +489,16 @@ body {
   font-family: var(--font-sans);
   font-size: 0.82rem;
 }
+/* The stack utility owns vertical rhythm; drop default <p> margins and cap the
+   measure so the disclaimer stays readable. The fine-print line sits quieter. */
+.app-footer p {
+  margin: 0;
+  max-width: 78ch;
+  line-height: 1.5;
+}
+.footer-fine {
+  opacity: 0.8;
+}
 
 /* Tablet breakpoint (matches Artificer --bp-tablet: 800px). The persistent
    sidenav yields to the drawer, and the two-pane inspectors stack — aligned so
