@@ -43,7 +43,22 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
     }
   }, [atEnd])
 
-  // Reused inline and in the expand modal — the diagram and the live node card.
+  // Reused inline and in the expand modal — the scenario header (picker + title),
+  // the diagram, and the live node card. The picker drives the lifted scenarioId,
+  // so the inline and modal copies stay in sync no matter which one you click.
+  const scenarioHeader = (
+    <>
+      <TabPicker
+        ariaLabel="Scenarios"
+        items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
+        active={scenarioId}
+        onSelect={(id) => onScenarioChange?.(id)}
+      />
+      <p className="scenario-title">
+        <Anchored text={sc.title} />
+      </p>
+    </>
+  )
   const graph = <LoopGraph spec={spec} activeNodeId={activeNodeId} activeEdge={activeEdge} />
   const nodeCard = node && (
     <div className="card card--active node-card">
@@ -63,16 +78,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
   return (
     <div className="player">
-      <TabPicker
-        ariaLabel="Scenarios"
-        items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
-        active={scenarioId}
-        onSelect={(id) => onScenarioChange?.(id)}
-      />
-
-      <p className="scenario-title">
-        <Anchored text={sc.title} />
-      </p>
+      {scenarioHeader}
 
       <div className="player-body">
         <div className="card graph-pane">
@@ -112,15 +118,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         <div className="graph-modal__layout">
           <div className="graph-modal__diagram">{graph}</div>
           <aside className="graph-modal__side">
-            <TabPicker
-              ariaLabel="Scenarios"
-              items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
-              active={scenarioId}
-              onSelect={(id) => onScenarioChange?.(id)}
-            />
-            <p className="scenario-title">
-              <Anchored text={sc.title} />
-            </p>
+            {scenarioHeader}
             <TransportBar player={player} playLabel="Play" total={sc.steps.length} counterLabel="step" />
             {nodeCard}
           </aside>
