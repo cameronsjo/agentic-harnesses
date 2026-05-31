@@ -126,7 +126,7 @@ export function App() {
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={navOpen}
           aria-controls="nav-drawer"
-          onClick={() => setNavOpen(true)}
+          onClick={() => setNavOpen((v) => !v)}
         >
           <i data-icon="menu" />
         </button>
