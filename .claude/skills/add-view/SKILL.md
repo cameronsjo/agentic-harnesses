@@ -19,6 +19,7 @@ This is the heart of the skill. The infrastructure already exists — a new view
 | Reset / Play·Pause·Replay / Step buttons + counter | `<TransportBar player={...} playLabel counterLabel total />` | `site/src/controls.tsx` |
 | A row of pill tabs (harness / scenario / mode picker) | `<TabPicker items active onSelect ariaLabel className? />` | `site/src/controls.tsx` |
 | Node/edge graph of a loop spec | `<LoopGraph spec activeNodeId activeEdge badges? onNodeClick? />` | `site/src/LoopGraph.tsx` |
+| Enlarge a diagram to a modal | `<ExpandButton onClick />` in the `.graph-pane`, paired with `<GraphModal open onClose title diagram side />` (it owns the two-column `diagram \| side` shell) | `site/src/controls.tsx`, `site/src/GraphModal.tsx` |
 | Active-edge helper for a step transition | `edgeBetween(fromId, toId)` | `site/src/player.ts` |
 | The loaded specs / lookup / shared scenarios | `specs`, `specByHarness`, `scenario`, `sharedScenarios` | `site/src/data.ts` |
 
@@ -64,7 +65,8 @@ Confirm: the new tab renders, the transport controls drive it, light/dark both l
 
 ## Anti-patterns
 
-- **Re-implementing the transport bar / tab row / timer.** Reuse `controls.tsx` + `player.ts`.
+- **Re-implementing the transport bar / tab row / timer / expand button.** Reuse `controls.tsx` (`TransportBar`, `TabPicker`, `ExpandButton`) + `player.ts`.
+- **Hand-building the expand-modal layout.** `GraphModal` owns the `diagram | side` shell — pass the two fragments as props, don't re-type `.graph-modal__layout`.
 - **Hardcoding harness facts in the component.** Back it with a JSON spec or a pure projector.
 - **Static SVG marker ids.** Namespace per instance or diagrams collide.
 - **Raw hex / bespoke spacing / one-off durations.** Use Artificer tokens.

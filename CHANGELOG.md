@@ -16,6 +16,9 @@ All notable changes to this project are documented here. Format loosely follows
 - Claude Code deep dives: `docs/wire.md` (request/response, prompt caching, system prompt, CLAUDE.md) and `docs/claude-code-events.md` (27 lifecycle events, hook config + control-flow contract).
 - Visualizer views: **Hooks & events** (lifecycle hooks overlaid on the Claude Code loop) and **Across the wire** (request assembly + streamed response with cache breakpoints, plus a **curl walkthrough** mode that hand-runs the round-trips).
 - **Sequence** view: loop scenarios projected as an animated sequence diagram across User · Agent · Model · Tool lifelines, for any harness.
+- **Expandable diagrams:** Loop, Sequence, and Hooks each enlarge to a modal (shared `GraphModal` + `ExpandButton`), mobile-friendly as a full-screen sheet, with the view's controls/inspector carried into the enlarged view.
+- **Disclaimer footer:** independence/provenance, attribution, a Claude Code bias disclosure, and a no-affiliation legal notice — a two-column band with full-width fine print.
+- Two handoff docs: `docs/artificer-spa-consumer-brief.md` (consuming Artificer in a React SPA) and `docs/disclaimer-footer-pattern.md` (the honest-footer content + layout pattern).
 - Claude Code references are file-level only and framed as leak + speculation (the source is a leaked/recovered snapshot); the three live repos keep reproducible `path:line` refs at pinned SHAs.
 
 ### Changed
