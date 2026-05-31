@@ -24,3 +24,13 @@ feedback issue filed upstream.
 - **Decision:** Map `.sidenav` → harness selection (scales vertically; rail/drawer on mobile), `.tabs` → view, `.appbar` → brand/theme. Hooks/Wire become Claude-Code-pinned tabs. (Topology is product-specific — explicitly *not* upstreamed.)
 - **Wished existed:** a vendorable `primitives.json` / `CHEATSHEET.md` riding alongside the runtime files like `tokens.json` does.
 - **Related cluster:** #28 (SPA consumption contract), #35 (provenance contract).
+
+## 2026-05-31 — nav refactor: `.sidenav`/`.nav-drawer` assume `<a>` nav
+
+- **Upstream issue:** cameronsjo/artificer-design-system#79
+- **Type:** gap (×2), Lane 3.
+- **Pivot:** Re-platformed nav onto v0.10 primitives — harness → `.sidenav`, view → `.tabs`, chrome → `.appbar`.
+- **Friction:** `.sidenav` styles only `.sidenav a` (`:1053`), but an SPA section-switch is a `<button>`, so every sidenav item got zero styling. Replicated the link grammar (resting/hover/`:focus-visible`/`[aria-current=page]` rail) against `.sidenav button` in `site/src/styles.css`. Note the asymmetry: `.tabs` already styles `button, a` (`:1141`); `.sidenav` doesn't.
+- **Second gap:** `.nav-drawer` stays in the DOM off-canvas with no closed-state focus handling, so its buttons stayed tab-reachable (and duplicated the persistent sidenav on desktop). Toggle `inert` imperatively in `App.tsx` (closed ⇒ inert, open ⇒ `ArtificerFocus.trap`).
+- **Wished existed:** widen `.sidenav` selectors to `a, button` (mirror `.tabs`), plus a drawer-pattern note on closed-state `inert`/`hidden`.
+- **Don't upstream:** sticky offset `top: calc(56px + var(--s-md))` (app-specific appbar height); harness/Claude-Code-pinned tab logic (product topology).

@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Format loosely follows
 ## [Unreleased]
 
 ### Added
+- Four new harnesses onboarded (4 → 8): **Claw Code** (Rust), **claux** (Rust), **Hermes Agent** (Python), **llm-tui** (Rust) — loop specs, profiles, and matrix rows/columns, all source-grounded at pinned SHAs. Documented two **exclusions** (`llm-mux`, `openclaw`) in `docs/methodology.md` for lacking a coding loop of their own.
 - Repo scaffold: README, LICENSE (MIT), CONTRIBUTING, docs structure, `.gitignore`.
 - Pinned harness sources (gitignored) for analysis: Claude Code (v2.1.88 recovery),
   OpenCode, pi, code_puppy. SHAs recorded in `docs/methodology.md`.

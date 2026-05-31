@@ -1,0 +1,121 @@
+{
+  "harness": "claw-code",
+  "displayName": "Claw Code",
+  "language": "Rust",
+  "repo": "https://github.com/ultraworkers/claw-code",
+  "version": "4d3dc5b8 (analyzed revision)",
+  "loopStyle": "Synchronous turn loop (ConversationRuntime::run_turn — loop{} over api_client.stream, capped by max_iterations); each model-requested tool runs PreToolUse hook → mode-based permission policy (read-only / workspace-write / danger-full-access / prompt / allow) → execute → PostToolUse hook",
+  "entrypoint": "rust/crates/runtime/src/conversation.rs:318",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "run_turn(user_input)",
+      "kind": "input",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:336",
+      "note": "**ConversationRuntime::run_turn** records the turn and pushes the user text onto the session (conversation.rs:337). If the session was compacted, a **session-health probe** runs first (conversation.rs:326). The `claw` REPL (rusty-claude-cli) drives this with an interactive PermissionPrompter."
+    },
+    {
+      "id": "loop-step",
+      "label": "Turn loop (loop {})",
+      "kind": "decision",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:347",
+      "note": "The turn loop. `iterations += 1`; if it exceeds **max_iterations** the turn fails (conversation.rs:349). Each pass builds an ApiRequest from the system prompt + full message history and calls the model. Auto-compaction is checked every iteration (conversation.rs:403)."
+    },
+    {
+      "id": "llm",
+      "label": "api_client.stream",
+      "kind": "llm",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:361",
+      "note": "**api_client.stream(request)** runs one streaming generation via the `api` crate (Anthropic / OpenAI-compatible / xAI). The AssistantEvent stream is folded by **build_assistant_message** (conversation.rs:368) into content blocks + usage + prompt-cache telemetry."
+    },
+    {
+      "id": "assistant",
+      "label": "Extract ToolUse blocks",
+      "kind": "decision",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:380",
+      "note": "The assistant message is pushed to the session; **pending_tool_uses** are filtered out of its `ToolUse` blocks (conversation.rs:380). If there are **none**, the loop breaks and the turn is complete (conversation.rs:407); otherwise each tool-use is processed in order."
+    },
+    {
+      "id": "pre-hook",
+      "label": "PreToolUse hook",
+      "kind": "decision",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:412",
+      "note": "Before permission, **run_pre_tool_use_hook** fires (conversation.rs:412). A hook can **rewrite the input**, supply a **permission override** (Allow / Deny / Ask), or **cancel/deny** the call outright (conversation.rs:421-441) — in which case it short-circuits to a denied tool result without consulting the policy."
+    },
+    {
+      "id": "approval",
+      "label": "PermissionPolicy.authorize",
+      "kind": "approval",
+      "sourceRef": "rust/crates/runtime/src/permissions.rs:181",
+      "note": "**authorize_with_context** resolves the outcome under a **PermissionMode** — `read-only`, `workspace-write`, `danger-full-access`, `prompt`, or `allow` (permissions.rs:9) — plus per-tool requirements and config rules (permissions.rs:181). In **prompt** mode it consults the interactive **PermissionPrompter** (permissions.rs:281), whose Allow/Deny decision becomes the outcome; **allow**/**danger-full-access** auto-allow; hook **Ask/Deny/Allow** overrides take precedence. Result is **Allow** or **Deny { reason }**."
+    },
+    {
+      "id": "execute",
+      "label": "tool_executor.execute (+PostToolUse)",
+      "kind": "execute",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:462",
+      "note": "On **Allow**, **tool_executor.execute(tool_name, input)** runs the tool (bash, file ops, glob/grep, MCP-bridged tools, etc.). A **PostToolUse** hook then runs (conversation.rs:475) — or a failure hook on error — and can mark the result an error and append feedback. The output becomes a tool_result."
+    },
+    {
+      "id": "denied",
+      "label": "Permission denied",
+      "kind": "decision",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:498",
+      "note": "A **Deny** (from the policy, a prompt rejection, or a PreToolUse hook) produces an **error tool_result** carrying the reason and any hook feedback (conversation.rs:498). The tool does not run; the error is fed back to the model and the loop continues."
+    },
+    {
+      "id": "tool-result",
+      "label": "Push tool_result",
+      "kind": "tool",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:505",
+      "note": "The result message (success or error) is pushed onto the session and recorded (conversation.rs:505). After all pending tool-uses are processed, control returns to the top of the loop, which re-prompts the model with the results in context."
+    },
+    {
+      "id": "done",
+      "label": "Turn complete (TurnSummary)",
+      "kind": "terminal",
+      "sourceRef": "rust/crates/runtime/src/conversation.rs:513",
+      "note": "When an assistant turn carried **no tool-use blocks**, the loop breaks and a **TurnSummary** (assistant messages, tool results, usage, prompt-cache events, auto-compaction) is returned (conversation.rs:513)."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "loop-step" },
+    { "from": "loop-step", "to": "llm", "on": "iteration ≤ max_iterations" },
+    { "from": "llm", "to": "assistant", "label": "AssistantEvent stream" },
+    { "from": "assistant", "to": "done", "on": "no tool_use" },
+    { "from": "assistant", "to": "pre-hook", "on": "tool_use present" },
+    { "from": "pre-hook", "to": "approval", "on": "not denied by hook" },
+    { "from": "pre-hook", "to": "denied", "on": "hook cancel / deny / fail" },
+    { "from": "approval", "to": "execute", "on": "Allow" },
+    { "from": "approval", "to": "denied", "on": "Deny / prompt reject" },
+    { "from": "execute", "to": "tool-result", "label": "output" },
+    { "from": "denied", "to": "tool-result", "label": "error result" },
+    { "from": "tool-result", "to": "loop-step", "on": "re-prompt with results" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with **no tools**",
+      "steps": ["user-input", "loop-step", "llm", "assistant", "done"],
+      "note": "The first assistant turn carries only text — no `ToolUse` blocks — so pending_tool_uses is empty, the loop breaks, and run_turn returns the TurnSummary."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to **edit a file**",
+      "steps": ["user-input", "loop-step", "llm", "assistant", "pre-hook", "approval", "execute", "tool-result", "loop-step", "llm", "assistant", "done"],
+      "note": "The model emits an edit/write tool-use. The PreToolUse hook passes; the permission policy authorizes it (auto in **allow** mode, or via the prompter in **prompt** mode). The tool runs, PostToolUse fires, the result is pushed, the loop re-prompts, and the model finishes."
+    },
+    {
+      "id": "denied-tool",
+      "title": "**Tool call is denied**",
+      "steps": ["user-input", "loop-step", "llm", "assistant", "pre-hook", "approval", "denied", "tool-result", "loop-step", "llm", "assistant", "done"],
+      "note": "The policy returns **Deny** — because the mode/rules forbid the tool, the interactive prompter rejected it, or (equivalently) a PreToolUse hook denied it. An error tool_result with the reason is fed back; the model adapts on the next turn and finishes."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues **several tool calls**",
+      "steps": ["user-input", "loop-step", "llm", "assistant", "pre-hook", "approval", "execute", "tool-result", "pre-hook", "approval", "execute", "tool-result", "loop-step", "llm", "assistant", "done"],
+      "note": "One assistant turn carries multiple `ToolUse` blocks. claw-code processes them **sequentially** in a `for` loop (conversation.rs:411): each runs its own PreToolUse hook, permission check, execution, and PostToolUse hook before the next. All results are pushed, then the loop re-prompts and the model finishes."
+    }
+  ]
+}

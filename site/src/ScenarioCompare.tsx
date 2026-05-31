@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { specs, sharedScenarios } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
 import { edgeBetween, usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
 
-/** The headline feature: every harness runs the SAME scenario, stepped in lockstep. */
-export function ScenarioCompare() {
-  const [scenarioId, setScenarioId] = useState(sharedScenarios[0]?.id ?? 'edit-file')
+interface Props {
+  scenarioId: string
+  onScenarioChange: (id: string) => void
+}
 
+/** The headline feature: every harness runs the SAME scenario, stepped in lockstep. */
+export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
   // The "turn complete" caption and the play→end latch (see the effects below).
   const captionRef = useRef<HTMLSpanElement>(null)
   const wasPlaying = useRef(false)
@@ -47,7 +50,7 @@ export function ScenarioCompare() {
           ariaLabel="Scenario"
           items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
           active={scenarioId}
-          onSelect={setScenarioId}
+          onSelect={onScenarioChange}
         />
         <TransportBar player={player} playLabel="Play all" total={maxSteps} counterLabel="step" />
       </div>

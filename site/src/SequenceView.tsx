@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { specs, sharedScenarios } from './data'
+import { useMemo } from 'react'
+import { sharedScenarios } from './data'
+import type { LoopSpec } from './types'
 import { KIND_COLOR } from './types'
 import { usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
@@ -19,12 +20,14 @@ const LANE_X = Object.fromEntries(
 ) as Record<Participant, number>
 const laneX = (p: Participant) => LANE_X[p]
 
-/** A message-passing-over-time view of a loop scenario: lifelines + animated arrows. */
-export function SequenceView() {
-  const [harness, setHarness] = useState(specs[0]?.harness ?? '')
-  const [scenarioId, setScenarioId] = useState(sharedScenarios[0]?.id ?? 'edit-file')
+interface Props {
+  spec: LoopSpec
+  scenarioId: string
+  onScenarioChange: (id: string) => void
+}
 
-  const spec = specs.find((s) => s.harness === harness) ?? specs[0]
+/** A message-passing-over-time view of a loop scenario: lifelines + animated arrows. */
+export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
   const messages = useMemo(() => {
     const sc = spec?.scenarios.find((s) => s.id === scenarioId) ?? spec?.scenarios[0]
     return spec && sc ? projectScenario(spec, sc) : []
@@ -32,7 +35,7 @@ export function SequenceView() {
 
   // Floor at 1 so a scenario that projects to no messages can't underflow the timer
   // (mirrors ScenarioCompare's maxSteps guard). active stays undefined and renders nothing.
-  const player = usePlayerTimer(Math.max(1, messages.length), `${harness}:${scenarioId}`)
+  const player = usePlayerTimer(Math.max(1, messages.length), `${spec?.harness}:${scenarioId}`)
   const { step } = player
 
   if (!spec) return <p className="empty">No specs.</p>
@@ -40,25 +43,17 @@ export function SequenceView() {
   const active = messages[step]
   const height = TOP + messages.length * ROW_H + 20
   // Namespace the SVG markers per diagram, matching LoopGraph's url(#id) collision guard.
-  const mid = `${harness}-${scenarioId}`
+  const mid = `${spec.harness}-${scenarioId}`
 
   return (
     <section className="seq-view">
       <div className="compare-controls">
-        <div className="cluster" style={{ gap: 'var(--s-md)', flexWrap: 'wrap' }}>
-          <TabPicker
-            ariaLabel="Harness"
-            items={specs.map((s) => ({ id: s.harness, label: s.displayName }))}
-            active={spec.harness}
-            onSelect={setHarness}
-          />
-          <TabPicker
-            ariaLabel="Scenario"
-            items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
-            active={scenarioId}
-            onSelect={setScenarioId}
-          />
-        </div>
+        <TabPicker
+          ariaLabel="Scenario"
+          items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
+          active={scenarioId}
+          onSelect={onScenarioChange}
+        />
         <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
       </div>
 

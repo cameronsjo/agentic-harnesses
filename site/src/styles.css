@@ -13,26 +13,17 @@ body {
   padding-block: var(--s-lg) var(--s-2xl);
 }
 
-/* ---- masthead ---- */
-.masthead {
-  margin-bottom: var(--s-xl);
-}
-/* Wordmark on the left, theme toggle on the right — one row. */
-.masthead-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-md);
-}
-.masthead-title {
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-/* The wordmark shimmer (.whimsy) clips a flowing gradient to the glyphs; keep
-   it at the headline's own size and let it own the weight. */
-.masthead-title .whimsy {
+/* ---- appbar + intro band ---- */
+/* The appbar is Artificer chrome (.appbar / .appbar__brand.wordmark); only the
+   brand's whimsy shimmer needs a nudge — clip the flowing gradient at the
+   wordmark's own size and tracking rather than the .whimsy default. */
+.appbar__brand .whimsy {
   font-size: inherit;
   letter-spacing: inherit;
+}
+/* Short intro band below the appbar (lede + build badges). Not sticky. */
+.intro {
+  margin-block: var(--s-lg) var(--s-xl);
 }
 .lede {
   margin: 0;
@@ -43,9 +34,60 @@ body {
   margin-top: var(--s-xs);
 }
 
-/* ---- nav / tabs ---- */
-/* Vertical spacing between nav, legend, and content is owned by the
-   `main.stack stack--lg` wrapper — no ad-hoc margins here. */
+/* ---- app shell: [ sidenav | content ] ---- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--s-lg);
+  align-items: start;
+}
+/* The persistent sidenav rides alongside the scrolling content, clearing the
+   sticky appbar. Hidden below the tablet breakpoint — the drawer takes over. */
+.app-sidenav {
+  position: sticky;
+  top: calc(56px + var(--s-md));
+}
+
+/* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
+   switch SPA state rather than navigate, so they're <button>s. Replicate the
+   link grammar (resting / hover / focus / active rail) with the same tokens.
+   (Filed upstream via /artificer-feedback — sidenav assumes nav <a>.) */
+.sidenav button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  width: 100%;
+  min-height: 44px; /* 44px nav touch target (a11y) */
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--fg-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--t-label-md-size);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.sidenav button > .label {
+  flex: 1;
+  min-width: 0;
+}
+.sidenav button:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+.sidenav button:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--focus-offset-inset);
+}
+.sidenav button[aria-current="page"] {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent); /* active rail — no layout shift */
+}
+
+/* ---- scenario / transport pill tabs (TabPicker) ---- */
 .tab {
   border-radius: var(--radius-sm);
 }
@@ -260,25 +302,22 @@ body {
   font-size: 0.82rem;
 }
 
-@media (max-width: 860px) {
+/* Tablet breakpoint (matches Artificer --bp-tablet: 800px). The persistent
+   sidenav yields to the drawer, and the two-pane inspectors stack — aligned so
+   nav and content reflow at the same width. */
+@media (max-width: 800px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+  .app-sidenav {
+    display: none;
+  }
   .player-body {
     grid-template-columns: 1fr;
   }
   .inspector {
     position: static;
   }
-}
-
-/* ---- nav separator (Claude Code section) ---- */
-.nav-sep {
-  margin-left: var(--s-sm);
-  padding-left: var(--s-sm);
-  border-left: 1px solid var(--border);
-  color: var(--fg-secondary);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  align-self: center;
 }
 
 /* ---- hooks view ---- */
@@ -433,7 +472,7 @@ body {
   gap: 4px;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 800px) {
   .hooks-body,
   .wire-body {
     grid-template-columns: 1fr;
@@ -560,7 +599,7 @@ body {
   gap: var(--s-lg);
   align-items: start;
 }
-@media (max-width: 860px) {
+@media (max-width: 800px) {
   .seq-body {
     grid-template-columns: 1fr;
   }

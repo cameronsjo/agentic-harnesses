@@ -6,18 +6,49 @@ import { LoopPlayer } from './LoopPlayer'
 import { HooksView } from './HooksView'
 import { WireView } from './WireView'
 import { SequenceView } from './SequenceView'
-import { TabPicker } from './controls'
 
-type View = 'compare' | 'single' | 'sequence' | 'hooks' | 'wire'
+// The view within a selected harness. Compare-all (harness === null) has no tabs —
+// the surface *is* the grid.
+type ViewTab = 'loop' | 'sequence' | 'hooks' | 'wire'
+
+const TAB_LABELS: Record<ViewTab, string> = {
+  loop: 'Loop',
+  sequence: 'Sequence',
+  hooks: 'Hooks & events',
+  wire: 'Across the wire',
+}
 
 const KINDS: NodeKind[] = ['input', 'llm', 'tool', 'approval', 'execute', 'decision', 'terminal']
 
-export function App() {
-  const [view, setView] = useState<View>('compare')
-  const [harness, setHarness] = useState(specs[0]?.harness ?? '')
-  const [scenarioId, setScenarioId] = useState('edit-file')
+// Tabs available for a given harness. Hooks/Wire are Claude-Code-pinned deep-dives,
+// not per-harness capabilities — they ride along only when claude-code is selected.
+function tabsFor(harness: string | null): ViewTab[] {
+  if (harness === null) return []
+  return ['loop', 'sequence', ...(harness === 'claude-code' ? (['hooks', 'wire'] as ViewTab[]) : [])]
+}
 
-  const spec = specs.find((s) => s.harness === harness) ?? specs[0]
+export function App() {
+  // Single source of truth. harness === null is the "Compare all" surface.
+  const [harness, setHarness] = useState<string | null>(null)
+  const [tab, setTab] = useState<ViewTab>('loop')
+  const [scenarioId, setScenarioId] = useState('edit-file') // lifted — persists across switches
+  const [navOpen, setNavOpen] = useState(false) // mobile drawer
+
+  const availableTabs = tabsFor(harness)
+  const spec = harness ? specs.find((s) => s.harness === harness) : undefined
+
+  // Clamp the tab back to Loop when switching to a harness that lacks the current tab
+  // (e.g. leaving claude-code while on Hooks/Wire). Only fires on harness change.
+  useEffect(() => {
+    if (harness === null) return
+    if (!tabsFor(harness).includes(tab)) setTab('loop')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [harness])
+
+  const selectHarness = (h: string | null) => {
+    setHarness(h)
+    setNavOpen(false)
+  }
 
   // The one persistent whimsy moment: the wordmark breathes the ultrathink
   // shimmer (spectrum) for three hue-cycles on load, then drifts glacially.
@@ -28,23 +59,58 @@ export function App() {
     return () => cancel?.()
   }, [])
 
+  // Mobile drawer focus management. The drawer is always in the DOM (CSS slides it
+  // off-canvas), so when closed we mark it `inert` to keep its buttons out of the tab
+  // order — otherwise desktop, where the hamburger is hidden, gains phantom nav stops.
+  // When open we trap focus (Esc / scrim close it; release restores focus to the
+  // hamburger). Graceful no-op if the vendored helper is absent.
+  const drawerRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = drawerRef.current
+    if (!el) return
+    if (!navOpen) {
+      el.setAttribute('inert', '')
+      return
+    }
+    el.removeAttribute('inert')
+    const handle = window.ArtificerFocus?.trap(el, { onEscape: () => setNavOpen(false) })
+    return () => handle?.release()
+  }, [navOpen])
+
+  // Legend belongs to graph contexts; the wire view draws its own request anatomy.
+  const showLegend = !(harness !== null && tab === 'wire')
+
   return (
-    <div className="app container container--lg surface-tool">
+    <div className="app container container--lg surface-tool" data-nav-open={navOpen ? '' : undefined}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
 
-      <header className="masthead stack stack--sm">
-        <div className="masthead-top">
-          <h1 className="masthead-title t-headline-md">
-            <span className="whimsy" ref={titleRef}>
-              agentic harness loops
-            </span>
-          </h1>
+      <header className="appbar">
+        <button
+          type="button"
+          className="btn btn--ghost btn--icon appbar__menu-btn"
+          aria-label="Open navigation"
+          aria-expanded={navOpen}
+          aria-controls="nav-drawer"
+          onClick={() => setNavOpen(true)}
+        >
+          <i data-icon="menu" />
+        </button>
+        <a className="appbar__brand wordmark" href="#main">
+          <span className="whimsy" ref={titleRef}>
+            agentic harness loops
+          </span>
+        </a>
+        <span className="appbar__spacer" />
+        <div className="appbar__actions">
           <ThemeToggle />
         </div>
+      </header>
+
+      <section className="intro stack stack--sm">
         <p className="lede t-body-lg">
-          Four coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
+          Coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
           <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
           <b className="anchor">gates the dangerous ones</b> — all{' '}
           <b className="anchor">reconstructed from pinned source</b>.
@@ -55,90 +121,73 @@ export function App() {
           <span className="badge badge--ghost">source-pinned</span>
           <span className="badge badge--ghost">WCAG AAA</span>
         </div>
-      </header>
+      </section>
 
-      <main id="main" className="stack stack--lg">
-      <nav className="view-nav cluster" role="group" aria-label="View">
-        <button
-          type="button"
-          aria-pressed={view === 'compare'}
-          className={`btn btn--ghost tab ${view === 'compare' ? 'tab--active' : ''}`}
-          onClick={() => setView('compare')}
-        >
-          Compare all
-        </button>
-        <button
-          type="button"
-          aria-pressed={view === 'single'}
-          className={`btn btn--ghost tab ${view === 'single' ? 'tab--active' : ''}`}
-          onClick={() => setView('single')}
-        >
-          Single harness
-        </button>
-        <button
-          type="button"
-          aria-pressed={view === 'sequence'}
-          className={`btn btn--ghost tab ${view === 'sequence' ? 'tab--active' : ''}`}
-          onClick={() => setView('sequence')}
-        >
-          Sequence
-        </button>
-        <span className="nav-sep">Claude Code</span>
-        <button
-          type="button"
-          aria-pressed={view === 'hooks'}
-          className={`btn btn--ghost tab ${view === 'hooks' ? 'tab--active' : ''}`}
-          onClick={() => setView('hooks')}
-        >
-          Hooks &amp; events
-        </button>
-        <button
-          type="button"
-          aria-pressed={view === 'wire'}
-          className={`btn btn--ghost tab ${view === 'wire' ? 'tab--active' : ''}`}
-          onClick={() => setView('wire')}
-        >
-          Across the wire
-        </button>
-      </nav>
+      <div className="app-shell">
+        <aside className="app-sidenav">
+          <HarnessNav harness={harness} onSelect={selectHarness} />
+        </aside>
 
-      {view !== 'wire' && <Legend />}
+        <main id="main" className="stack stack--lg">
+          {availableTabs.length > 0 && (
+            <div className="tabs" role="tablist" aria-label="View">
+              {availableTabs.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t}
+                  onClick={() => setTab(t)}
+                >
+                  {TAB_LABELS[t]}
+                </button>
+              ))}
+            </div>
+          )}
 
-      {specs.length === 0 ? (
-        <p className="empty">
-          <b className="anchor">No loop specs found.</b> Add files under <code>src/data/loops/</code>.
-        </p>
-      ) : view === 'hooks' ? (
-        <HooksView />
-      ) : view === 'wire' ? (
-        <WireView />
-      ) : view === 'sequence' ? (
-        <SequenceView />
-      ) : view === 'compare' ? (
-        <ScenarioCompare />
-      ) : (
-        <section className="single">
-          <TabPicker
-            className="harness-pick"
-            ariaLabel="Harness"
-            items={specs.map((s) => ({ id: s.harness, label: s.displayName }))}
-            active={spec.harness}
-            onSelect={setHarness}
-          />
-          <div className="harness-meta">
-            <span className="lang-badge">{spec.language}</span>
-            <span className="loop-style">{spec.loopStyle}</span>
-            {spec.repo && (
-              <a className="repo-link" href={spec.repo} target="_blank" rel="noreferrer">
-                {spec.repo.replace('https://github.com/', '')}
-              </a>
-            )}
-          </div>
-          <LoopPlayer spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
-        </section>
-      )}
+          {showLegend && <Legend />}
 
-      </main>
+          {specs.length === 0 ? (
+            <p className="empty">
+              <b className="anchor">No loop specs found.</b> Add files under{' '}
+              <code>src/data/loops/</code>.
+            </p>
+          ) : harness === null ? (
+            <ScenarioCompare scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+          ) : !spec ? (
+            <p className="empty">
+              <b className="anchor">Harness not found.</b>
+            </p>
+          ) : tab === 'hooks' ? (
+            <HooksView />
+          ) : tab === 'wire' ? (
+            <WireView />
+          ) : tab === 'sequence' ? (
+            <SequenceView spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+          ) : (
+            <>
+              {/* Harness-level metadata for the Loop view — the sidenav owns
+                  selection now, so this is just the badges + source-pinned repo link. */}
+              <div className="harness-meta">
+                <span className="lang-badge">{spec.language}</span>
+                <span className="loop-style">{spec.loopStyle}</span>
+                {spec.repo && (
+                  <a className="repo-link" href={spec.repo} target="_blank" rel="noreferrer">
+                    {spec.repo.replace('https://github.com/', '')}
+                  </a>
+                )}
+              </div>
+              <LoopPlayer spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+            </>
+          )}
+        </main>
+      </div>
+
+      {/* Mobile drawer: scrim + off-canvas sidenav. data-nav-open on .app drives both. */}
+      <div className="nav-scrim" onClick={() => setNavOpen(false)} />
+      <aside id="nav-drawer" className="nav-drawer" aria-hidden={!navOpen} ref={drawerRef}>
+        <HarnessNav harness={harness} onSelect={selectHarness} />
+      </aside>
 
       <footer className="app-footer">
         Live repos (OpenCode · pi · code_puppy) <b className="anchor">cite <code>file:line</code></b> at{' '}
@@ -147,6 +196,45 @@ export function App() {
         Built with the <b className="anchor">Artificer design system</b>.
       </footer>
     </div>
+  )
+}
+
+/**
+ * The between-surface spine: "Compare all" plus one item per harness. These switch
+ * app state rather than navigate, so they're <button>s — Artificer styles only
+ * `.sidenav a`, so styles.css carries a matching `.sidenav button` shim. Rendered
+ * twice (persistent aside + mobile drawer) from the same source of truth.
+ */
+function HarnessNav({
+  harness,
+  onSelect,
+}: {
+  harness: string | null
+  onSelect: (h: string | null) => void
+}) {
+  return (
+    <nav className="sidenav" aria-label="Harnesses">
+      <div className="sidenav__group">Overview</div>
+      <button
+        type="button"
+        aria-current={harness === null ? 'page' : undefined}
+        onClick={() => onSelect(null)}
+      >
+        <span className="label">Compare all</span>
+      </button>
+
+      <div className="sidenav__group">Harnesses</div>
+      {specs.map((s) => (
+        <button
+          key={s.harness}
+          type="button"
+          aria-current={harness === s.harness ? 'page' : undefined}
+          onClick={() => onSelect(s.harness)}
+        >
+          <span className="label">{s.displayName}</span>
+        </button>
+      ))}
+    </nav>
   )
 }
 
