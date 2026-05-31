@@ -94,7 +94,7 @@ export function HooksView() {
       </p>
 
       <div className="hooks-body">
-        <div className="graph-pane">
+        <div className="card graph-pane">
           <button
             type="button"
             className="btn btn--secondary graph-expand"

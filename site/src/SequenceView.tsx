@@ -138,7 +138,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
       <div className="compare-controls">{controls}</div>
 
       <div className="seq-body">
-        <div className="graph-pane">
+        <div className="card graph-pane">
           <button
             type="button"
             className="btn btn--secondary graph-expand"
