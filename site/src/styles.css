@@ -169,6 +169,57 @@ body {
   overflow-x: auto;
   padding-bottom: var(--s-md);
 }
+
+/* Horizontal-scroll affordance (see ScenarioCompare). The scrollbar alone is a
+   weak cue — overlay scrollbars hide it — so an edge fade and/or chevron pager
+   signal there's more. Both sit in .compare-scroll (position: relative) and stay
+   put while .compare-grid scrolls beneath. */
+.compare-scroll {
+  position: relative;
+}
+.compare-fade {
+  position: absolute;
+  top: 0;
+  bottom: var(--s-md); /* clear the scrollbar gutter (.compare-grid padding-bottom) */
+  width: 44px;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.compare-fade[data-show='true'] {
+  opacity: 1;
+}
+.compare-fade--left {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+.compare-fade--right {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+/* Chevron pager — circular, raised above the fade. Hidden (not just dimmed) at
+   the matching edge so it never invites a no-op click. */
+.compare-chev {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.compare-chev--left {
+  left: 4px;
+}
+.compare-chev--right {
+  right: 4px;
+}
+.compare-chev:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
 /* .card supplies bg / radius / padding / transparent border; keep only the
    fixed column width and the border transition here. */
 .compare-col {

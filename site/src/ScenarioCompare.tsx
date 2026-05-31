@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { specs, sharedScenarios } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
@@ -43,6 +43,40 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
     }
   }, [atEnd])
 
+  // Horizontal-scroll affordance. The bottom scrollbar alone isn't discoverable
+  // (macOS overlay scrollbars hide it at rest), so we surface an edge fade and/or
+  // chevron pager. Variant is an eyeball A/B via ?scroll= — fade | chevrons | both
+  // (default both). No tracking/cookie: flip the param, judge by feel, pick a winner.
+  const [variant] = useState<'fade' | 'chevrons' | 'both'>(() => {
+    const v = new URLSearchParams(window.location.search).get('scroll')
+    return v === 'fade' || v === 'chevrons' ? v : 'both'
+  })
+  const showFade = variant === 'fade' || variant === 'both'
+  const showChevrons = variant === 'chevrons' || variant === 'both'
+
+  const gridRef = useRef<HTMLDivElement>(null)
+  const [scroll, setScroll] = useState({ overflowing: false, atStart: true, atEnd: true })
+  useEffect(() => {
+    const el = gridRef.current
+    if (!el) return
+    const update = () => {
+      setScroll({
+        overflowing: el.scrollWidth > el.clientWidth + 1,
+        atStart: el.scrollLeft <= 1,
+        atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+      })
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      el.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+  const page = (dir: -1 | 1) =>
+    gridRef.current?.scrollBy({ left: dir * gridRef.current.clientWidth * 0.8, behavior: 'smooth' })
+
   return (
     <section className="compare">
       <div className="compare-controls">
@@ -59,7 +93,19 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
         <Anchored text={sharedScenarios.find((s) => s.id === scenarioId)?.title ?? ''} />
       </p>
 
-      <div className="compare-grid">
+      <div className="compare-scroll">
+        {showChevrons && scroll.overflowing && (
+          <button
+            type="button"
+            className="btn btn--ghost btn--icon compare-chev compare-chev--left"
+            aria-label="Scroll comparison left"
+            disabled={scroll.atStart}
+            onClick={() => page(-1)}
+          >
+            ‹
+          </button>
+        )}
+        <div className="compare-grid" ref={gridRef}>
         {columns.map(({ spec, sc }) => {
           // Each harness clamps the global step to its own scenario length, then holds at its terminal.
           const local = Math.min(step, sc.steps.length - 1)
@@ -88,6 +134,32 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
             </div>
           )
         })}
+        </div>
+        {showChevrons && scroll.overflowing && (
+          <button
+            type="button"
+            className="btn btn--ghost btn--icon compare-chev compare-chev--right"
+            aria-label="Scroll comparison right"
+            disabled={scroll.atEnd}
+            onClick={() => page(1)}
+          >
+            ›
+          </button>
+        )}
+        {showFade && (
+          <>
+            <div
+              className="compare-fade compare-fade--left"
+              data-show={scroll.overflowing && !scroll.atStart}
+              aria-hidden="true"
+            />
+            <div
+              className="compare-fade compare-fade--right"
+              data-show={scroll.overflowing && !scroll.atEnd}
+              aria-hidden="true"
+            />
+          </>
+        )}
       </div>
     </section>
   )
