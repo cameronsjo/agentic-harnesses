@@ -4,7 +4,11 @@
      // ... when closing:
      trap.release();
    Behavior: tab/shift-tab cycles within element; Esc fires onEscape if provided;
-   focus is restored to the previously-focused element on release. */
+   focus is restored to the previously-focused element on release.
+   SPA note: focusables are recomputed on EVERY Tab, so controls added while
+   open are reachable automatically — no re-trap needed. Only INITIAL focus is
+   set at trap() time; if you swap content and want focus reset, release() then
+   trap() again. */
 (function () {
   'use strict';
   const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';

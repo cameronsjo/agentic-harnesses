@@ -108,9 +108,26 @@
   }
 
   // Public API
+  // SPA lifecycle — auto-hydrate nodes inserted after first paint. Returns a
+  // disconnect fn. Idempotent guards make the re-scan cheap (done nodes skip).
+  function observe(root) {
+    root = root || document.body;
+    hydrate(root);
+    if (typeof MutationObserver === 'undefined') return function () {};
+    var scheduled = false;
+    var mo = new MutationObserver(function () {
+      if (scheduled) return;
+      scheduled = true;
+      (window.requestAnimationFrame || window.setTimeout)(function () { scheduled = false; hydrate(root); }, 0);
+    });
+    mo.observe(root, { childList: true, subtree: true });
+    return function () { mo.disconnect(); };
+  }
+
   window.ArtificerIcons = {
     build:   build,
     hydrate: hydrate,
+    observe: observe,
     list:    () => Object.keys(PATHS),
   };
 

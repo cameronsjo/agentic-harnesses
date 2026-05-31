@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   ARTIFICER · Whimsy helper · v0.7.2
+   ARTIFICER · Whimsy helper · v0.10.0
    ─────────────────────────────────────────────────────────────────────────
    Tiny, dependency-free. Pairs with artificer-whimsy.css. Exposes window.Whimsy.
 
@@ -147,8 +147,25 @@
     window.setTimeout(function () { clearEl(el); }, dur);
   }
 
+  // SPA lifecycle — auto-hydrate nodes inserted after first paint. Returns a
+  // disconnect fn. Idempotent guards make the re-scan cheap (done nodes skip).
+  function observe(root) {
+    root = root || document.body;
+    hydrate(root);
+    if (typeof MutationObserver === 'undefined') return function () {};
+    var scheduled = false;
+    var mo = new MutationObserver(function () {
+      if (scheduled) return;
+      scheduled = true;
+      (window.requestAnimationFrame || window.setTimeout)(function () { scheduled = false; hydrate(root); }, 0);
+    });
+    mo.observe(root, { childList: true, subtree: true });
+    return function () { mo.disconnect(); };
+  }
+
   window.Whimsy = {
     hydrate: hydrate,
+    observe: observe,
     watch: watch,
     celebrate: celebrate,
     run: run,
