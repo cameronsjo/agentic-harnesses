@@ -88,12 +88,18 @@ text"). The fix is structural, not editorial:
 ```
 
 ```css
-.footer-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-xl); align-items: start; }
-.app-footer p { margin: 0; max-width: 70ch; line-height: 1.5; }  /* column measure */
-.footer-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--accent); }
-.footer-fine  { max-width: none; opacity: 0.8; }                 /* spans both columns */
+.footer-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-xl); align-items: start; }
+.app-footer p  { margin: 0; line-height: 1.5; }
+.footer-grid p { max-width: 70ch; }   /* cap the measure ONLY in the columns */
+.footer-label  { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--accent); }
+.footer-fine   { opacity: 0.8; }       /* a direct footer child, outside the grid → never capped → full width */
 @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; gap: var(--s-md); } }
 ```
+
+> **Specificity gotcha:** do *not* cap the measure with `.app-footer p { max-width: 70ch }`
+> and then try to release it with `.footer-fine { max-width: none }` — element+class
+> `(0,1,1)` outranks the bare class `(0,1,0)`, so the fine print stays pinned to one
+> column. Scope the cap to `.footer-grid p` instead, so it never touches the fine-print line.
 
 ### Artificer caveat
 
