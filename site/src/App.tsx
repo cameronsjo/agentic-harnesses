@@ -128,7 +128,7 @@ export function App() {
           aria-controls="nav-drawer"
           onClick={() => setNavOpen((v) => !v)}
         >
-          <i data-icon="menu" />
+          <i data-icon="menu" data-icon-size="32" />
         </button>
         <a className="appbar__brand" href="#main">
           {/* .wordmark (and its ::after accent period) rides the inline span, not

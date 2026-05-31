@@ -34,6 +34,12 @@ body {
   font-size: inherit;
   letter-spacing: inherit;
 }
+/* The mobile nav trigger is the primary chrome control on a phone — the ghost
+   icon's resting fg-secondary is too faint for that role. Full contrast at rest
+   (hover still raises the bg). Pairs with data-icon-size=22 on the glyph. */
+.appbar__menu-btn {
+  color: var(--fg);
+}
 /* Short intro band below the appbar (lede + build badges). Not sticky. */
 .intro {
   margin-block: var(--s-lg) var(--s-xl);
@@ -172,6 +178,47 @@ body {
   padding-bottom: var(--s-md);
 }
 
+/* Dot pager — mobile carousel position indicator. Hidden on desktop (chevrons +
+   edge fades cover the filmstrip there). One dot per harness; tap to jump. */
+.compare-dots {
+  display: none;
+}
+@media (max-width: 800px) {
+  .compare-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--s-sm);
+    margin-top: var(--s-sm);
+  }
+}
+.compare-dot {
+  position: relative; /* anchors the expanded hit area */
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--fg-secondary);
+  opacity: 0.4;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+/* 44px touch target without bloating the 8px visual dot. */
+.compare-dot::before {
+  content: '';
+  position: absolute;
+  inset: -18px;
+}
+.compare-dot--active {
+  background: var(--accent);
+  opacity: 1;
+}
+.compare-dot:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: 4px;
+}
+
 /* Horizontal-scroll affordance (see ScenarioCompare). The scrollbar alone is a
    weak cue — overlay scrollbars hide it — so an edge fade and/or chevron pager
    signal there's more. Both sit in .compare-scroll (position: relative) and stay
@@ -240,6 +287,28 @@ body {
 .compare-col svg {
   max-width: 100%;
   height: auto;
+}
+/* Mobile: one card per screen with snap — the desktop multi-card filmstrip (290px
+   columns above) is wrong on a phone, so each harness fills the viewport and swipes
+   settle card-to-card. MUST come after the `.compare-col { flex: 0 0 290px }` rule:
+   equal specificity means source order decides, and the desktop shorthand re-sets
+   flex-basis. Mandatory snap is scoped here so it never fights the desktop filmstrip. */
+@media (max-width: 800px) {
+  /* Full-bleed: break the card scroller out of the container's inline gutter so
+     cards span the whole screen edge-to-edge (their own padding insets the
+     content). The negative margin exactly cancels .container's padding-inline, so
+     the element lands flush at the viewport edges — no page overflow. The controls,
+     title, and dots stay siblings outside this rule, keeping the 24px gutter. */
+  .compare-scroll {
+    margin-inline: calc(-1 * var(--s-lg));
+  }
+  .compare-grid {
+    scroll-snap-type: x mandatory;
+  }
+  .compare-col {
+    flex-basis: 100%;
+    scroll-snap-align: center;
+  }
 }
 .compare-col-head {
   display: flex;
@@ -423,8 +492,10 @@ a.anchor:hover {
     padding: 0;
   }
   .graph-modal {
-    width: 100vw;
-    max-width: 100vw;
+    /* dvw, not vw: vw counts the scrollbar gutter and pushes a sliver of
+       horizontal overflow on phones. dvw is the visible width. */
+    width: 100dvw;
+    max-width: 100dvw;
     height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
@@ -543,7 +614,12 @@ a.anchor:hover {
    nav and content reflow at the same width. */
 @media (max-width: 800px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), not a bare 1fr: bare `1fr` resolves to minmax(auto, 1fr),
+       whose auto minimum refuses to shrink below the content's min-content — so a
+       wide child (the compare filmstrip) blows the single column past the viewport
+       and the whole page scrolls sideways. minmax(0, …) lets the column shrink and
+       the child's own overflow-x:auto take over. (Desktop already uses minmax(0,1fr).) */
+    grid-template-columns: minmax(0, 1fr);
   }
   .app-sidenav {
     display: none;
@@ -553,6 +629,13 @@ a.anchor:hover {
   }
   .inspector {
     position: static;
+  }
+  /* Shrink single-view diagrams (loop / sequence / hooks all wrap their SVG in
+     .graph-pane) to the viewport instead of demanding sideways scroll. Desktop
+     keeps full size + the pane's overflow-x scroll; richer pan/zoom is issue #3. */
+  .graph-pane svg {
+    max-width: 100%;
+    height: auto;
   }
 }
 

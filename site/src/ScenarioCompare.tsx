@@ -48,15 +48,30 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
   // (passive "there's more") and a chevron pager (active control) — the A/B landed
   // on keeping both. Each is gated by a live overflow + scroll-position check.
   const gridRef = useRef<HTMLDivElement>(null)
-  const [scroll, setScroll] = useState({ overflowing: false, atStart: true, atEnd: true })
+  // `active` is the card nearest the viewport center — drives the mobile dot pager.
+  const [scroll, setScroll] = useState({ overflowing: false, atStart: true, atEnd: true, active: 0 })
   useEffect(() => {
     const el = gridRef.current
     if (!el) return
     const update = () => {
+      // Nearest-center wins — width-agnostic, so it's correct for both the desktop
+      // multi-card filmstrip and the mobile one-card-per-screen carousel.
+      const center = el.scrollLeft + el.clientWidth / 2
+      let active = 0
+      let best = Infinity
+      Array.from(el.children).forEach((c, i) => {
+        const card = c as HTMLElement
+        const dist = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center)
+        if (dist < best) {
+          best = dist
+          active = i
+        }
+      })
       setScroll({
         overflowing: el.scrollWidth > el.clientWidth + 1,
         atStart: el.scrollLeft <= 1,
         atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+        active,
       })
     }
     update()
@@ -67,8 +82,20 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
       window.removeEventListener('resize', update)
     }
   }, [])
-  const page = (dir: -1 | 1) =>
-    gridRef.current?.scrollBy({ left: dir * gridRef.current.clientWidth * 0.8, behavior: 'smooth' })
+  // On mobile each card == clientWidth, so paging by clientWidth lands exactly one
+  // card over (scroll-snap then settles it); desktop keeps the gentler 0.8 stride.
+  const page = (dir: -1 | 1) => {
+    const el = gridRef.current
+    if (!el) return
+    const stride = window.matchMedia('(max-width: 800px)').matches ? 1 : 0.8
+    el.scrollBy({ left: dir * el.clientWidth * stride, behavior: 'smooth' })
+  }
+  const scrollToCard = (i: number) => {
+    const el = gridRef.current
+    const card = el?.children[i] as HTMLElement | undefined
+    if (!el || !card) return
+    el.scrollTo({ left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
+  }
 
   return (
     <section className="compare">
@@ -150,6 +177,23 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
           aria-hidden="true"
         />
       </div>
+
+      {/* Mobile carousel position indicator (CSS hides it on the desktop filmstrip,
+          which has chevrons + edge fades instead). One dot per harness; tap to jump. */}
+      {scroll.overflowing && (
+        <div className="compare-dots" role="group" aria-label="Jump to harness">
+          {columns.map(({ spec }, i) => (
+            <button
+              key={spec.harness}
+              type="button"
+              className={`compare-dot ${i === scroll.active ? 'compare-dot--active' : ''}`}
+              aria-label={`Show ${spec.displayName}`}
+              aria-current={i === scroll.active ? 'true' : undefined}
+              onClick={() => scrollToCard(i)}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
