@@ -512,6 +512,7 @@ body {
   color: var(--accent);
 }
 .footer-fine {
+  max-width: none;
   opacity: 0.8;
 }
 @media (max-width: 800px) {
