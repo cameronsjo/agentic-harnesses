@@ -33,5 +33,10 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Cloudflare Web Analytics — cookieless, hostname-scoped to
+         cameronsjo.github.io (one token covers the root, /blog, and this site).
+         Token is public/write-only. -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "9db7302de886402680e0838d0f35f7db"}'></script>
+    <!-- End Cloudflare Web Analytics -->
   </body>
 </html>
