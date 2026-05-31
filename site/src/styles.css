@@ -493,11 +493,32 @@ body {
    measure so the disclaimer stays readable. The fine-print line sits quieter. */
 .app-footer p {
   margin: 0;
-  max-width: 78ch;
+  max-width: 70ch;
   line-height: 1.5;
+}
+/* Lay the two substantive blocks side-by-side so the footer uses the full width
+   instead of stacking into one tall column down the left edge. */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-xl);
+  align-items: start;
+}
+.footer-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--accent);
 }
 .footer-fine {
   opacity: 0.8;
+}
+@media (max-width: 800px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s-md);
+  }
 }
 
 /* Tablet breakpoint (matches Artificer --bp-tablet: 800px). The persistent
