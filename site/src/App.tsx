@@ -149,7 +149,6 @@ export function App() {
           <span className="badge badge--ghost">v1</span>
           <span className="badge badge--ghost">{specs.length} harnesses</span>
           <span className="badge badge--ghost">source-pinned</span>
-          <span className="badge badge--ghost">WCAG AAA</span>
         </div>
       </section>
 
