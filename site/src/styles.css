@@ -14,6 +14,14 @@ body {
 }
 
 /* ---- appbar + intro band ---- */
+/* Artificer's .appbar carries its own `padding: 0 var(--s-md)` for a full-bleed
+   bar, but ours sits INSIDE .container--lg (which already pads the inline edges),
+   so that padding double-insets the brand one --s-md past the lede / sidenav
+   below it. Zero it (higher-specificity selector beats the vendored rule + its
+   safe-area variant) so the wordmark lines up flush-left with the content column. */
+.app .appbar {
+  padding-inline: 0;
+}
 /* The appbar is Artificer chrome (.appbar / .appbar__brand.wordmark); only the
    brand's whimsy shimmer needs a nudge — clip the flowing gradient at the
    wordmark's own size and tracking rather than the .whimsy default. */

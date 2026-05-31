@@ -34,3 +34,21 @@ feedback issue filed upstream.
 - **Second gap:** `.nav-drawer` stays in the DOM off-canvas with no closed-state focus handling, so its buttons stayed tab-reachable (and duplicated the persistent sidenav on desktop). Toggle `inert` imperatively in `App.tsx` (closed ⇒ inert, open ⇒ `ArtificerFocus.trap`).
 - **Wished existed:** widen `.sidenav` selectors to `a, button` (mirror `.tabs`), plus a drawer-pattern note on closed-state `inert`/`hidden`.
 - **Don't upstream:** sticky offset `top: calc(56px + var(--s-md))` (app-specific appbar height); harness/Claude-Code-pinned tab logic (product topology).
+
+## 2026-05-31 — `.wordmark` period detaches on a flex parent
+
+- **Upstream issue:** cameronsjo/artificer-design-system#81
+- **Type:** misfit, Lane 3.
+- **Friction:** `.wordmark::after { content: "." }` (`:1169`) becomes a flex item when `.wordmark` is on a flex/grid container — including Artificer's own `.appbar__brand` (`display:flex; gap: var(--s-sm)`, `:1119`). The container `gap` opens a space, so the brand reads `agentic harnesses .` not `agentic harnesses.`. Reappeared on a second surface composed the same way — a system trap, not a typo.
+- **Fix (consumer):** apply `.wordmark` to the inline `<span>` inside `.appbar__brand`, not to the flex container itself, so `::after` stays inline with the text. See `site/src/App.tsx` brand markup.
+- **Wished existed:** guard the period against parent gap, or document "`.wordmark` goes on an inline text element, never a flex/grid container."
+- **Don't upstream:** nothing product-specific.
+
+## 2026-05-31 — `.appbar` inline padding double-insets inside a container
+
+- **Upstream issue:** cameronsjo/artificer-design-system#83
+- **Type:** misfit, Lane 3.
+- **Friction:** `.appbar { padding: 0 var(--s-md) }` (+ safe-area `padding-left/right: max(...)`, `:1192`) is the full-bleed gutter, but our appbar sits inside `.container--lg` (already padded), so the brand double-insets one `--s-md` right of the lede/sidenav and the bar's divider starts left of the mark.
+- **Fix (consumer):** `.app .appbar { padding-inline: 0 }` in `site/src/styles.css` — higher specificity to beat both the base rule and its safe-area variant.
+- **Wished existed:** a contained-appbar note or `.appbar--contained` modifier that drops the inline padding when the container owns the gutter.
+- **Don't upstream:** nothing product-specific.
