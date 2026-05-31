@@ -53,6 +53,19 @@ interface TabPickerProps {
   className?: string
 }
 
+/**
+ * The "open the enlarged diagram" affordance parked in a graph pane's corner.
+ * Identical across every diagram view, so it lives here rather than re-typed
+ * per view. Uses a plain glyph (not `data-icon`) so it needs no icon hydration.
+ */
+export function ExpandButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="btn btn--secondary graph-expand" onClick={onClick}>
+      <span aria-hidden="true">⤢</span> Expand
+    </button>
+  )
+}
+
 /** A row of pill tabs (harness / scenario / mode pickers) with shared a11y wiring. */
 export function TabPicker({ items, active, onSelect, ariaLabel, className = 'scenario-tabs' }: TabPickerProps) {
   return (

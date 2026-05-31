@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LoopSpec } from './types'
 import { KIND_LABEL } from './types'
 import { scenario } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
+import { GraphModal } from './GraphModal'
 import { edgeBetween, usePlayerTimer } from './player'
-import { TabPicker, TransportBar } from './controls'
+import { ExpandButton, TabPicker, TransportBar } from './controls'
 
 interface Props {
   spec: LoopSpec
@@ -18,6 +19,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const sc = scenario(spec, scenarioId) ?? spec.scenarios[0]
   const player = usePlayerTimer(sc.steps.length, `${spec.harness}:${scenarioId}`)
   const { step, playing, atEnd } = player
+  const [expanded, setExpanded] = useState(false)
 
   // The "turn complete" caption and the play→end latch (see the effects below).
   const captionRef = useRef<HTMLSpanElement>(null)
@@ -41,22 +43,47 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
     }
   }, [atEnd])
 
-  return (
-    <div className="player">
+  // Reused inline and in the expand modal — the scenario header (picker + title),
+  // the diagram, and the live node card. The picker drives the lifted scenarioId,
+  // so the inline and modal copies stay in sync no matter which one you click.
+  const scenarioHeader = (
+    <>
       <TabPicker
         ariaLabel="Scenarios"
         items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
         active={scenarioId}
         onSelect={(id) => onScenarioChange?.(id)}
       />
-
       <p className="scenario-title">
         <Anchored text={sc.title} />
       </p>
+    </>
+  )
+  const graph = <LoopGraph spec={spec} activeNodeId={activeNodeId} activeEdge={activeEdge} />
+  const nodeCard = node && (
+    <div className="card card--active node-card">
+      <div className="node-card-head">
+        <span className={`dot dot--${dotFor(node.kind)}`} />
+        <b>{node.label}</b>
+      </div>
+      <div className="node-kind">{KIND_LABEL[node.kind]}</div>
+      {node.sourceRef && <code className="source-ref">{node.sourceRef}</code>}
+      {node.note && (
+        <p className="node-note">
+          <Anchored text={node.note} />
+        </p>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="player">
+      {scenarioHeader}
 
       <div className="player-body">
         <div className="card graph-pane">
-          <LoopGraph spec={spec} activeNodeId={activeNodeId} activeEdge={activeEdge} />
+          <ExpandButton onClick={() => setExpanded(true)} />
+          {graph}
         </div>
 
         <aside className="inspector">
@@ -71,21 +98,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
             )}
           </div>
 
-          {node && (
-            <div className="card card--active node-card">
-              <div className="node-card-head">
-                <span className={`dot dot--${dotFor(node.kind)}`} />
-                <b>{node.label}</b>
-              </div>
-              <div className="node-kind">{KIND_LABEL[node.kind]}</div>
-              {node.sourceRef && <code className="source-ref">{node.sourceRef}</code>}
-              {node.note && (
-                <p className="node-note">
-                  <Anchored text={node.note} />
-                </p>
-              )}
-            </div>
-          )}
+          {nodeCard}
 
           {sc.note && (
             <p className="scenario-note">
@@ -94,6 +107,20 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
           )}
         </aside>
       </div>
+
+      <GraphModal
+        open={expanded}
+        onClose={() => setExpanded(false)}
+        title={spec.displayName}
+        diagram={graph}
+        side={
+          <>
+            {scenarioHeader}
+            <TransportBar player={player} playLabel="Play" total={sc.steps.length} counterLabel="step" />
+            {nodeCard}
+          </>
+        }
+      />
     </div>
   )
 }

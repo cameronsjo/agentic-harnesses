@@ -122,9 +122,12 @@
   --steel:           #b8cad4;   /* honest middle; meta / secondary UI */
   --steel-fill:      #5a7a8a;
 
-  /* Brand — personal signature (gold + purple = Cameron). Not semantic. */
-  --brand-purple:       #5a3a9a;  /* lifted purple — text/border on dark */
-  --brand-purple-fill:  #331567;  /* deep purple — surface / button fill */
+  /* Brand — personal signature (gold + purple = Cameron). Not semantic.
+     bare = deep, NOT a foreground role (chart series-3, whimsy gradient stop).
+     -bright = foreground (syntax keyword). -fill = surface. */
+  --brand-purple:        #5a3a9a;  /* deep — chart series-3, whimsy gradient stop */
+  --brand-purple-bright: #b095e0;  /* lifted — syntax keyword foreground · 5.47:1 AA · v0.10.1 */
+  --brand-purple-fill:   #331567;  /* deep — surface / button fill */
 
   /* Diff backgrounds — derived tints of success/urgent. Same hue, low L, kept C. */
   --diff-add-bg:     #1f3a28;   /* derived from --success #4a8a5e */
@@ -151,23 +154,34 @@
                 'Iowan Old Style', 'Charter', 'Source Sans 3',
                 system-ui, -apple-system, sans-serif;
 
-  --t-headline-lg-size: 28px;  --t-headline-lg-lh: 1.3;  --t-headline-lg-ls: -0.01em;
-  --t-headline-md-size: 22px;  --t-headline-md-lh: 1.35;
-  --t-body-lg-size:     16px;  --t-body-lg-lh:     1.65;
-  --t-body-md-size:     14px;  --t-body-md-lh:     1.6;
-  --t-label-md-size:    13px;  --t-label-md-lh:    1.3;
-  --t-label-sm-size:    12px;  --t-label-sm-lh:    1.3;
-  --t-code-size:        14px;  --t-code-lh:        1.5;
+  /* Type sizes are REM (root = browser default, never overridden) so text
+     honors the user's browser font-size preference, not just zoom. 1rem = 16px
+     at default. Spacing/radii/component-internal px stay px on purpose. */
+  --t-headline-lg-size: 1.75rem;    --t-headline-lg-lh: 1.3;  --t-headline-lg-ls: -0.01em; /* 28px */
+  --t-headline-md-size: 1.375rem;   --t-headline-md-lh: 1.35;                               /* 22px */
+  --t-body-lg-size:     1rem;       --t-body-lg-lh:     1.65;                               /* 16px */
+  --t-body-md-size:     0.875rem;   --t-body-md-lh:     1.6;                                /* 14px */
+  --t-label-md-size:    0.8125rem;  --t-label-md-lh:    1.3;                                /* 13px */
+  --t-label-sm-size:    0.75rem;    --t-label-sm-lh:    1.3;                                /* 12px */
+  --t-label-xs-size:    0.6875rem;  --t-label-xs-lh:    1.3;                                /* 11px — micro-chrome (v0.9.0 tier; restored v0.10.1) */
+  --t-code-size:        0.875rem;   --t-code-lh:        1.5;                                /* 14px */
 
   --letter-spacing-body: 0.01em;
   --word-spacing-body:   0.16em;
 
   --radius-sm: 4px;  --radius-md: 8px;  --radius-lg: 12px;
 
-  --s-xs: 4px; --s-sm: 8px; --s-md: 16px; --s-lg: 24px; --s-xl: 32px; --s-2xl: 48px;
+  --s-xs: 4px; --s-sm: 8px; --s-md: 16px; --s-lg: 24px; --s-xl: 32px; --s-2xl: 48px; --s-3xl: 96px;
 
   --dur-instant: 80ms; --dur-fast: 160ms; --dur-max: 300ms;
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-linear: linear;          /* continuous translation only (motion pattern #02) */
+
+  /* Focus ring — tokenized so themes/consumers retune; a11y floor: never 0. */
+  --focus-width: 2px;
+  --focus-offset: 2px;            /* default — drawn outside the box */
+  --focus-offset-loose: 4px;      /* sliders / thumbs that need air */
+  --focus-offset-inset: -2px;     /* rings drawn inside (nav items, table rows) */
 
   --shadow-overlay: 0 4px 12px rgba(0, 0, 0, 0.35);
   --shadow-popover: 0 2px 8px rgba(0, 0, 0, 0.30);
@@ -179,6 +193,9 @@
   --z-popover: 1000;  /* tooltips, popovers, dropdowns */
   --z-modal:   2000;  /* dialogs, scrim + content */
   --z-toast:   3000;  /* always-on-top notifications */
+
+  /* Artificer v0.10.1 — baseline contract: see CLAUDE.md § Baseline contract */
+  --art-version: "0.10.1";
 
   color-scheme: dark;
 }
@@ -207,8 +224,9 @@
   --steel:           #2e4a5a;
   --steel-fill:      #5a7a8a;
 
-  --brand-purple:       #4a25a0;  /* purple as text on ivory, AAA 8.51 */
-  --brand-purple-fill:  #331567;  /* deep purple, fill */
+  --brand-purple:        #4a25a0;  /* deep — chart series-3, whimsy gradient stop · 8.51:1 on ivory */
+  --brand-purple-bright: #5a35b0;  /* lifted — syntax keyword foreground · 6.83:1 on ivory · v0.10.1 */
+  --brand-purple-fill:   #331567;  /* deep purple, fill */
 
   --diff-add-bg:     #d8e4cc;   /* derived light tint of apothecary green */
   --diff-del-bg:     #ecd6d4;   /* derived light tint of brick */
@@ -250,8 +268,9 @@
     --success:         #2a5a3a;
     --steel:           #2e4a5a;
     --steel-fill:      #5a7a8a;
-    --brand-purple:       #4a25a0;
-    --brand-purple-fill:  #331567;
+    --brand-purple:        #4a25a0;
+    --brand-purple-bright: #5a35b0;  /* v0.10.1 — syntax keyword foreground · 6.83:1 */
+    --brand-purple-fill:   #331567;
     --diff-add-bg:     #d8e4cc;
     --diff-del-bg:     #ecd6d4;
     --ivory-raised:    #eddcc0;
@@ -261,6 +280,7 @@
     --on-urgent:       #f5ead0;
     --on-success:      #f5ead0;
     --shadow-overlay:  0 4px 12px rgba(32, 32, 62, 0.18);
+    --shadow-popover:  0 2px 8px rgba(32, 32, 62, 0.14);
     color-scheme: light;
   }
 }
@@ -307,6 +327,7 @@ html, body {
 .t-body-md     { font-family: var(--font-sans); font-weight: 400; font-size: var(--t-body-md-size); line-height: var(--t-body-md-lh); }
 .t-label-md    { font-family: var(--font-sans); font-weight: 500; font-size: var(--t-label-md-size); line-height: var(--t-label-md-lh); }
 .t-label-sm    { font-family: var(--font-sans); font-weight: 400; font-size: var(--t-label-sm-size); line-height: var(--t-label-sm-lh); }
+.t-label-xs    { font-family: var(--font-sans); font-weight: 500; font-size: var(--t-label-xs-size); line-height: var(--t-label-xs-lh); } /* micro-chrome: keycaps, timestamps, dense table meta. Never body. */
 .t-code        { font-family: var(--font-mono); font-weight: 400; font-size: var(--t-code-size); line-height: var(--t-code-lh); color: var(--accent); }
 .t-mono-headline-lg { font-family: var(--font-mono); font-weight: 700; font-size: var(--t-headline-lg-size); line-height: var(--t-headline-lg-lh); letter-spacing: var(--t-headline-lg-ls); color: var(--fg); }
 .t-mono-body-md     { font-family: var(--font-mono); font-weight: 400; font-size: var(--t-body-md-size); line-height: var(--t-body-md-lh); }
@@ -327,7 +348,7 @@ a {
   transition: color var(--dur-fast) var(--ease);
 }
 a:hover, a:focus-visible { color: var(--accent-bright); text-decoration: underline; text-underline-offset: 2px; }
-a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+a:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset); border-radius: 2px; }
 
 /* ═══ Buttons ═══════════════════════════════════════════════════════════ */
 .btn {
@@ -337,7 +358,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
   cursor: pointer; white-space: nowrap;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
-.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset); }
 
 .btn--primary       { background: var(--accent-fill); color: var(--on-accent); }
 .btn--primary:hover { background: var(--accent-bright); }
@@ -347,6 +368,11 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
 
 .btn--ghost       { background: transparent; color: var(--fg-secondary); }
 .btn--ghost:hover { background: var(--bg-raised); color: var(--fg); }
+
+/* Icon-only button — square, meets the 44px nav touch floor (a11y #8).
+   Compose with any variant (.btn.btn--icon.btn--ghost). Always needs an
+   aria-label, since there's no text. v0.10.0. */
+.btn--icon { width: 44px; height: 44px; min-width: 44px; padding: 0; }
 
 .btn--destructive       { background: var(--urgent-fill); color: var(--on-urgent); }
 .btn--destructive:hover { filter: brightness(1.08); }
@@ -543,7 +569,7 @@ hr, .divider { border: none; border-top: 1px solid var(--border); margin: var(--
   content: ""; display: block; width: 6px; height: 6px; border-radius: 50%;
   background: var(--on-accent); margin: 4px auto 0;
 }
-.checkbox > input:focus-visible, .radio > input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.checkbox > input:focus-visible, .radio > input:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset); }
 .checkbox > input:disabled + *, .radio > input:disabled + * { color: var(--fg-disabled); cursor: not-allowed; }
 
 /* Toggle / switch */
@@ -566,7 +592,7 @@ hr, .divider { border: none; border-top: 1px solid var(--border); margin: var(--
 }
 .toggle > input:checked { background: var(--accent-fill); }
 .toggle > input:checked::after { transform: translateX(14px); background: var(--on-accent); }
-.toggle > input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toggle > input:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset); }
 
 /* Search input — input + leading icon slot */
 .search {
@@ -588,7 +614,7 @@ hr, .divider { border: none; border-top: 1px solid var(--border); margin: var(--
 .slider { width: 100%; appearance: none; -webkit-appearance: none; height: 4px; background: var(--border); border-radius: 2px; }
 .slider::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-fill); cursor: pointer; transition: transform var(--dur-fast) var(--ease); }
 .slider::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: var(--accent-fill); cursor: pointer; }
-.slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+.slider:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset-loose); border-radius: 2px; }
 
 /* File field */
 .file-field {
@@ -610,7 +636,7 @@ hr, .divider { border: none; border-top: 1px solid var(--border); margin: var(--
   margin: 0;
 }
 .code-block .tok-comment { color: var(--fg-disabled); font-style: italic; }
-.code-block .tok-keyword { color: var(--brand-purple); }
+.code-block .tok-keyword { color: var(--brand-purple-bright); }
 .code-block .tok-string  { color: var(--success); }
 .code-block .tok-number  { color: var(--attention); }
 .code-block .tok-fn      { color: var(--accent); }
@@ -646,7 +672,7 @@ hr, .divider { border: none; border-top: 1px solid var(--border); margin: var(--
 .skeleton::after {
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--fg) 6%, transparent), transparent);
-  animation: skeleton-shimmer 1.4s linear infinite;
+  animation: skeleton-shimmer 1.4s var(--ease-linear) infinite;
 }
 @keyframes skeleton-shimmer { from { transform: translateX(-100%) } to { transform: translateX(100%) } }
 @media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; opacity: .25; } }
@@ -694,8 +720,8 @@ select:focus-visible,
 [role="menuitem"]:focus-visible,
 [role="option"]:focus-visible,
 [role="tab"]:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--focus-offset);
   border-radius: var(--radius-sm);
 }
 
@@ -754,6 +780,29 @@ select:focus-visible,
 /* Split-pane — sidebar + main, 280px / fr; collapses to stack on mobile */
 .split-pane { display: grid; gap: var(--s-lg); grid-template-columns: 280px 1fr; }
 @media (max-width: 800px) { .split-pane { grid-template-columns: 1fr; } }
+
+/* ── Dashboard frame ── one shell, many bodies. Promoted v0.10.0 (was
+   demo-only in composition.html). .dash is the framed surface; .dash__topbar
+   carries the title + live/range actions; the body (1fr) is built from
+   primitives — .kpi-strip, .split-pane, .table, or a chart grid. The "five
+   shells" (KPI · ops · observe · table-first · split) are RECIPES = .dash +
+   a density-* + one of those bodies, NOT five classes. */
+.dash {
+  display: grid; grid-template-rows: auto 1fr; gap: var(--s-md);
+  padding: var(--s-md) var(--s-lg) var(--s-lg);
+  background: var(--bg);
+}
+.dash__topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--s-md); padding-bottom: var(--s-sm);
+  border-bottom: 1px solid var(--border);
+}
+.dash__title {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: var(--t-body-md-size); color: var(--fg);
+  margin: 0; letter-spacing: 0.04em;
+}
+.dash__actions { display: flex; gap: var(--s-sm); align-items: center; }
 
 /* Filter bar — horizontal cluster of chips, search, time-range */
 .filter-bar {
@@ -960,3 +1009,292 @@ select:focus-visible,
   fill: var(--fg-secondary); font-family: var(--font-sans); font-size: 11px;
   letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NAVIGATION — the spine. Promoted v0.10.0 from orphan demos (.crumb was
+   copied verbatim ~14x; .sidenav lived in composition.html). Core, not a
+   carve: nav is load-bearing chrome. See _research/lane1-navigation-*.md.
+   Four surfaces, distinct jobs:
+     .crumb    — where am I (hierarchy / location)
+     .sidenav  — what sections exist (between-surface spine)  [+ --rail, drawer]
+     .appbar   — global chrome (brand · search · actions)
+     .tabs     — switch the VIEW within one surface
+   (For switching a PARAMETER of one view — time window, density — use the
+    .timerange segmented control, not .tabs.)
+   No new tokens: --s-* for gaps/padding, raw px only for fixed dimensions
+   (bar height, rail width), exactly as .split-pane / .btn already do.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Breadcrumb ── location in a hierarchy. Inline; last item is current. */
+.crumb {
+  font-family: var(--font-sans); font-size: var(--t-label-sm-size);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--fg-secondary); margin: 0 0 var(--s-md);
+}
+.crumb a { color: var(--fg-secondary); text-decoration: none; }
+.crumb a:hover, .crumb a:focus-visible { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.crumb [aria-current="page"] { color: var(--fg); }
+.crumb__sep { color: var(--fg-disabled); margin: 0 0.4em; }
+
+/* ── Sidebar nav ── the between-surface spine. Sections of one product. */
+.sidenav {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: var(--s-md);
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.sidenav__group {
+  font-family: var(--font-sans); font-size: var(--t-label-sm-size);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-secondary);
+  padding: var(--s-sm) var(--s-sm) var(--s-xs);
+}
+.sidenav__group:not(:first-child) { margin-top: var(--s-sm); }
+.sidenav a {
+  display: flex; align-items: center; gap: var(--s-sm);
+  min-height: 44px; padding: 6px 10px;   /* 44px nav touch target (a11y #8) */
+  border-radius: var(--radius-sm);
+  color: var(--fg-secondary); font-family: var(--font-sans);
+  font-size: var(--t-label-md-size); text-decoration: none;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.sidenav a > .label { flex: 1; min-width: 0; }
+.sidenav a > [data-icon], .sidenav a > .i { flex: none; }
+.sidenav a > .count {
+  margin-left: auto; font-variant-numeric: tabular-nums;
+  font-size: var(--t-label-sm-size); color: var(--fg-disabled);
+}
+.sidenav a:hover { background: var(--bg); color: var(--fg); }
+.sidenav a:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset-inset); }
+.sidenav a[aria-current="page"] {
+  background: var(--bg); color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);   /* active rail — no layout shift */
+}
+
+/* Rail — collapsed, icon-only (~56px). Labels go SR-only, not display:none,
+   so the link keeps an accessible name. Counts → a dot. */
+.sidenav--rail { width: 56px; padding: var(--s-sm) 6px; }
+.sidenav--rail .sidenav__group { display: none; }
+.sidenav--rail a { justify-content: center; gap: 0; padding: 0; width: 44px; margin: 0 auto; }
+.sidenav--rail a > .label {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.sidenav--rail a > .count {
+  margin: 0; position: absolute; top: 6px; right: 6px;
+  width: 6px; height: 6px; padding: 0; border-radius: 50%;
+  background: var(--accent); color: transparent; overflow: hidden;
+}
+
+/* Drawer — off-canvas sidenav for mobile. Toggle [data-nav-open] on a
+   shared ancestor (or <body>); a trigger sets aria-expanded + aria-controls.
+   Slide = modal-entry motion (pattern #05); collapses under reduced-motion. */
+.nav-scrim {
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  background: rgba(0,0,0,.55);
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--dur-fast) var(--ease), visibility var(--dur-fast) var(--ease);
+}
+:root[data-theme="light"] .nav-scrim { background: rgba(13,27,42,.4); }
+.nav-drawer {
+  position: fixed; top: 0; bottom: 0; left: 0;
+  z-index: calc(var(--z-modal) + 1);
+  width: min(280px, 80vw); overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform var(--dur-max) var(--ease);
+}
+.nav-drawer > .sidenav { height: 100%; border: none; border-radius: 0; }
+[data-nav-open] .nav-scrim  { opacity: 1; visibility: visible; }
+[data-nav-open] .nav-drawer { transform: none; }
+
+/* ── App bar ── global top chrome. Brand · (search) · spacer · actions.
+   At most one .btn--primary here (one-CTA rule). The brand wordmark is a
+   sanctioned .whimsy home; nothing else in the bar is. */
+.appbar {
+  display: flex; align-items: center; gap: var(--s-md);
+  height: 56px; padding: 0 var(--s-md);
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: var(--z-overlay);
+}
+.appbar__brand {
+  display: flex; align-items: center; gap: var(--s-sm);
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: var(--t-body-lg-size); letter-spacing: -0.01em;
+  color: var(--fg); text-decoration: none;
+}
+.appbar__search { flex: 0 1 360px; min-width: 0; }
+.appbar__spacer { flex: 1; }
+.appbar__actions { display: flex; align-items: center; gap: var(--s-xs); }
+.appbar__menu-btn { display: none; }
+@media (max-width: 800px) {
+  .appbar__menu-btn { display: inline-flex; }
+  .appbar__search   { display: none; }
+}
+
+/* ── Tabs ── switch the VIEW within one surface. role=tablist (button +
+   aria-selected) or links (aria-current). Underline marks the active view.
+   NOT for filtering one view's parameters — that's .timerange. */
+.tabs {
+  display: flex; gap: var(--s-md); align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+.tabs button, .tabs a {
+  appearance: none; background: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding: var(--s-sm) 2px; margin-bottom: -1px;
+  font-family: var(--font-sans); font-size: var(--t-label-md-size); font-weight: 500;
+  color: var(--fg-secondary); text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.tabs button:hover, .tabs a:hover { color: var(--fg); }
+.tabs [aria-selected="true"], .tabs [aria-current="page"] {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
+.tabs button:focus-visible, .tabs a:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset); }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BRAND · wordmark — the mark is lowercase "artificer" closed by a
+   burnished full stop (the accent period). Mono, tight tracking. The stop
+   is the signature; it also caps display page titles ("Navigation.").
+   Override the stop's color per surface if needed; never stretch the
+   mark's tracking or set it in sans. v0.10.0.
+   ═══════════════════════════════════════════════════════════════════════ */
+.wordmark {
+  font-family: var(--font-mono); font-weight: 700;
+  text-transform: lowercase; letter-spacing: -0.01em;
+  color: var(--fg); text-decoration: none; white-space: nowrap;
+}
+.wordmark::after { content: "."; color: var(--accent); }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RESPONSIVE — breakpoints · touch escalation · safe-area · table reflow.
+   v0.10.0. Reconciles Lane 3's "mobile layer" audit, with two corrections:
+     1. The 44px target is a NAV rule (a11y #8: "in nav"), NOT a blanket
+        floor. Desktop controls stay dense by design; they grow only on a
+        finger — gated to @media (pointer: coarse), so a mouse desktop is
+        untouched.
+     2. CSS @media can't read var(--bp-*). The --bp-* tokens (and tokens.json)
+        are the source of truth for JS / Tailwind / Figma; the literal @media
+        widths below MUST be kept equal to them.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bp-mobile: 640px;    /* phone */
+  --bp-tablet: 800px;    /* small tablet / split view */
+  --bp-wide:  1200px;    /* wide desktop */
+}
+
+/* Safe-area — sticky/fixed chrome clears the notch + home indicator.
+   Requires <meta name="viewport" content="..., viewport-fit=cover">. */
+.appbar {
+  padding-left:  max(var(--s-md), env(safe-area-inset-left));
+  padding-right: max(var(--s-md), env(safe-area-inset-right));
+}
+.nav-drawer { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+/* Touch escalation — on coarse pointers (finger) interactive controls grow
+   to the 44px target. Fine-pointer (mouse) desktops keep Artificer density. */
+@media (pointer: coarse) {
+  .btn { min-height: 44px; }
+  .input, .textarea, .select { min-height: 44px; }
+  .checkbox, .radio { min-height: 44px; align-items: center; }
+  .checkbox > input, .radio > input { width: 22px; height: 22px; }
+  .checkbox > input:checked::after { width: 5px; height: 10px; margin-top: 2px; }
+  .radio > input:checked::after { width: 8px; height: 8px; margin-top: 6px; }
+  .toggle > input { width: 44px; height: 26px; }
+  .toggle > input::after { width: 22px; height: 22px; }
+  .toggle > input:checked::after { transform: translateX(18px); }
+  .slider { height: 6px; }
+  .slider::-webkit-slider-thumb { width: 24px; height: 24px; }
+  .slider::-moz-range-thumb { width: 24px; height: 24px; }
+  .chip { padding: 8px 14px; }
+}
+
+/* Table -> cards reflow. Below --bp-mobile (640px) a wide data table
+   restacks: each row becomes a card, each cell labelled by its column.
+   Opt-in: add .table--responsive and a data-label on every <td>. */
+@media (max-width: 640px) {
+  .table--responsive thead {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+  }
+  .table--responsive tbody tr {
+    display: block; margin-bottom: var(--s-md);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: var(--s-sm) var(--s-md);
+  }
+  .table--responsive tbody td {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--s-md); border: none; padding: 6px 0; text-align: right;
+  }
+  .table--responsive tbody td::before {
+    content: attr(data-label); text-align: left;
+    font-family: var(--font-sans); font-size: var(--t-label-sm-size);
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-secondary);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PRIMITIVES (v0.10.0) — avatar, accordion, selectable rows, date/time.
+   From Lane 3's "missing primitives" audit. Built the small/proven ones;
+   the floating-list family (combobox/menu/palette/select) is deferred and
+   UNIFIED onto one option-popover primitive (see _research). Token-pure.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Avatar — image or initials. .dot is an 8px status; .badge is a pill;
+   this is the 24-64px person/entity mark. Default 32px, circular. */
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex: none; overflow: hidden;
+  border-radius: 50%; border: 1px solid var(--border);
+  background: var(--bg-raised); color: var(--fg-secondary);
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: var(--t-label-sm-size); text-transform: uppercase;
+  letter-spacing: 0.02em; user-select: none;
+}
+.avatar > img { width: 100%; height: 100%; object-fit: cover; }
+.avatar--sm     { width: 24px; height: 24px; font-size: 10px; }
+.avatar--lg     { width: 48px; height: 48px; font-size: var(--t-label-md-size); }
+.avatar--xl     { width: 64px; height: 64px; font-size: var(--t-body-lg-size); }
+.avatar--square { border-radius: var(--radius-sm); }
+
+/* Accordion — built on native <details>/<summary>: accessible + keyboard
+   for free, no JS. Wrap <details> items in .accordion; body in .accordion__body. */
+.accordion { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.accordion > details { border-bottom: 1px solid var(--border); }
+.accordion > details:last-child { border-bottom: none; }
+.accordion summary {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-md);
+  min-height: 44px; padding: var(--s-sm) var(--s-md); cursor: pointer; list-style: none;
+  font-family: var(--font-sans); font-weight: 500; color: var(--fg);
+  transition: background var(--dur-fast) var(--ease);
+}
+.accordion summary::-webkit-details-marker { display: none; }
+.accordion summary::after {
+  content: ""; flex: none; width: 7px; height: 7px;
+  border-right: 1.5px solid var(--fg-secondary); border-bottom: 1.5px solid var(--fg-secondary);
+  transform: rotate(45deg); transition: transform var(--dur-fast) var(--ease);
+}
+.accordion details[open] > summary::after { transform: rotate(-135deg); }
+.accordion summary:hover { background: var(--bg-raised); }
+.accordion summary:focus-visible { outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset-inset); }
+.accordion__body { padding: 0 var(--s-md) var(--s-md); color: var(--fg-secondary); }
+
+/* Selectable table rows — when rows are interactive (tabindex / role="row"),
+   they must be keyboard-reachable + show focus. (No effect on plain rows.) */
+.table tbody tr:focus-visible {
+  background: var(--bg-raised);
+  outline: var(--focus-width) solid var(--accent); outline-offset: var(--focus-offset-inset);
+}
+
+/* Date / time fields — take .input like any field; keep mono numerals and a
+   tappable picker icon. The native picker popup stays browser-default. */
+.input[type="date"], .input[type="time"], .input[type="datetime-local"] {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+.input::-webkit-calendar-picker-indicator:hover { opacity: 1; }

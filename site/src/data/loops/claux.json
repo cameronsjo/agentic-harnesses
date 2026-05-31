@@ -1,0 +1,112 @@
+{
+  "harness": "claux",
+  "displayName": "claux",
+  "language": "Rust",
+  "repo": "https://github.com/ducks/claux",
+  "version": "d906c568 (analyzed revision)",
+  "loopStyle": "Async turn loop (Engine::submit_streaming — loop{} over provider.stream); read-only tools run in parallel, writes sequentially, each behind a 4-mode permission gate (default / accept-edits / bypass / plan)",
+  "entrypoint": "src/query.rs:531",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "Submit user message",
+      "kind": "input",
+      "sourceRef": "src/query.rs:544",
+      "note": "**submit_streaming** first runs **maybe_auto_compact** (query.rs:536), then pushes a **Message::user** onto the conversation. The REPL/TUI calls this per turn; events stream back to the UI over an mpsc channel."
+    },
+    {
+      "id": "loop-step",
+      "label": "Turn loop (loop {})",
+      "kind": "decision",
+      "sourceRef": "src/query.rs:549",
+      "note": "The **turn loop**: `loop {}` that keeps going as long as the assistant requests tools. Each iteration rebuilds tool defs (**tools.definitions**, 9 built-ins + MCP) and starts a fresh model stream. Has built-in recovery: prompt-too-long → compact & retry (up to 3×), max-output-tokens → double max_tokens (query.rs:606)."
+    },
+    {
+      "id": "llm",
+      "label": "provider.stream",
+      "kind": "llm",
+      "sourceRef": "src/query.rs:551",
+      "note": "**provider.stream** opens one streaming generation (Anthropic / OpenAI-compatible, api/provider.rs) and returns an **mpsc::Receiver<ApiEvent>**. One call = one assistant turn; it does not auto-loop tools."
+    },
+    {
+      "id": "stream-drain",
+      "label": "Drain ApiEvent stream",
+      "kind": "decision",
+      "sourceRef": "src/query.rs:584",
+      "note": "`while let Some(event) = rx.recv()` folds events: **Text** → stream to UI + buffer; **ToolUse** → push (id,name,input) + emit ToolStart; **Usage** → cost tracking; **Done** → break. Collected text + tool-use blocks become one **assistant message** (query.rs:646)."
+    },
+    {
+      "id": "permission",
+      "label": "PermissionChecker.check",
+      "kind": "approval",
+      "sourceRef": "src/permissions.rs:76",
+      "note": "Per tool-use, **permissions.check(name, input, is_read_only)** returns **Allow / Deny / Ask** under one of four modes — **Default** (ask writes + Read/Grep/WebFetch, auto-allow Glob), **AcceptEdits** (auto Write/Edit, ask Bash), **Bypass** (allow all), **Plan** (allow reads, deny all writes). Session `always_allow` overrides. An **Ask** sends a PermissionRequest(+diff) to the UI (query.rs:675); the TUI answers **y/Enter→Allow, a→AlwaysAllow, n/Esc→Deny** (chat.rs:501)."
+    },
+    {
+      "id": "execute",
+      "label": "Run tool (read-only ∥, writes →)",
+      "kind": "execute",
+      "sourceRef": "src/query.rs:663",
+      "note": "On **Allow**, **tools.execute** runs the tool. In the non-streaming path, read-only + auto-allowed tools are partitioned out and run **concurrently** (execute_tools_parallel, query.rs:425) while writes run sequentially; the streaming path runs them in order. Output is truncated to protect context (compact::truncate_tool_output)."
+    },
+    {
+      "id": "denied",
+      "label": "Permission denied",
+      "kind": "decision",
+      "sourceRef": "src/query.rs:671",
+      "note": "A mode **Deny** (e.g. Plan mode write) yields `Permission denied: <reason>` (query.rs:671); a user **Deny** at the prompt yields `Permission denied by user.` (query.rs:726). Either way the tool does **not** run — an **error tool-result** is recorded and fed back to the model, so the loop continues."
+    },
+    {
+      "id": "tool-results",
+      "label": "Append tool results",
+      "kind": "tool",
+      "sourceRef": "src/query.rs:759",
+      "note": "All result blocks (successes + denials, truncated) are pushed as one **Message::tool_results**. Control returns to the top of the turn loop, which re-prompts the model with the results in context."
+    },
+    {
+      "id": "done",
+      "label": "Turn complete",
+      "kind": "terminal",
+      "sourceRef": "src/query.rs:650",
+      "note": "When the assistant turn produced **no tool-use blocks**, the loop emits **StreamEvent::Done** and **breaks** (query.rs:650) — the final text is the answer. The non-streaming `submit` mirrors this at query.rs:409."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "loop-step" },
+    { "from": "loop-step", "to": "llm" },
+    { "from": "llm", "to": "stream-drain", "label": "ApiEvent stream" },
+    { "from": "stream-drain", "to": "done", "on": "no tool_use" },
+    { "from": "stream-drain", "to": "permission", "on": "tool_use" },
+    { "from": "permission", "to": "execute", "on": "Allow / AlwaysAllow" },
+    { "from": "permission", "to": "denied", "on": "Deny (mode or user)" },
+    { "from": "execute", "to": "tool-results", "label": "tool result" },
+    { "from": "denied", "to": "tool-results", "label": "error tool result" },
+    { "from": "tool-results", "to": "loop-step", "on": "re-prompt with results" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with **no tools**",
+      "steps": ["user-input", "loop-step", "llm", "stream-drain", "done"],
+      "note": "The stream yields only **Text** and **Done**; `tool_uses` is empty, so the loop emits StreamEvent::Done and breaks on the first iteration. The buffered text is the response."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to **edit a file**",
+      "steps": ["user-input", "loop-step", "llm", "stream-drain", "permission", "execute", "tool-results", "loop-step", "llm", "stream-drain", "done"],
+      "note": "The model emits an **Edit** tool-use. In **Default** mode permissions.check returns **Ask** with a generated diff (permissions.rs:176); the UI shows the diff and the user presses **y**. Edit runs, its result is appended, the loop re-prompts, and the model finishes with no further tools. (In **AcceptEdits** mode the Edit auto-allows with no prompt.)"
+    },
+    {
+      "id": "denied-tool",
+      "title": "**Tool call is denied**",
+      "steps": ["user-input", "loop-step", "llm", "stream-drain", "permission", "denied", "tool-results", "loop-step", "llm", "stream-drain", "done"],
+      "note": "Either the user presses **n** at the prompt, or the harness is in **Plan** mode and the model called a write tool → permissions.check returns **Deny** (permissions.rs:103). No execution happens; a `Permission denied…` error tool-result is fed back, and the model adapts on the next turn and finishes."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues **several tool calls**",
+      "steps": ["user-input", "loop-step", "llm", "stream-drain", "permission", "execute", "permission", "execute", "tool-results", "loop-step", "llm", "stream-drain", "done"],
+      "note": "One assistant turn carries multiple tool-use blocks. Each is permission-checked independently; read-only + auto-allowed calls (e.g. two Reads) can run **in parallel** (execute_tools_parallel, query.rs:425) while writes run sequentially. All results are appended in original order as a single tool_results message, then the model is re-prompted and finishes."
+    }
+  ]
+}

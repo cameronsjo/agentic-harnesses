@@ -17,3 +17,13 @@ npm-debug.log*
 .vscode/
 *.swp
 .claude/intros/
+.claude/worktrees/
+
+# External tooling output (CodeBoarding)
+.codeboarding/
+
+# review-loop state (local, ephemeral)
+.review-loop.local.md
+
+# retro raw-material index (local)
+.claude/retro/

@@ -13,26 +13,30 @@ body {
   padding-block: var(--s-lg) var(--s-2xl);
 }
 
-/* ---- masthead ---- */
-.masthead {
-  margin-bottom: var(--s-xl);
+/* ---- appbar + intro band ---- */
+/* Artificer's .appbar carries its own `padding: 0 var(--s-md)` for a full-bleed
+   bar, but ours sits INSIDE .container--lg (which already pads the inline edges),
+   so that padding double-insets the brand one --s-md past the lede / sidenav
+   below it. Zero it (higher-specificity selector beats the vendored rule + its
+   safe-area variant) so the wordmark lines up flush-left with the content column. */
+.app .appbar {
+  padding-inline: 0;
+  /* Non-sticky (experiment): a compact tool surface doesn't need the bar eating
+     56px at every scroll position, and a static bar removes the two-sticky-planes
+     seam where scrolling content slid between the sticky appbar and the sticky
+     sidenav. Artificer hardcodes position:sticky; toggle requested upstream (#84). */
+  position: static;
 }
-/* Wordmark on the left, theme toggle on the right — one row. */
-.masthead-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-md);
-}
-.masthead-title {
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-/* The wordmark shimmer (.whimsy) clips a flowing gradient to the glyphs; keep
-   it at the headline's own size and let it own the weight. */
-.masthead-title .whimsy {
+/* The appbar is Artificer chrome (.appbar / .appbar__brand.wordmark); only the
+   brand's whimsy shimmer needs a nudge — clip the flowing gradient at the
+   wordmark's own size and tracking rather than the .whimsy default. */
+.appbar__brand .whimsy {
   font-size: inherit;
   letter-spacing: inherit;
+}
+/* Short intro band below the appbar (lede + build badges). Not sticky. */
+.intro {
+  margin-block: var(--s-lg) var(--s-xl);
 }
 .lede {
   margin: 0;
@@ -43,9 +47,63 @@ body {
   margin-top: var(--s-xs);
 }
 
-/* ---- nav / tabs ---- */
-/* Vertical spacing between nav, legend, and content is owned by the
-   `main.stack stack--lg` wrapper — no ad-hoc margins here. */
+/* ---- app shell: [ sidenav | content ] ---- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--s-lg);
+  align-items: start;
+}
+/* The persistent sidenav rides alongside the scrolling content. With the appbar
+   now static (no 56px bar to clear) it sticks to a small top inset. Hidden below
+   the tablet breakpoint — the drawer takes over. */
+.app-sidenav {
+  position: sticky;
+  top: var(--s-md);
+}
+
+/* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
+   switch SPA state rather than navigate, so they're <button>s. Replicate the
+   link grammar (resting / hover / focus / active rail) with the same tokens.
+   (Filed upstream via /artificer-feedback — sidenav assumes nav <a>.) */
+.sidenav button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  width: 100%;
+  min-height: 44px; /* 44px nav touch target (a11y) */
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--fg-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--t-label-md-size);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.sidenav button > .label {
+  flex: 1;
+  min-width: 0;
+}
+.sidenav button:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+.sidenav button:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--focus-offset-inset);
+}
+.sidenav button[aria-current="page"] {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent); /* active rail — no layout shift */
+}
+
+/* ---- scenario / transport pill tabs (TabPicker) ---- */
+/* Inactive pills are .btn--ghost (transparent, fg-secondary). The active one
+   reads as selected with a gold underline over the faint raised bg — enough. */
 .tab {
   border-radius: var(--radius-sm);
 }
@@ -112,6 +170,57 @@ body {
   gap: var(--s-md);
   overflow-x: auto;
   padding-bottom: var(--s-md);
+}
+
+/* Horizontal-scroll affordance (see ScenarioCompare). The scrollbar alone is a
+   weak cue — overlay scrollbars hide it — so an edge fade and/or chevron pager
+   signal there's more. Both sit in .compare-scroll (position: relative) and stay
+   put while .compare-grid scrolls beneath. */
+.compare-scroll {
+  position: relative;
+}
+.compare-fade {
+  position: absolute;
+  top: 0;
+  bottom: var(--s-md); /* clear the scrollbar gutter (.compare-grid padding-bottom) */
+  width: 44px;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.compare-fade[data-show='true'] {
+  opacity: 1;
+}
+.compare-fade--left {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+.compare-fade--right {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+/* Chevron pager — circular, raised above the fade. Hidden (not just dimmed) at
+   the matching edge so it never invites a no-op click. */
+.compare-chev {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.compare-chev--left {
+  left: 4px;
+}
+.compare-chev--right {
+  right: 4px;
+}
+.compare-chev:disabled {
+  opacity: 0;
+  pointer-events: none;
 }
 /* .card supplies bg / radius / padding / transparent border; keep only the
    fixed column width and the border transition here. */
@@ -197,6 +306,127 @@ body {
   justify-content: center;
   overflow-x: auto;
 }
+
+/* Loop-graph node label — rendered in a foreignObject (see LoopGraph) so text
+   wraps inside the box instead of spilling past it. Centered both axes; the left
+   pad clears the 6px kind-color chip. pointer-events:none so clicks fall through
+   to the node <g> (hooks view). overflow-wrap breaks long unbroken identifiers. */
+.loop-node-label {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2px 11px 2px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.12;
+  color: var(--dia-node-fg);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.loop-node-label--active {
+  color: var(--fg);
+  font-weight: 700;
+}
+.loop-node-line {
+  display: block;
+}
+
+/* ---- expand-to-modal (GraphModal) ---- */
+/* Trigger parked in the graph pane's corner — always visible (.btn--secondary
+   gives it a solid chip so it reads as a control), just made compact. */
+.graph-pane {
+  position: relative;
+}
+.graph-expand {
+  position: absolute;
+  top: var(--s-sm);
+  right: var(--s-sm);
+  z-index: 1;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+}
+/* Large, near-fullscreen panel (Artificer .scrim/.modal supply the overlay + chrome). */
+.graph-modal {
+  width: min(96vw, 1100px);
+  max-width: min(96vw, 1100px);
+  max-height: 92vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.graph-modal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-md);
+  padding: var(--s-sm) var(--s-sm) var(--s-sm) var(--s-md);
+  border-bottom: 1px solid var(--border);
+}
+.graph-modal__title {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+/* The ghost close button defaults to fg-secondary on transparent — too faint to
+   spot in the corner. Give it full-contrast at rest (hover still raises the bg). */
+.graph-modal__bar .btn--icon {
+  color: var(--fg);
+}
+.graph-modal__body {
+  overflow: auto;
+  padding: var(--s-md);
+}
+.graph-modal__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--s-lg);
+  align-items: start;
+}
+.graph-modal__diagram {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+}
+/* Fit the diagram WITHIN the modal (contain) rather than filling its width: cap
+   the height so a tall graph scales down to the viewport instead of forcing a
+   scroll, and clamp width so a wide one fits too. viewBox holds the aspect ratio. */
+.graph-modal__diagram svg {
+  max-width: 100%;
+  max-height: 78vh;
+  width: auto;
+  height: auto;
+}
+.graph-modal__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+}
+/* Mobile: true full-screen sheet, controls stacked under the diagram. */
+@media (max-width: 800px) {
+  .graph-scrim {
+    padding: 0;
+  }
+  .graph-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+  .graph-modal__layout {
+    grid-template-columns: 1fr;
+  }
+  /* Leave room for the stacked controls below the diagram on a phone. */
+  .graph-modal__diagram svg {
+    max-height: 58dvh;
+  }
+}
 .inspector {
   position: sticky;
   top: var(--s-md);
@@ -259,26 +489,60 @@ body {
   font-family: var(--font-sans);
   font-size: 0.82rem;
 }
+/* The stack utility owns vertical rhythm; drop default <p> margins and cap the
+   measure so the disclaimer stays readable. The fine-print line sits quieter. */
+.app-footer p {
+  margin: 0;
+  line-height: 1.5;
+}
+/* Cap the measure only inside the columns; the fine-print line (a direct child
+   of the footer, outside the grid) stays uncapped so it spans both columns.
+   Scoping the cap here avoids the .app-footer p (0,1,1) vs .footer-fine (0,1,0)
+   specificity collision that kept the fine print pinned to one column. */
+.footer-grid p {
+  max-width: 70ch;
+}
+/* Lay the two substantive blocks side-by-side so the footer uses the full width
+   instead of stacking into one tall column down the left edge. */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-xl);
+  align-items: start;
+}
+.footer-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--accent);
+}
+.footer-fine {
+  opacity: 0.8;
+}
+@media (max-width: 800px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s-md);
+  }
+}
 
-@media (max-width: 860px) {
+/* Tablet breakpoint (matches Artificer --bp-tablet: 800px). The persistent
+   sidenav yields to the drawer, and the two-pane inspectors stack — aligned so
+   nav and content reflow at the same width. */
+@media (max-width: 800px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+  .app-sidenav {
+    display: none;
+  }
   .player-body {
     grid-template-columns: 1fr;
   }
   .inspector {
     position: static;
   }
-}
-
-/* ---- nav separator (Claude Code section) ---- */
-.nav-sep {
-  margin-left: var(--s-sm);
-  padding-left: var(--s-sm);
-  border-left: 1px solid var(--border);
-  color: var(--fg-secondary);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  align-self: center;
 }
 
 /* ---- hooks view ---- */
@@ -433,7 +697,7 @@ body {
   gap: 4px;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 800px) {
   .hooks-body,
   .wire-body {
     grid-template-columns: 1fr;
@@ -560,7 +824,7 @@ body {
   gap: var(--s-lg);
   align-items: start;
 }
-@media (max-width: 860px) {
+@media (max-width: 800px) {
   .seq-body {
     grid-template-columns: 1fr;
   }

@@ -5,10 +5,13 @@ import { LoopGraph } from './LoopGraph'
 import { edgeBetween, usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
 
-/** The headline feature: every harness runs the SAME scenario, stepped in lockstep. */
-export function ScenarioCompare() {
-  const [scenarioId, setScenarioId] = useState(sharedScenarios[0]?.id ?? 'edit-file')
+interface Props {
+  scenarioId: string
+  onScenarioChange: (id: string) => void
+}
 
+/** The headline feature: every harness runs the SAME scenario, stepped in lockstep. */
+export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
   // The "turn complete" caption and the play→end latch (see the effects below).
   const captionRef = useRef<HTMLSpanElement>(null)
   const wasPlaying = useRef(false)
@@ -40,6 +43,33 @@ export function ScenarioCompare() {
     }
   }, [atEnd])
 
+  // Horizontal-scroll affordance. The bottom scrollbar alone isn't discoverable
+  // (macOS overlay scrollbars hide it at rest), so we surface BOTH an edge fade
+  // (passive "there's more") and a chevron pager (active control) — the A/B landed
+  // on keeping both. Each is gated by a live overflow + scroll-position check.
+  const gridRef = useRef<HTMLDivElement>(null)
+  const [scroll, setScroll] = useState({ overflowing: false, atStart: true, atEnd: true })
+  useEffect(() => {
+    const el = gridRef.current
+    if (!el) return
+    const update = () => {
+      setScroll({
+        overflowing: el.scrollWidth > el.clientWidth + 1,
+        atStart: el.scrollLeft <= 1,
+        atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+      })
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      el.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+  const page = (dir: -1 | 1) =>
+    gridRef.current?.scrollBy({ left: dir * gridRef.current.clientWidth * 0.8, behavior: 'smooth' })
+
   return (
     <section className="compare">
       <div className="compare-controls">
@@ -47,7 +77,7 @@ export function ScenarioCompare() {
           ariaLabel="Scenario"
           items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
           active={scenarioId}
-          onSelect={setScenarioId}
+          onSelect={onScenarioChange}
         />
         <TransportBar player={player} playLabel="Play all" total={maxSteps} counterLabel="step" />
       </div>
@@ -56,7 +86,19 @@ export function ScenarioCompare() {
         <Anchored text={sharedScenarios.find((s) => s.id === scenarioId)?.title ?? ''} />
       </p>
 
-      <div className="compare-grid">
+      <div className="compare-scroll">
+        {scroll.overflowing && (
+          <button
+            type="button"
+            className="btn btn--ghost btn--icon compare-chev compare-chev--left"
+            aria-label="Scroll comparison left"
+            disabled={scroll.atStart}
+            onClick={() => page(-1)}
+          >
+            ‹
+          </button>
+        )}
+        <div className="compare-grid" ref={gridRef}>
         {columns.map(({ spec, sc }) => {
           // Each harness clamps the global step to its own scenario length, then holds at its terminal.
           const local = Math.min(step, sc.steps.length - 1)
@@ -85,6 +127,28 @@ export function ScenarioCompare() {
             </div>
           )
         })}
+        </div>
+        {scroll.overflowing && (
+          <button
+            type="button"
+            className="btn btn--ghost btn--icon compare-chev compare-chev--right"
+            aria-label="Scroll comparison right"
+            disabled={scroll.atEnd}
+            onClick={() => page(1)}
+          >
+            ›
+          </button>
+        )}
+        <div
+          className="compare-fade compare-fade--left"
+          data-show={scroll.overflowing && !scroll.atStart}
+          aria-hidden="true"
+        />
+        <div
+          className="compare-fade compare-fade--right"
+          data-show={scroll.overflowing && !scroll.atEnd}
+          aria-hidden="true"
+        />
       </div>
     </section>
   )

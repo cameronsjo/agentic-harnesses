@@ -1,0 +1,114 @@
+{
+  "harness": "llm-tui",
+  "displayName": "llm-tui",
+  "language": "Rust",
+  "repo": "https://github.com/ducks/llm-tui",
+  "version": "384a880b (analyzed revision)",
+  "loopStyle": "Event-driven TUI poll loop (crossterm/ratatui); the model runs on a background thread and streams LlmEvents drained each tick, and EVERY tool call is human-gated y/n/a/q before it runs",
+  "entrypoint": "src/main.rs:69",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "User sends message",
+      "kind": "input",
+      "sourceRef": "src/app.rs:1342",
+      "note": "In the Chat screen, **Enter** appends a user message to the session (**add_message**) and calls **send_llm_message()** (app.rs:1348). There is no separate agent loop — the TUI render loop (**main.rs:69**) is the driver."
+    },
+    {
+      "id": "llm",
+      "label": "provider.chat → stream thread",
+      "kind": "llm",
+      "sourceRef": "src/app.rs:1060",
+      "note": "**send_llm_message** (app.rs:934) builds the system prompt + history, attaches the **6 tool definitions** (provider/mod.rs:127), and calls **provider.chat(...)** which spawns a background thread returning a **Receiver<LlmEvent>**. waiting_for_response is set; the loop does **not** block."
+    },
+    {
+      "id": "poll",
+      "label": "check_response drains LlmEvents",
+      "kind": "decision",
+      "sourceRef": "src/app.rs:515",
+      "note": "Each tick of the render loop (**main.rs:81**) calls **check_response**, which try_recv's one event: **Text** → append to the assistant buffer; **ToolUse** → queue; **Done** → branch on pending work; **Error** → abort. This poller is the real loop."
+    },
+    {
+      "id": "toolcall",
+      "label": "ToolUse → queue + gate",
+      "kind": "tool",
+      "sourceRef": "src/app.rs:522",
+      "note": "A **ToolUse** event pushes (name, input) onto **pending_tool_calls** and, unless **auto_approve_tools** is set (app.rs:529 — the sticky 'All' choice), flips **awaiting_tool_confirmation** and shows `Waiting for confirmation: <tool> [Y]es [N]o [A]ll [Q]uit` (app.rs:546)."
+    },
+    {
+      "id": "approval",
+      "label": "y/n/a/q confirmation gate",
+      "kind": "approval",
+      "sourceRef": "src/app.rs:1243",
+      "note": "While **awaiting_tool_confirmation**, handle_input routes **every** keystroke to **handle_tool_confirmation** (app.rs:1210): **y/Y** → confirm; **n/N** → reject; **a/A** → approve-all + sticky auto-approve; **q/Q/Esc** → cancel the whole queue. This is a real, mandatory, per-call gate — maximal approval, zero autonomy by default."
+    },
+    {
+      "id": "execute",
+      "label": "Run tool (home-sandboxed)",
+      "kind": "execute",
+      "sourceRef": "src/app.rs:656",
+      "note": "**confirm_tool_execution** pops the queue and calls **execute_tool** (app.rs:789), dispatching to one of read/write/edit/glob/grep/bash (tools.rs). Every filesystem tool **canonicalizes the path and refuses anything outside $HOME** (e.g. tools.rs:136); bash refuses to run unless cwd is under $HOME (tools.rs:615). The result string is queued in pending_tool_results."
+    },
+    {
+      "id": "rejected",
+      "label": "Tool rejected by user",
+      "kind": "decision",
+      "sourceRef": "src/app.rs:703",
+      "note": "**reject_tool_execution** pops the call and records the literal result `\"Tool execution rejected by user\"`, then **advance_tool_queue** (app.rs:713). The refusal is fed back to the model as the tool's result — the loop continues rather than ending."
+    },
+    {
+      "id": "continue",
+      "label": "Feed results back to model",
+      "kind": "decision",
+      "sourceRef": "src/app.rs:1083",
+      "note": "Once the queue drains and the **Done** event has arrived (app.rs:554 sets done_received, app.rs:608 / process_tool_completion at app.rs:729 fire), **continue_with_tool_results** saves the assistant + tool-result messages and calls **provider.continue_with_tools** — another model generation with the results appended (provider/mod.rs:101)."
+    },
+    {
+      "id": "done",
+      "label": "Final response saved",
+      "kind": "terminal",
+      "sourceRef": "src/app.rs:609",
+      "note": "A **Done** event with **no pending tool calls or results** saves the assistant message (add_message_full, app.rs:618), clears the buffer, and sets **waiting_for_response = false** (app.rs:633) — the turn ends and the poller goes idle until the next user message."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "llm" },
+    { "from": "llm", "to": "poll", "label": "LlmEvent stream" },
+    { "from": "poll", "to": "toolcall", "on": "ToolUse" },
+    { "from": "poll", "to": "continue", "on": "Done + pending results" },
+    { "from": "poll", "to": "done", "on": "Done, no tools" },
+    { "from": "toolcall", "to": "approval", "on": "needs confirmation" },
+    { "from": "approval", "to": "execute", "on": "y / a", "label": "allow" },
+    { "from": "approval", "to": "rejected", "on": "n", "label": "deny" },
+    { "from": "approval", "to": "done", "on": "q / Esc", "label": "cancel queue" },
+    { "from": "execute", "to": "poll", "label": "tool result queued" },
+    { "from": "rejected", "to": "poll", "label": "refusal queued" },
+    { "from": "continue", "to": "llm", "on": "re-prompt with tool results" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with **no tools**",
+      "steps": ["user-input", "llm", "poll", "done"],
+      "note": "provider.chat streams **Text** events into the buffer; the **Done** event finds no pending tool calls or results, so the final assistant message is saved and waiting_for_response clears. The system prompt explicitly tells the model **not** to use tools for casual conversation (app.rs:1010)."
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to **edit a file**",
+      "steps": ["user-input", "llm", "poll", "toolcall", "approval", "execute", "poll", "continue", "llm", "poll", "done"],
+      "note": "The model emits an **edit** ToolUse; the call queues and the **[Y]es [N]o [A]ll [Q]uit** prompt appears. Pressing **y** runs edit (home-sandboxed, exact-match replace, tools.rs:242). The result is fed back via continue_with_tool_results, the model re-prompts, finishes with no further tools, and the turn ends."
+    },
+    {
+      "id": "denied-tool",
+      "title": "**Tool call is denied** (press n)",
+      "steps": ["user-input", "llm", "poll", "toolcall", "approval", "rejected", "poll", "continue", "llm", "poll", "done"],
+      "note": "At the gate the user presses **n**. reject_tool_execution records `\"Tool execution rejected by user\"` as the tool result and the queue advances. That refusal is sent back to the model (continue_with_tool_results), which then responds without the tool and the turn ends. (Pressing **q** instead would abort the whole turn straight to done — the cancel-queue edge.)"
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues **several tool calls**",
+      "steps": ["user-input", "llm", "poll", "toolcall", "approval", "execute", "poll", "toolcall", "approval", "execute", "poll", "continue", "llm", "poll", "done"],
+      "note": "Multiple **ToolUse** events queue in **pending_tool_calls** (a VecDeque). Each is gated **separately** — y/n decided per call — and advance_tool_queue (app.rs:713) re-shows the prompt for the next one. Pressing **a** once would auto-approve the rest of the queue and all future calls this session. After all run, the collected results are fed back and the model finishes."
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   ARTIFICER · Whimsy · v0.7.2  (the sanctioned exception)
+   ARTIFICER · Whimsy · v0.10.0  (the sanctioned exception)
    ─────────────────────────────────────────────────────────────────────────
    This file is the ONE place in Artificer where the "no looping decoration"
    and "no raw color" rules are deliberately relaxed. Read themes/CLAUDE.md
@@ -59,12 +59,12 @@
      because it references the live vars. First == last so the loop is seamless. */
   --whimsy-gradient-brand: linear-gradient(
     var(--whimsy-angle),
-    var(--accent),        /* gold        */
-    var(--attention),     /* rose        */
-    var(--brand-purple),  /* purple      */
-    var(--steel),         /* steel       */
-    var(--success),       /* apothecary  */
-    var(--accent)         /* → gold      */
+    var(--accent,       #dbbb6f),               /* gold        */
+    var(--attention,    #c4808a),               /* rose        */
+    var(--brand-purple, #5a3a9a),               /* purple      */
+    var(--steel,        #b8cad4),               /* steel       */
+    var(--success,      #4a8a5e),               /* apothecary  */
+    var(--accent,       #dbbb6f)                /* → gold      */
   );
 
   /* Sine-wave mask for the rainbow rule (one period = 64px). */
@@ -272,4 +272,46 @@
     background-position: 30% 50%;   /* hold a pleasant slice of spectrum */
   }
   .whimsy--wave > .whimsy-char { transform: none !important; }
+}
+
+
+/* ─── Whimsy focus ring (opt-in · explicit request only) ───────────────────
+   A burnished ring that circles a focused control — delight layered OVER
+   the standard :focus-visible outline, never replacing it. The system
+   outline still guarantees WCAG focus visibility; this spins on top. It is
+   the ONE sanctioned whimsy use on an interactive control, and only when the
+   owner explicitly asks (see themes/CLAUDE.md § Whimsy). One per view.
+   Reduced-motion: the ring holds still (still visible); the outline still
+   does the a11y work. Reuses --whimsy-l/c/speed — no new tokens. */
+@property --whimsy-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.whimsy-focus { position: relative; }
+.whimsy-focus::after {
+  content: ""; position: absolute; inset: -5px; border-radius: inherit;
+  padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--whimsy-spin),
+    oklch(var(--whimsy-l) var(--whimsy-c)  85),
+    oklch(var(--whimsy-l) var(--whimsy-c) 200),
+    oklch(var(--whimsy-l) var(--whimsy-c) 290),
+    oklch(var(--whimsy-l) var(--whimsy-c) 340),
+    oklch(var(--whimsy-l) var(--whimsy-c)  30),
+    oklch(var(--whimsy-l) var(--whimsy-c)  85));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity var(--dur-fast) var(--ease);
+}
+.whimsy-focus.whimsy--brand::after {
+  background: conic-gradient(from var(--whimsy-spin),
+    var(--accent), var(--attention), var(--brand-purple),
+    var(--steel), var(--success), var(--accent));
+}
+.whimsy-focus:focus-visible::after,
+.whimsy-focus:hover::after {
+  opacity: 1;
+  animation: whimsy-spin var(--whimsy-speed) linear infinite;
+}
+@keyframes whimsy-spin { to { --whimsy-spin: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .whimsy-focus:focus-visible::after,
+  .whimsy-focus:hover::after { animation: none; opacity: 1; }
 }

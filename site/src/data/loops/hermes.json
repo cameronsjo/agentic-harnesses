@@ -1,0 +1,121 @@
+{
+  "harness": "hermes",
+  "displayName": "Hermes Agent",
+  "language": "Python",
+  "repo": "https://github.com/NousResearch/hermes-agent",
+  "version": "02d1da49 (analyzed revision)",
+  "loopStyle": "Per-turn while-loop over model calls (run_conversation: while api_call_count < max_iterations), batched concurrent/sequential tool dispatch, gated only for dangerous shell commands. A self-improving skill/memory meta-loop runs BETWEEN turns, outside this loop.",
+  "entrypoint": "agent/conversation_loop.py:351",
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "run_conversation(user_message)",
+      "kind": "input",
+      "sourceRef": "agent/conversation_loop.py:351",
+      "note": "**AIAgent.run_conversation** (run_agent.py:4476) delegates to the module-level **run_conversation**. It builds/restores the system prompt and may inject a **memory/skill nudge** into the turn on a turn-count interval (conversation_loop.py:553) — the only place the meta-loop touches the per-turn path."
+    },
+    {
+      "id": "loop-step",
+      "label": "Turn loop (while iterations/budget)",
+      "kind": "decision",
+      "sourceRef": "agent/conversation_loop.py:796",
+      "note": "`while (api_call_count < agent.max_iterations and agent.iteration_budget.remaining > 0)`. Each iteration sanitizes the message list, builds API kwargs, calls the model, and either finishes or dispatches tools and loops. Bounded by **max_iterations** and an **iteration_budget**."
+    },
+    {
+      "id": "llm",
+      "label": "_interruptible_api_call",
+      "kind": "llm",
+      "sourceRef": "agent/conversation_loop.py:1308",
+      "note": "**agent._interruptible_api_call(api_kwargs)** runs one model generation through the active transport adapter (Anthropic / OpenAI-compatible / Bedrock / Gemini / Codex, etc.). Supports streaming via `_stream_callback`, with extensive retry/backoff and error-recovery wrapping (retry loop at conversation_loop.py:1157)."
+    },
+    {
+      "id": "tool-decision",
+      "label": "assistant_message.tool_calls?",
+      "kind": "decision",
+      "sourceRef": "agent/conversation_loop.py:3608",
+      "note": "`if assistant_message.tool_calls:` — if the turn requested tools, validate/repair the names and dispatch; otherwise the turn's text **is the final response** and the loop ends (returned at conversation_loop.py:4703)."
+    },
+    {
+      "id": "dispatch",
+      "label": "_execute_tool_calls (batch)",
+      "kind": "tool",
+      "sourceRef": "agent/conversation_loop.py:3840",
+      "note": "**agent._execute_tool_calls** (run_agent.py:4376) runs **all** tool calls from the assistant message — independent calls **concurrently** (_execute_tool_calls_concurrent, run_agent.py:4450), otherwise **sequentially** (run_agent.py:4455). 100+ tools are available via the registry (tools/registry.py)."
+    },
+    {
+      "id": "approval",
+      "label": "Dangerous-command guard",
+      "kind": "approval",
+      "sourceRef": "tools/terminal_tool.py:261",
+      "note": "**Not a uniform per-tool gate.** Only **shell commands** flagged by **detect_dangerous_command** (tools/approval.py:482) route through `_check_all_guards` → an interactive/gateway **approval_callback** (terminal_tool.py:264). File edits and most tools run **ungated**. A frozen **HERMES_YOLO_MODE** (approval.py, read once at import to block prompt-injection escalation) and per-session/permanent allowlists can auto-approve. A low-risk command may be auto-approved by an auxiliary LLM."
+    },
+    {
+      "id": "execute",
+      "label": "Run tool body",
+      "kind": "execute",
+      "sourceRef": "run_agent.py:4455",
+      "note": "The tool's implementation runs in the selected **terminal backend** (local / Docker / SSH / Singularity / Modal / Daytona). Output is captured as a tool result and appended to the message list for the next iteration."
+    },
+    {
+      "id": "denied",
+      "label": "Command blocked",
+      "kind": "decision",
+      "sourceRef": "tools/terminal_tool.py:1929",
+      "note": "If the user/gateway denies (or a hardline guard blocks) the dangerous command, a **`pending_approval` → blocked** result is returned instead of running it (terminal_tool.py:1929). The block message is fed back to the model as the tool result, so the loop **continues** and the model adapts."
+    },
+    {
+      "id": "done",
+      "label": "Turn complete",
+      "kind": "terminal",
+      "sourceRef": "agent/conversation_loop.py:3608",
+      "note": "When the assistant turn carried **no tool calls**, run_conversation returns the final text (conversation_loop.py:4703). The turn loop also exits on budget exhaustion or user interrupt (`_turn_exit_reason`, conversation_loop.py:733)."
+    },
+    {
+      "id": "curate",
+      "label": "Self-improving meta-loop (between turns)",
+      "kind": "decision",
+      "sourceRef": "agent/curator.py:199",
+      "note": "**Outside the per-turn loop.** On an hours-long interval gated by idle time (**curator.should_run_now**, curator.py:199; get_interval_hours/get_min_idle_hours), a **background_review** (agent/background_review.py) curates skills and memory: autonomous **skill creation** after complex tasks, skill self-improvement during use, FTS5 session search, and Honcho user modeling. This is hermes's structural signature — a second loop on a different clock — so it is represented here as one trailing node, not folded into the four turn-scoped scenarios."
+    }
+  ],
+  "edges": [
+    { "from": "user-input", "to": "loop-step" },
+    { "from": "loop-step", "to": "llm", "on": "iterations & budget remain" },
+    { "from": "llm", "to": "tool-decision" },
+    { "from": "tool-decision", "to": "done", "on": "no tool_calls" },
+    { "from": "tool-decision", "to": "dispatch", "on": "tool_calls present" },
+    { "from": "dispatch", "to": "approval", "on": "dangerous shell command" },
+    { "from": "dispatch", "to": "execute", "on": "safe op (file edits, most tools)" },
+    { "from": "approval", "to": "execute", "on": "approved / yolo / allowlisted" },
+    { "from": "approval", "to": "denied", "on": "denied / blocked" },
+    { "from": "execute", "to": "loop-step", "label": "tool result" },
+    { "from": "denied", "to": "loop-step", "label": "blocked result fed back" },
+    { "from": "done", "to": "curate", "on": "async, between turns" }
+  ],
+  "scenarios": [
+    {
+      "id": "plain-answer",
+      "title": "Model answers with **no tools**",
+      "steps": ["user-input", "loop-step", "llm", "tool-decision", "done"],
+      "note": "The model returns text with no `tool_calls`; tool-decision falls through and run_conversation returns the text. (A turn-count nudge may have been injected at the top, but it does not change the loop shape.)"
+    },
+    {
+      "id": "edit-file",
+      "title": "User asks to **edit a file**",
+      "steps": ["user-input", "loop-step", "llm", "tool-decision", "dispatch", "execute", "loop-step", "llm", "tool-decision", "done"],
+      "note": "The model calls a file-edit tool. Crucially, hermes **does not** put file edits behind the interactive approval prompt — the dangerous-command guard targets shell commands — so dispatch routes straight to **execute** (subject to file-safety boundaries). The result is fed back, the loop re-prompts, and the model finishes."
+    },
+    {
+      "id": "denied-tool",
+      "title": "**Tool call is denied** (dangerous shell command)",
+      "steps": ["user-input", "loop-step", "llm", "tool-decision", "dispatch", "approval", "denied", "loop-step", "llm", "tool-decision", "done"],
+      "note": "The model runs a flagged command (e.g. `rm -rf`). detect_dangerous_command trips, the approval callback prompts, and the user (or a hardline guard) **denies**. A blocked result is fed back, the model adapts on the next turn, and the turn ends. This is the only path that exercises hermes's gate."
+    },
+    {
+      "id": "multi-tool",
+      "title": "Model issues **several tool calls**",
+      "steps": ["user-input", "loop-step", "llm", "tool-decision", "dispatch", "execute", "execute", "loop-step", "llm", "tool-decision", "done"],
+      "note": "One assistant turn carries multiple tool calls. **_execute_tool_calls** runs them in a single dispatch — independent calls **concurrently** (run_agent.py:4450). The two execute steps depict that batch; all results are appended together before the loop re-prompts and the model finishes."
+    }
+  ]
+}
