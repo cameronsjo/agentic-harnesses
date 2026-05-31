@@ -117,3 +117,12 @@ feedback issue filed upstream.
 - **Friction:** `.surface-tool, .surface-tool *` forces `--font-mono` on every descendant, so a prose disclaimer footer can't escape to `--font-sans` (lost at equal specificity; Artificer loads last). No footer/colophon primitive exists either. Hand-rolled `.app-footer` + a two-column `.footer-grid` + full-width `.footer-fine`, and accepted mono prose.
 - **Wished existed:** a prose/document escape hatch inside a tool surface, and a `.footer`/`.colophon` pattern (columns + a fine-print tier).
 - **Don't upstream:** the exact column proportions and copy. See also `docs/disclaimer-footer-pattern.md`.
+
+## 2026-05-31 — hamburger as primary mobile nav (size + contrast)
+
+- **Upstream issue:** cameronsjo/artificer-design-system#114
+- **Type:** misfit + override, Lane 3.
+- **Friction:** As the sole nav affordance on a phone, Artificer's hamburger under-serves on two axes. (1) The `menu` glyph (`artificer-icons.js`, `M3 6h10M3 8h10M3 10h10`) packs its three bars at y=6/8/10 — 2px gaps in the middle third of a 16-tall viewBox — so at the default 16px it reads squished. (2) `.btn--ghost.btn--icon` rests at `--fg-secondary`, too faint for a primary control. The faint-ghost repeat was already flagged for the modal close button in the SPA consumer brief.
+- **Fix (consumer):** `data-icon-size="22"` on `<i data-icon="menu">` in `site/src/App.tsx`; `.appbar__menu-btn { color: var(--fg) }` in `site/src/styles.css`. Kept the library glyph — size, not an override of the path.
+- **Wished existed:** a full-height `menu` glyph (bars ≈ y 4/8/12) that reads at 16px; a `.btn--icon--prominent` (or guidance) for icon buttons used as primary controls.
+- **Don't upstream:** the `22` size value, the `.appbar__menu-btn` selector, and the mobile compare carousel composition (product-specific).
