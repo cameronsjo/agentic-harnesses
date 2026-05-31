@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { sharedScenarios } from './data'
 import type { LoopSpec } from './types'
 import { KIND_COLOR } from './types'
 import { usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
+import { GraphModal } from './GraphModal'
 import { PARTICIPANTS, projectScenario, type Participant } from './sequence'
 
 const MARGIN = 70
@@ -37,6 +38,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
   // (mirrors ScenarioCompare's maxSteps guard). active stays undefined and renders nothing.
   const player = usePlayerTimer(Math.max(1, messages.length), `${spec?.harness}:${scenarioId}`)
   const { step } = player
+  const [expanded, setExpanded] = useState(false)
 
   if (!spec) return <p className="empty">No specs.</p>
 
@@ -45,21 +47,9 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
   // Namespace the SVG markers per diagram, matching LoopGraph's url(#id) collision guard.
   const mid = `${spec.harness}-${scenarioId}`
 
-  return (
-    <section className="seq-view">
-      <div className="compare-controls">
-        <TabPicker
-          ariaLabel="Scenario"
-          items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
-          active={scenarioId}
-          onSelect={onScenarioChange}
-        />
-        <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
-      </div>
-
-      <div className="seq-body">
-        <div className="graph-pane">
-          <svg viewBox={`0 0 ${WIDTH} ${height}`} width={WIDTH} height={height} role="img" aria-label="sequence diagram">
+  // Reused inline and in the expand modal — the lifeline diagram and the message inspector.
+  const diagram = (
+    <svg viewBox={`0 0 ${WIDTH} ${height}`} width={WIDTH} height={height} role="img" aria-label="sequence diagram">
             <defs>
               <marker id={`seq-arrow-${mid}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-bright)" />
@@ -118,7 +108,44 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
                 </g>
               )
             })}
-          </svg>
+    </svg>
+  )
+
+  const messageCard = active && (
+    <div className="node-card">
+      <div className="node-card-head">
+        <b>
+          {active.from} → {active.to}
+        </b>
+      </div>
+      <div className="node-kind">{active.label}</div>
+      {active.sourceRef && <code className="source-ref">{active.sourceRef}</code>}
+      {active.note && <p className="node-note">{active.note}</p>}
+    </div>
+  )
+
+  return (
+    <section className="seq-view">
+      <div className="compare-controls">
+        <TabPicker
+          ariaLabel="Scenario"
+          items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
+          active={scenarioId}
+          onSelect={onScenarioChange}
+        />
+        <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
+      </div>
+
+      <div className="seq-body">
+        <div className="graph-pane">
+          <button
+            type="button"
+            className="btn btn--secondary graph-expand"
+            onClick={() => setExpanded(true)}
+          >
+            <span aria-hidden="true">⤢</span> Expand
+          </button>
+          {diagram}
         </div>
 
         <aside className="inspector">
@@ -126,20 +153,25 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
             <span className="lang-badge">{spec.language}</span>
             <span className="loop-style">{spec.loopStyle}</span>
           </div>
-          {active && (
-            <div className="node-card">
-              <div className="node-card-head">
-                <b>
-                  {active.from} → {active.to}
-                </b>
-              </div>
-              <div className="node-kind">{active.label}</div>
-              {active.sourceRef && <code className="source-ref">{active.sourceRef}</code>}
-              {active.note && <p className="node-note">{active.note}</p>}
-            </div>
-          )}
+          {messageCard}
         </aside>
       </div>
+
+      <GraphModal open={expanded} onClose={() => setExpanded(false)} title={spec.displayName}>
+        <div className="graph-modal__layout">
+          <div className="graph-modal__diagram">{diagram}</div>
+          <aside className="graph-modal__side">
+            <TabPicker
+              ariaLabel="Scenario"
+              items={sharedScenarios.map((s) => ({ id: s.id, label: s.id }))}
+              active={scenarioId}
+              onSelect={onScenarioChange}
+            />
+            <TransportBar player={player} playLabel="Play" total={messages.length} counterLabel="msg" />
+            {messageCard}
+          </aside>
+        </div>
+      </GraphModal>
     </section>
   )
 }

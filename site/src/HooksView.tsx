@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { specByHarness } from './data'
 import { LoopGraph } from './LoopGraph'
+import { GraphModal } from './GraphModal'
 import hooksData from './data/hooks/claude-code-events.json'
 
 interface HookEvent {
@@ -19,6 +20,7 @@ const events = (hooksData as { events: HookEvent[] }).events
 export function HooksView() {
   const spec = specByHarness('claude-code')
   const [selected, setSelected] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   const badges = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -30,6 +32,56 @@ export function HooksView() {
 
   const shown = selected ? events.filter((e) => e.firesAt === selected) : events
   const selectedLabel = selected ? spec.nodes.find((n) => n.id === selected)?.label : null
+
+  // Reused inline and in the expand modal — the annotated loop and the event list.
+  const graph = (
+    <LoopGraph
+      spec={spec}
+      badges={badges}
+      onNodeClick={(id) => setSelected((cur) => (cur === id ? null : id))}
+      activeNodeId={selected ?? undefined}
+    />
+  )
+  const eventList = (
+    <aside className="hooks-list">
+      <div className="hooks-list-head">
+        {selected ? (
+          <>
+            <b>{selectedLabel}</b>
+            <button className="btn btn--ghost tab" onClick={() => setSelected(null)}>
+              clear ✕
+            </button>
+          </>
+        ) : (
+          <b>All events ({events.length})</b>
+        )}
+      </div>
+
+      <ul className="event-list">
+        {shown.map((e) => (
+          <li key={e.event} className="event-item">
+            <div className="event-head">
+              <b>{e.event}</b>
+              {e.blocking ? (
+                <span className="badge badge--urgent">blocking</span>
+              ) : (
+                <span className="badge badge--ghost">observe</span>
+              )}
+            </div>
+            <div className="event-when">{e.when}</div>
+            <div className="event-controls">
+              {e.controls.map((c) => (
+                <span key={c} className="control-chip">
+                  {c}
+                </span>
+              ))}
+            </div>
+            <code className="source-ref">{e.sourceRef}</code>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
 
   return (
     <section className="hooks-view">
@@ -43,53 +95,25 @@ export function HooksView() {
 
       <div className="hooks-body">
         <div className="graph-pane">
-          <LoopGraph
-            spec={spec}
-            badges={badges}
-            onNodeClick={(id) => setSelected((cur) => (cur === id ? null : id))}
-            activeNodeId={selected ?? undefined}
-          />
+          <button
+            type="button"
+            className="btn btn--secondary graph-expand"
+            onClick={() => setExpanded(true)}
+          >
+            <span aria-hidden="true">⤢</span> Expand
+          </button>
+          {graph}
         </div>
 
-        <aside className="hooks-list">
-          <div className="hooks-list-head">
-            {selected ? (
-              <>
-                <b>{selectedLabel}</b>
-                <button className="btn btn--ghost tab" onClick={() => setSelected(null)}>
-                  clear ✕
-                </button>
-              </>
-            ) : (
-              <b>All events ({events.length})</b>
-            )}
-          </div>
-
-          <ul className="event-list">
-            {shown.map((e) => (
-              <li key={e.event} className="event-item">
-                <div className="event-head">
-                  <b>{e.event}</b>
-                  {e.blocking ? (
-                    <span className="badge badge--urgent">blocking</span>
-                  ) : (
-                    <span className="badge badge--ghost">observe</span>
-                  )}
-                </div>
-                <div className="event-when">{e.when}</div>
-                <div className="event-controls">
-                  {e.controls.map((c) => (
-                    <span key={c} className="control-chip">
-                      {c}
-                    </span>
-                  ))}
-                </div>
-                <code className="source-ref">{e.sourceRef}</code>
-              </li>
-            ))}
-          </ul>
-        </aside>
+        {eventList}
       </div>
+
+      <GraphModal open={expanded} onClose={() => setExpanded(false)} title={spec.displayName}>
+        <div className="graph-modal__layout">
+          <div className="graph-modal__diagram">{graph}</div>
+          <div className="graph-modal__side">{eventList}</div>
+        </div>
+      </GraphModal>
     </section>
   )
 }
