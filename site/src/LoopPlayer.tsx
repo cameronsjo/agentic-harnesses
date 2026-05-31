@@ -112,6 +112,15 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         <div className="graph-modal__layout">
           <div className="graph-modal__diagram">{graph}</div>
           <aside className="graph-modal__side">
+            <TabPicker
+              ariaLabel="Scenarios"
+              items={spec.scenarios.map((s) => ({ id: s.id, label: s.id }))}
+              active={scenarioId}
+              onSelect={(id) => onScenarioChange?.(id)}
+            />
+            <p className="scenario-title">
+              <Anchored text={sc.title} />
+            </p>
             <TransportBar player={player} playLabel="Play" total={sc.steps.length} counterLabel="step" />
             {nodeCard}
           </aside>
