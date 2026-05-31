@@ -21,3 +21,6 @@ npm-debug.log*
 
 # External tooling output (CodeBoarding)
 .codeboarding/
+
+# review-loop state (local, ephemeral)
+.review-loop.local.md
