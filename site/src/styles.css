@@ -332,6 +332,86 @@ body {
 .loop-node-line {
   display: block;
 }
+
+/* ---- expand-to-modal (GraphModal) ---- */
+/* Trigger parked in the graph pane's corner; dim until hover/focus. */
+.graph-pane {
+  position: relative;
+}
+.graph-expand {
+  position: absolute;
+  top: var(--s-sm);
+  right: var(--s-sm);
+  z-index: 1;
+  opacity: 0.55;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.graph-pane:hover .graph-expand,
+.graph-expand:focus-visible {
+  opacity: 1;
+}
+/* Large, near-fullscreen panel (Artificer .scrim/.modal supply the overlay + chrome). */
+.graph-modal {
+  width: min(96vw, 1100px);
+  max-width: min(96vw, 1100px);
+  max-height: 92vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.graph-modal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-md);
+  padding: var(--s-sm) var(--s-sm) var(--s-sm) var(--s-md);
+  border-bottom: 1px solid var(--border);
+}
+.graph-modal__title {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.graph-modal__body {
+  overflow: auto;
+  padding: var(--s-md);
+}
+.graph-modal__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--s-lg);
+  align-items: start;
+}
+.graph-modal__diagram {
+  overflow: auto;
+}
+/* Scale the diagram up to fill the modal column (overrides the SVG's intrinsic
+   width/height attributes); aspect ratio held by the viewBox. */
+.graph-modal__diagram svg {
+  width: 100%;
+  height: auto;
+}
+.graph-modal__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+}
+/* Mobile: true full-screen sheet, controls stacked under the diagram. */
+@media (max-width: 800px) {
+  .graph-scrim {
+    padding: 0;
+  }
+  .graph-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+  .graph-modal__layout {
+    grid-template-columns: 1fr;
+  }
+}
 .inspector {
   position: sticky;
   top: var(--s-md);

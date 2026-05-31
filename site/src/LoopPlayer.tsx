@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LoopSpec } from './types'
 import { KIND_LABEL } from './types'
 import { scenario } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
+import { GraphModal } from './GraphModal'
 import { edgeBetween, usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
 
@@ -18,6 +19,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
   const sc = scenario(spec, scenarioId) ?? spec.scenarios[0]
   const player = usePlayerTimer(sc.steps.length, `${spec.harness}:${scenarioId}`)
   const { step, playing, atEnd } = player
+  const [expanded, setExpanded] = useState(false)
 
   // The "turn complete" caption and the play→end latch (see the effects below).
   const captionRef = useRef<HTMLSpanElement>(null)
@@ -41,6 +43,24 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
     }
   }, [atEnd])
 
+  // Reused inline and in the expand modal — the diagram and the live node card.
+  const graph = <LoopGraph spec={spec} activeNodeId={activeNodeId} activeEdge={activeEdge} />
+  const nodeCard = node && (
+    <div className="card card--active node-card">
+      <div className="node-card-head">
+        <span className={`dot dot--${dotFor(node.kind)}`} />
+        <b>{node.label}</b>
+      </div>
+      <div className="node-kind">{KIND_LABEL[node.kind]}</div>
+      {node.sourceRef && <code className="source-ref">{node.sourceRef}</code>}
+      {node.note && (
+        <p className="node-note">
+          <Anchored text={node.note} />
+        </p>
+      )}
+    </div>
+  )
+
   return (
     <div className="player">
       <TabPicker
@@ -56,7 +76,15 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
       <div className="player-body">
         <div className="card graph-pane">
-          <LoopGraph spec={spec} activeNodeId={activeNodeId} activeEdge={activeEdge} />
+          <button
+            type="button"
+            className="btn btn--ghost btn--icon graph-expand"
+            aria-label="Expand diagram"
+            onClick={() => setExpanded(true)}
+          >
+            ⤢
+          </button>
+          {graph}
         </div>
 
         <aside className="inspector">
@@ -71,21 +99,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
             )}
           </div>
 
-          {node && (
-            <div className="card card--active node-card">
-              <div className="node-card-head">
-                <span className={`dot dot--${dotFor(node.kind)}`} />
-                <b>{node.label}</b>
-              </div>
-              <div className="node-kind">{KIND_LABEL[node.kind]}</div>
-              {node.sourceRef && <code className="source-ref">{node.sourceRef}</code>}
-              {node.note && (
-                <p className="node-note">
-                  <Anchored text={node.note} />
-                </p>
-              )}
-            </div>
-          )}
+          {nodeCard}
 
           {sc.note && (
             <p className="scenario-note">
@@ -94,6 +108,16 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
           )}
         </aside>
       </div>
+
+      <GraphModal open={expanded} onClose={() => setExpanded(false)} title={spec.displayName}>
+        <div className="graph-modal__layout">
+          <div className="graph-modal__diagram">{graph}</div>
+          <aside className="graph-modal__side">
+            <TransportBar player={player} playLabel="Play" total={sc.steps.length} counterLabel="step" />
+            {nodeCard}
+          </aside>
+        </div>
+      </GraphModal>
     </div>
   )
 }
