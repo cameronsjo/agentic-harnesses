@@ -102,13 +102,20 @@ body {
 }
 
 /* ---- scenario / transport pill tabs (TabPicker) ---- */
+/* Inactive pills are .btn--ghost (transparent, fg-secondary). The active one
+   needs to read as clearly *selected*: accent-tinted fill + accent label + weight
+   + an accent underline — not just the faint raised bg it had before. */
 .tab {
   border-radius: var(--radius-sm);
 }
 .tab--active {
-  background: var(--bg-raised);
-  color: var(--fg);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  background: var(--accent-fill);
+  color: var(--accent-bright);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent-bright);
+}
+.tab--active:hover {
+  color: var(--accent-bright);
 }
 
 /* ---- legend ---- */
