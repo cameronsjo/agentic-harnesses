@@ -44,16 +44,9 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
   }, [atEnd])
 
   // Horizontal-scroll affordance. The bottom scrollbar alone isn't discoverable
-  // (macOS overlay scrollbars hide it at rest), so we surface an edge fade and/or
-  // chevron pager. Variant is an eyeball A/B via ?scroll= — fade | chevrons | both
-  // (default both). No tracking/cookie: flip the param, judge by feel, pick a winner.
-  const [variant] = useState<'fade' | 'chevrons' | 'both'>(() => {
-    const v = new URLSearchParams(window.location.search).get('scroll')
-    return v === 'fade' || v === 'chevrons' ? v : 'both'
-  })
-  const showFade = variant === 'fade' || variant === 'both'
-  const showChevrons = variant === 'chevrons' || variant === 'both'
-
+  // (macOS overlay scrollbars hide it at rest), so we surface BOTH an edge fade
+  // (passive "there's more") and a chevron pager (active control) — the A/B landed
+  // on keeping both. Each is gated by a live overflow + scroll-position check.
   const gridRef = useRef<HTMLDivElement>(null)
   const [scroll, setScroll] = useState({ overflowing: false, atStart: true, atEnd: true })
   useEffect(() => {
@@ -94,7 +87,7 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
       </p>
 
       <div className="compare-scroll">
-        {showChevrons && scroll.overflowing && (
+        {scroll.overflowing && (
           <button
             type="button"
             className="btn btn--ghost btn--icon compare-chev compare-chev--left"
@@ -135,7 +128,7 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
           )
         })}
         </div>
-        {showChevrons && scroll.overflowing && (
+        {scroll.overflowing && (
           <button
             type="button"
             className="btn btn--ghost btn--icon compare-chev compare-chev--right"
@@ -146,20 +139,16 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
             ›
           </button>
         )}
-        {showFade && (
-          <>
-            <div
-              className="compare-fade compare-fade--left"
-              data-show={scroll.overflowing && !scroll.atStart}
-              aria-hidden="true"
-            />
-            <div
-              className="compare-fade compare-fade--right"
-              data-show={scroll.overflowing && !scroll.atEnd}
-              aria-hidden="true"
-            />
-          </>
-        )}
+        <div
+          className="compare-fade compare-fade--left"
+          data-show={scroll.overflowing && !scroll.atStart}
+          aria-hidden="true"
+        />
+        <div
+          className="compare-fade compare-fade--right"
+          data-show={scroll.overflowing && !scroll.atEnd}
+          aria-hidden="true"
+        />
       </div>
     </section>
   )
