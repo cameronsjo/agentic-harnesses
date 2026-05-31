@@ -23,7 +23,7 @@ It is also by far the largest harness profiled — `conversation_loop.py` alone 
 - **Tool branch:** `if assistant_message.tool_calls:` (`conversation_loop.py:3608`). Tools present → dispatch and loop; no tools → the text is the answer, returned at `:4703`.
 - **Exit reasons:** tracked in `_turn_exit_reason` (`:733`) — normal finish, `budget_exhausted`, `interrupted_by_user`, `guardrail_halt`, etc.
 
-```
+```text
 user msg (+nudge?) ──▶ turn loop ──▶ _interruptible_api_call ──▶ tool_calls?
        ▲                                                          │ no ──▶ done ──async──▶ curate (skills/memory)
        │ tool result / blocked result                            │ yes

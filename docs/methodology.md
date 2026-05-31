@@ -35,7 +35,7 @@ git clone https://github.com/earendil-works/pi.git           && git -C pi       
 git clone https://github.com/mpfaffenberger/code_puppy.git   && git -C code_puppy checkout ccde401a
 git clone https://github.com/ultraworkers/claw-code.git      && git -C claw-code  checkout 4d3dc5b8
 git clone https://github.com/ducks/claux.git                 && git -C claux      checkout d906c568
-git clone https://github.com/NousResearch/hermes-agent.git   && git -C hermes     checkout 02d1da49
+git clone https://github.com/NousResearch/hermes-agent.git   && git -C hermes-agent checkout 02d1da49
 git clone https://github.com/ducks/llm-tui.git               && git -C llm-tui    checkout 384a880b
 ```
 

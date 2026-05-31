@@ -95,5 +95,6 @@ Add `<script src="/artificer/artificer-focus.js" defer></script>`.
 - Fold old `@media (max-width:860px)` into tablet breakpoint.
 
 ## Verification
+
 1. Build: `cd site && npm run build` exits 0.
 2-7. Manual surface checks per plan.

@@ -12,7 +12,7 @@ feedback issue filed upstream.
   - px→rem (0.10.0): app already fully `rem`-based, no `--t-*-size` overrides.
   - theme key (0.10.0): already `'artificer.theme'` (dot) in `artificer-theme.js` + `App.tsx`.
   - brandPurpleBright/`.tok-keyword` (0.10.1): app emits no `tok-*` spans; syntax CSS dormant.
-- **Only real change:** Added the inline FOUC bootstrap (`theme-bootstrap.html`) to `index.html` `<head>` before first paint; kept the deferred `artificer-theme.js` for the runtime API. `App.tsx` unchanged (its `.theme-toggle` class never collides with the new `[data-theme-toggle]` `bind()`).
+- **Only real change:** Added an inline FOUC bootstrap `<script>` to `site/index.html`'s `<head>` (runs before first paint — no separate `theme-bootstrap.html` artifact); kept the deferred `artificer-theme.js` for the runtime API. `App.tsx` unchanged (its `.theme-toggle` class never collides with the new `[data-theme-toggle]` `bind()`).
 - **Upstream bug reported:** `main/src/artificer.css` banner still says "v0.6" while `--art-version` is `0.10.1` — banner-based detection misleads.
 - **Lane:** 3 (no palette value or role-name changes).
 

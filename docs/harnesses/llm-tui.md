@@ -20,7 +20,7 @@ llm-tui is the **maximal-approval, zero-autonomy** end of the comparison. It is 
 - **The real loop:** `check_response` (`app.rs:515`) `try_recv`s one `LlmEvent` per tick — `Text` (append to buffer), `ToolUse` (queue), `Done` (branch), `Error` (abort).
 - **Continue vs. stop:** a `Done` event with pending tool results triggers `continue_with_tool_results` (`app.rs:1083`) — another model generation; a `Done` with nothing pending saves the final message and clears `waiting_for_response` (`app.rs:633`).
 
-```
+```text
 user msg ──▶ provider.chat (bg thread) ──▶ check_response (poll each tick)
                                                │  Text → buffer
                                                │  ToolUse → queue ──▶ [Y]es [N]o [A]ll [Q]uit

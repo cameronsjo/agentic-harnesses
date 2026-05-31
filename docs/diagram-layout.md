@@ -16,7 +16,7 @@ node column off-center, so once the SVG is centered in its container the *boxes*
 look shifted. Instead the frame is **symmetric about the node center**: pad both
 sides to the wider gutter (`sideMax = max(leftPad, rightPad)`), then
 
-```
+```text
 viewMinX = leftPad - sideMax   // ≤ 0
 width    = NODE_W + 2 * sideMax
 ```

@@ -96,9 +96,11 @@ From **fully owned** (Claude Code's hand-written async generator; pi's dual `whi
 This is the sharpest divergence, and the new harnesses stretch it to both extremes. **llm-tui** is the maximal end — *every* tool call blocks on a `y/n/a/q` keypress with no rulesets at all, leaning on a hard `$HOME` sandbox for the rest. **claux** and **Claw Code** join Claude Code's **one-gate-in-the-loop** camp (claux with four modes; Claw Code with the most elaborate gate here — sandbox modes + per-tool rules + Pre/PostToolUse hooks + approval tokens). **Hermes** is the permissive extreme: there is *no* per-tool prompt — only *dangerous shell commands* route through an approval callback (file edits run ungated), with a frozen `HERMES_YOLO_MODE` and auxiliary-LLM auto-approval to cut fatigue. Against these, OpenCode and code_puppy's **in-tool** gates and pi's **no interactive gate** fill the middle. None is strictly better; they trade uniform safety against flexibility and headless ergonomics.
 
 ### 3. Whose tool-call protocol?
+
 Claude Code, **Claw Code**, and **claux** speak **Anthropic-native** `tool_use`/`tool_result` directly. **Hermes** uses **OpenAI-style** `tool_calls`. **llm-tui** rolls its own provider-agnostic tool definitions and round-trips results as plain text. The remaining three delegate the wire protocol to a normalizing layer — the **Vercel AI SDK** (OpenCode), a **unified AI API** (pi), or **pydantic-ai** (code_puppy) — so they describe tools once and run on many models.
 
 ### 4. One loop, or two?
+
 A new axis the latest cohort introduces. Every other harness has exactly one loop — the turn cycle. **Hermes** has two: the per-turn loop modeled here, *plus* a self-improving **skill/memory meta-loop** that runs on an hours-long idle-gated interval *between* turns (`curator.should_run_now`), autonomously creating and refining skills. That second loop is its headline feature but is structurally external to the coding turn — which is why it appears in the spec as a single trailing node rather than inside the four scenarios.
 
 ## Related
