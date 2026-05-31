@@ -24,3 +24,6 @@ npm-debug.log*
 
 # review-loop state (local, ephemeral)
 .review-loop.local.md
+
+# retro raw-material index (local)
+.claude/retro/
