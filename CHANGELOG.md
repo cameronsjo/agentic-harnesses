@@ -29,3 +29,10 @@ All notable changes to this project are documented here. Format loosely follows
   look). The wordmark breathes the spectrum once on load and then settles; a
   "turn complete" caption shimmers once when a played scenario reaches its
   terminal node, in both the single and side-by-side players.
+- Visualizer: upgraded the vendored Artificer design system from **v0.6 → v0.10.1**
+  (full re-vendor of `site/public/artificer/` from canonical `src/`; Whimsy now
+  v0.10.0). Adds `--art-version` provenance, the v0.9.0 baseline-contract tokens,
+  and focus / breakpoint / nav primitives. Added an inline FOUC theme bootstrap in
+  `site/index.html` so the dark-first page no longer risks a theme flash on reload,
+  and `scripts/revendor-artificer.sh` to reproduce the fetch. See
+  `docs/artificer-adaptations.md`.

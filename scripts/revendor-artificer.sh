@@ -25,18 +25,25 @@ FILES=(
   tokens.json
 )
 
+# Smallest real source file is ~1.9 KB; a floor well under that rejects an
+# empty fetch *and* the JSON-null / error-body case that decodes to a few
+# garbage bytes (gh's own HTTP failures are already caught by pipefail).
+MIN_BYTES=200
+tmp=""
+trap 'rm -f "${tmp:-}"' EXIT
+
 echo "Re-vendoring ${#FILES[@]} files from ${REPO}@${REF}:/src/ -> ${DEST}"
 for f in "${FILES[@]}"; do
   tmp="$(mktemp)"
   gh api "repos/${REPO}/contents/src/${f}?ref=${REF}" --jq '.content' \
     | base64 -d > "$tmp"
-  if [[ ! -s "$tmp" ]]; then
-    echo "  ! ${f}: fetched empty — aborting" >&2
-    rm -f "$tmp"
+  size=$(wc -c < "$tmp" | tr -d ' ')
+  if (( size < MIN_BYTES )); then
+    echo "  ! ${f}: fetched ${size}b (< ${MIN_BYTES}b floor) — aborting" >&2
     exit 1
   fi
   mv "$tmp" "${DEST}/${f}"
-  echo "  ok ${f} ($(wc -c < "${DEST}/${f}" | tr -d ' ') bytes)"
+  echo "  ok ${f} (${size} bytes)"
 done
 
 echo "Done. --art-version in new artificer.css:"
