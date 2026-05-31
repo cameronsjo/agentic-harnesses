@@ -255,7 +255,16 @@ export function App() {
             <span className="footer-label">Disclosure</span>
             <p>
               Built with <b className="anchor">Claude</b> and <b className="anchor">Claude&nbsp;Code</b>, on
-              the <b className="anchor">Artificer design system</b>. In the interest of full disclosure:
+              the{' '}
+              <a
+                className="anchor"
+                href="https://cameronsjo.github.io/artificer/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Artificer design system
+              </a>
+              . In the interest of full disclosure:
               this was written by — and with — a genuine Claude&nbsp;Code partisan. The diagrams still
               aim to treat every harness on equal terms. Spot a bias or an error?{' '}
               <a className="repo-link" href="https://github.com/cameronsjo/agentic-harnesses/issues">

@@ -18,6 +18,7 @@ npm-debug.log*
 *.swp
 .claude/intros/
 .claude/worktrees/
+.claude/scheduled_tasks.lock
 
 # External tooling output (CodeBoarding)
 .codeboarding/

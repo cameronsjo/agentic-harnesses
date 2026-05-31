@@ -294,6 +294,17 @@ body {
 .repo-link:hover {
   text-decoration: underline;
 }
+/* An .anchor that's also a link (footer Artificer credit): keep the bold
+   emphasis of its sibling .anchor terms, but tint accent + underline-on-hover
+   so it reads as clickable. Scoped to a.anchor so the <b className="anchor">
+   emphasis terms stay foreground-colored. */
+a.anchor {
+  color: var(--accent);
+  text-decoration: none;
+}
+a.anchor:hover {
+  text-decoration: underline;
+}
 .player-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
