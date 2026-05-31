@@ -21,6 +21,11 @@ body {
    safe-area variant) so the wordmark lines up flush-left with the content column. */
 .app .appbar {
   padding-inline: 0;
+  /* Non-sticky (experiment): a compact tool surface doesn't need the bar eating
+     56px at every scroll position, and a static bar removes the two-sticky-planes
+     seam where scrolling content slid between the sticky appbar and the sticky
+     sidenav. Artificer hardcodes position:sticky; toggle requested upstream (#84). */
+  position: static;
 }
 /* The appbar is Artificer chrome (.appbar / .appbar__brand.wordmark); only the
    brand's whimsy shimmer needs a nudge — clip the flowing gradient at the
@@ -49,11 +54,12 @@ body {
   gap: var(--s-lg);
   align-items: start;
 }
-/* The persistent sidenav rides alongside the scrolling content, clearing the
-   sticky appbar. Hidden below the tablet breakpoint — the drawer takes over. */
+/* The persistent sidenav rides alongside the scrolling content. With the appbar
+   now static (no 56px bar to clear) it sticks to a small top inset. Hidden below
+   the tablet breakpoint — the drawer takes over. */
 .app-sidenav {
   position: sticky;
-  top: calc(56px + var(--s-md));
+  top: var(--s-md);
 }
 
 /* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
