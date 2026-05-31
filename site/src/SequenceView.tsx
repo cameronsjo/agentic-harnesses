@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { sharedScenarios } from './data'
 import type { LoopSpec } from './types'
-import { KIND_COLOR } from './types'
 import { usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
 import { GraphModal } from './GraphModal'
@@ -65,7 +64,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
               const lit = active && (active.from === p.id || active.to === p.id)
               return (
                 <g key={p.id}>
-                  <line x1={x} y1={HEAD_Y + HEAD_H} x2={x} y2={height} stroke="var(--dia-rail)" strokeWidth="1" strokeDasharray="3 4" />
+                  <line x1={x} y1={HEAD_Y + HEAD_H} x2={x} y2={height} stroke="var(--dia-node-border)" strokeWidth="1.5" strokeDasharray="4 5" />
                   <rect x={x - 60} y={HEAD_Y} width={120} height={HEAD_H} rx={8} fill={lit ? 'var(--bg-overlay)' : 'var(--dia-node-bg)'} stroke={lit ? 'var(--accent-bright)' : 'var(--dia-node-border)'} strokeWidth={lit ? 2 : 1.5} />
                   <text x={x} y={HEAD_Y + HEAD_H / 2} fill="var(--dia-node-fg)" fontSize="12" fontFamily="var(--font-mono)" textAnchor="middle" dominantBaseline="central">
                     {p.label}
@@ -80,14 +79,12 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
               const isActive = i === step
               const color = isActive ? 'var(--accent-bright)' : 'var(--dia-edge)'
               const marker = isActive ? `url(#seq-arrow-${mid})` : `url(#seq-arrow-dim-${mid})`
-              const kindColor = KIND_COLOR[m.kind]
 
               if (m.self) {
                 const x = laneX(m.from)
                 return (
                   <g key={i} opacity={isActive ? 1 : 0.55}>
                     <path d={`M ${x} ${y} h 34 v 18 h -30`} fill="none" stroke={color} strokeWidth={isActive ? 2.5 : 1.5} markerEnd={marker} />
-                    <rect x={x + 6} y={y - 5} width={4} height={4} fill={kindColor} />
                     <text x={x + 42} y={y + 4} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="11" fontFamily="var(--font-mono)">
                       {m.label}
                     </text>
@@ -101,7 +98,6 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
               return (
                 <g key={i} opacity={isActive ? 1 : 0.55}>
                   <line x1={x1} y1={y} x2={x2} y2={y} stroke={color} strokeWidth={isActive ? 2.5 : 1.5} strokeDasharray={m.return ? '5 4' : undefined} markerEnd={marker} />
-                  <rect x={midX - 3} y={y - 14} width={6} height={6} rx={1} fill={kindColor} />
                   <text x={midX} y={y - 6} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="11" fontFamily="var(--font-mono)" textAnchor="middle">
                     {m.label}
                   </text>
