@@ -90,9 +90,11 @@ Legend: ✅ full / first-class · ⚠️ partial or indirect · ❌ absent.
 The eight harnesses separate cleanly along a few independent axes — which is what makes them worth comparing rather than ranking.
 
 ### 1. Who owns the loop?
+
 From **fully owned** (Claude Code's hand-written async generator; pi's dual `while` loops; the three Rust ports — Claw Code, claux, llm-tui — each hand-writing their own `loop{}`/poll loop) through **hybrid** (OpenCode owns the macro step loop but hands each model-generation-plus-tool-execution to the Vercel AI SDK) to **fully delegated** (code_puppy hands the entire model→tool→result cycle to pydantic-ai's `Agent.run` and only orchestrates a REPL around it). Owning the loop buys control over retries, compaction, and permission placement; delegating buys provider-normalization and less code. The Rust newcomers cluster firmly in the "fully owned" camp — claux and Claw Code are essentially legible re-statements of the Claude-Code shape.
 
 ### 2. Where does permission live?
+
 This is the sharpest divergence, and the new harnesses stretch it to both extremes. **llm-tui** is the maximal end — *every* tool call blocks on a `y/n/a/q` keypress with no rulesets at all, leaning on a hard `$HOME` sandbox for the rest. **claux** and **Claw Code** join Claude Code's **one-gate-in-the-loop** camp (claux with four modes; Claw Code with the most elaborate gate here — sandbox modes + per-tool rules + Pre/PostToolUse hooks + approval tokens). **Hermes** is the permissive extreme: there is *no* per-tool prompt — only *dangerous shell commands* route through an approval callback (file edits run ungated), with a frozen `HERMES_YOLO_MODE` and auxiliary-LLM auto-approval to cut fatigue. Against these, OpenCode and code_puppy's **in-tool** gates and pi's **no interactive gate** fill the middle. None is strictly better; they trade uniform safety against flexibility and headless ergonomics.
 
 ### 3. Whose tool-call protocol?

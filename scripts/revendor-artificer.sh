@@ -10,6 +10,12 @@
 # Usage: scripts/revendor-artificer.sh
 set -euo pipefail
 
+# Preflight: this script fetches source via the GitHub CLI.
+command -v gh >/dev/null 2>&1 || {
+  echo "error: GitHub CLI (gh) is required but was not found — install it from https://cli.github.com" >&2
+  exit 1
+}
+
 REPO="cameronsjo/artificer-design-system"
 REF="main"
 DEST="$(cd "$(dirname "$0")/.." && pwd)/site/public/artificer"

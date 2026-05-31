@@ -11,10 +11,13 @@
       (function () {
         try {
           var saved = localStorage.getItem('artificer.theme');
-          var prefersDark = window.matchMedia &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          // Dark-first: match artificer-theme.js + App.readTheme, which default to
+          // dark unless the OS explicitly prefers light. (Keying off prefers-dark
+          // here flashed light on no-preference systems before the runtime corrected it.)
+          var prefersLight = window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: light)').matches;
           document.documentElement.setAttribute(
-            'data-theme', saved || (prefersDark ? 'dark' : 'light'));
+            'data-theme', saved || (prefersLight ? 'light' : 'dark'));
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'dark');
         }
