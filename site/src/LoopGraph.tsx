@@ -12,8 +12,14 @@ const TOP = 16
 // don't stack on top of each other or collide with the node boxes.
 const LANE_BASE = 48 // control-point distance of the first arc beyond the node edge
 const LANE_STEP = 42 // extra distance for each additional concurrent arc on that side
-const LABEL_ROOM = 30 // padding beyond the outermost arc so its label clears the edge
-const MIN_SIDE = 24 // gutter when a side carries no arcs
+const LABEL_ROOM = 30 // room past the arc apex for its label to sit in the gutter
+const MIN_SIDE = 20 // gutter when a side carries no arcs
+// A same-side arc's cubic control points both sit at ctrlX, so the curve's
+// horizontal apex (t=0.5) reaches only ~0.75·ctrlDist beyond the node edge — not
+// the full control distance. Sizing the gutter to the apex (not ctrlDist) keeps
+// the frame tight, so centered diagrams don't read as "zoomed out". See
+// docs/diagram-layout.md.
+const APEX_FRAC = 0.75
 
 export interface ActiveEdge {
   from: string
@@ -40,25 +46,43 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, badges, onNodeClick 
 
   // Assign each non-adjacent edge a lane on its side (right = forward, left = backward),
   // then size each gutter to hold its widest lane plus room for the label.
+  // Lanes are ordered by row-span, not edge-declaration order: the shortest arc
+  // hugs the nodes (inner lane) and the longest rides the outer lane, so arcs nest
+  // concentrically instead of a long arc cutting across short ones and tangling
+  // their labels (the crowding seen on the denser harness graphs).
   const { laneOf, leftPad, rightPad } = useMemo(() => {
-    const laneOf = new Map<number, number>()
-    let left = 0
-    let right = 0
+    const right: { i: number; span: number }[] = []
+    const left: { i: number; span: number }[] = []
     spec.edges.forEach((e, i) => {
       const fr = rowOf.get(e.from)
       const tr = rowOf.get(e.to)
       if (fr == null || tr == null || tr === fr + 1) return
-      if (tr > fr) laneOf.set(i, right++)
-      else laneOf.set(i, left++)
+      ;(tr > fr ? right : left).push({ i, span: Math.abs(tr - fr) })
     })
-    const sidePad = (count: number) =>
-      count === 0 ? MIN_SIDE : LANE_BASE + (count - 1) * LANE_STEP + LABEL_ROOM
-    return { laneOf, leftPad: sidePad(left), rightPad: sidePad(right) }
+    const laneOf = new Map<number, number>()
+    for (const side of [right, left]) {
+      // Stable sort: shortest span → lane 0 (innermost); ties keep declaration order.
+      side.sort((a, b) => a.span - b.span).forEach((e, lane) => laneOf.set(e.i, lane))
+    }
+    const sidePad = (count: number) => {
+      if (count === 0) return MIN_SIDE
+      const ctrlOuter = LANE_BASE + (count - 1) * LANE_STEP // outermost lane's control distance
+      return Math.round(APEX_FRAC * ctrlOuter) + LABEL_ROOM
+    }
+    return { laneOf, leftPad: sidePad(left.length), rightPad: sidePad(right.length) }
   }, [spec, rowOf])
 
-  const width = leftPad + NODE_W + rightPad
+  // Node column geometry. nodeX/arcs keep their tuned positions; the frame is
+  // what centers. Left gutter holds backward arcs, right gutter forward arcs —
+  // they're rarely equal, so a naive `leftPad + NODE_W + rightPad` viewBox leaves
+  // the node column off-center once the SVG is centered in its container. Instead
+  // we frame symmetrically about the node center: pad both sides to the WIDER
+  // gutter. The lighter side just gains empty gutter; the boxes land dead-center.
   const nodeX = leftPad
   const centerX = nodeX + NODE_W / 2
+  const sideMax = Math.max(leftPad, rightPad)
+  const viewMinX = leftPad - sideMax // ≤ 0; shifts the frame so centerX is its middle
+  const width = NODE_W + 2 * sideMax
   const yTop = (row: number) => TOP + row * ROW_H
   const yMid = (row: number) => yTop(row) + NODE_H / 2
   const height = TOP + spec.nodes.length * ROW_H
@@ -102,7 +126,7 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, badges, onNodeClick 
 
   return (
     <svg
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={`${viewMinX} 0 ${width} ${height}`}
       width={width}
       height={height}
       role="img"

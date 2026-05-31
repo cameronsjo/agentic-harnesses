@@ -40,11 +40,11 @@ Create `site/src/<Name>View.tsx`. Conventions to honor:
 - **SVG marker IDs must be per-instance.** `url(#id)` resolves document-scope, so two diagrams on one page collide. Namespace markers by harness/scenario (e.g. `seq-arrow-${harness}-${scenarioId}`) — LoopGraph and SequenceView both do this.
 - **Own your timer where it's used.** If only a sub-mode steps through, call `usePlayerTimer` inside the sub-component so it mounts/unmounts with that mode (this is why WireView's timer lives in `LayersView`, not the parent — it avoids stale state across mode switches).
 
-## Step 3 — Wire into the nav
+## Step 3 — Wire into the tabs
 
 In `site/src/App.tsx`:
-1. Add the view key to the `View` union type.
-2. Add a nav button in the `view-nav` group (or under the "Claude Code" separator if it's CC-specific, like Wire/Hooks).
+1. Add the tab key to the `ViewTab` union type.
+2. Add a tab to the computed `availableTabs` array — either globally (always shown) or conditionally under `harness === 'claude-code'` if it's CC-specific (like Wire/Hooks).
 3. Add a branch to the render switch that mounts `<NameView />`.
 
 Decide whether the Legend shows for your view (the `view !== 'wire'` guard controls this today).

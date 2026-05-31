@@ -65,13 +65,13 @@ Every harness defines the same **scenarios** — `edit-file`, `denied-tool`, `mu
 
 ## Interactive Visualizer
 
-The `site/` app animates each loop and compares scenarios across harnesses. Four views:
+The `site/` app animates each loop and compares scenarios across harnesses. Navigation: a sidenav lists "Compare all" or a harness; within a harness, tabs switch between:
 
 - **Compare all** — every harness runs the same scenario, stepped in lockstep
-- **Single harness** — one loop with transport controls and a node inspector
+- **Loop** — one harness's loop with transport controls and a node inspector
 - **Sequence** — the same scenarios projected as an animated sequence diagram (User · Agent · Model · Tool lifelines)
-- **Hooks & events** — Claude Code's lifecycle hooks overlaid on its loop (click a node to see what fires)
-- **Across the wire** — Claude Code's request/response, as a **curl walkthrough** (hand-run the round-trips) or a layered request-assembly view, with cache breakpoints
+- **Hooks & events** — Claude Code's lifecycle hooks overlaid on its loop (click a node to see what fires) — Claude Code only
+- **Across the wire** — Claude Code's request/response, as a **curl walkthrough** (hand-run the round-trips) or a layered request-assembly view, with cache breakpoints — Claude Code only
 
 ```bash
 cd site

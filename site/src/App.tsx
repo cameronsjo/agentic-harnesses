@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
@@ -37,13 +37,12 @@ export function App() {
   const availableTabs = tabsFor(harness)
   const spec = harness ? specs.find((s) => s.harness === harness) : undefined
 
-  // Clamp the tab back to Loop when switching to a harness that lacks the current tab
-  // (e.g. leaving claude-code while on Hooks/Wire). Only fires on harness change.
-  useEffect(() => {
-    if (harness === null) return
-    if (!tabsFor(harness).includes(tab)) setTab('loop')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [harness])
+  // Derive the active view rather than clamping `tab` via an effect: if the
+  // selected harness lacks the current tab (e.g. you left claude-code while on
+  // Wire), fall back to Loop for this render. No one-frame flash of the wrong
+  // view, no effect/eslint-suppression, and `tab` still remembers your pick if
+  // you return to a harness that has it.
+  const activeTab: ViewTab = availableTabs.includes(tab) ? tab : 'loop'
 
   const selectHarness = (h: string | null) => {
     setHarness(h)
@@ -65,7 +64,12 @@ export function App() {
   // When open we trap focus (Esc / scrim close it; release restores focus to the
   // hamburger). Graceful no-op if the vendored helper is absent.
   const drawerRef = useRef<HTMLElement>(null)
-  useEffect(() => {
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
+  // useLayoutEffect (not useEffect) so `inert` lands before the browser paints —
+  // otherwise the drawer is briefly live in the tab order on first render. `inert`
+  // is the single authority for both keyboard tab-order and the a11y tree, so the
+  // markup carries no separate aria-hidden that could drift out of sync with it.
+  useLayoutEffect(() => {
     const el = drawerRef.current
     if (!el) return
     if (!navOpen) {
@@ -74,11 +78,17 @@ export function App() {
     }
     el.removeAttribute('inert')
     const handle = window.ArtificerFocus?.trap(el, { onEscape: () => setNavOpen(false) })
-    return () => handle?.release()
+    // On close, return focus to the hamburger regardless of how the drawer was
+    // dismissed — the trap's own restore targets whatever was focused at open
+    // time, which a scrim click (focus moves to body/scrim) leaves wrong.
+    return () => {
+      handle?.release()
+      menuBtnRef.current?.focus()
+    }
   }, [navOpen])
 
   // Legend belongs to graph contexts; the wire view draws its own request anatomy.
-  const showLegend = !(harness !== null && tab === 'wire')
+  const showLegend = harness === null || activeTab !== 'wire'
 
   return (
     <div className="app container container--lg surface-tool" data-nav-open={navOpen ? '' : undefined}>
@@ -89,17 +99,21 @@ export function App() {
       <header className="appbar">
         <button
           type="button"
+          ref={menuBtnRef}
           className="btn btn--ghost btn--icon appbar__menu-btn"
-          aria-label="Open navigation"
+          aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={navOpen}
           aria-controls="nav-drawer"
           onClick={() => setNavOpen(true)}
         >
           <i data-icon="menu" />
         </button>
-        <a className="appbar__brand wordmark" href="#main">
-          <span className="whimsy" ref={titleRef}>
-            agentic harness loops
+        <a className="appbar__brand" href="#main">
+          {/* .wordmark (and its ::after accent period) rides the inline span, not
+              the flex .appbar__brand — otherwise the period becomes a flex child
+              and the container's gap pushes it off as "harness ·." */}
+          <span className="whimsy wordmark" ref={titleRef}>
+            agentic harnesses
           </span>
         </a>
         <span className="appbar__spacer" />
@@ -136,7 +150,7 @@ export function App() {
                   key={t}
                   type="button"
                   role="tab"
-                  aria-selected={tab === t}
+                  aria-selected={activeTab === t}
                   onClick={() => setTab(t)}
                 >
                   {TAB_LABELS[t]}
@@ -158,11 +172,11 @@ export function App() {
             <p className="empty">
               <b className="anchor">Harness not found.</b>
             </p>
-          ) : tab === 'hooks' ? (
+          ) : activeTab === 'hooks' ? (
             <HooksView />
-          ) : tab === 'wire' ? (
+          ) : activeTab === 'wire' ? (
             <WireView />
-          ) : tab === 'sequence' ? (
+          ) : activeTab === 'sequence' ? (
             <SequenceView spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
           ) : (
             <>
@@ -185,7 +199,7 @@ export function App() {
 
       {/* Mobile drawer: scrim + off-canvas sidenav. data-nav-open on .app drives both. */}
       <div className="nav-scrim" onClick={() => setNavOpen(false)} />
-      <aside id="nav-drawer" className="nav-drawer" aria-hidden={!navOpen} ref={drawerRef}>
+      <aside id="nav-drawer" className="nav-drawer" ref={drawerRef}>
         <HarnessNav harness={harness} onSelect={selectHarness} />
       </aside>
 
