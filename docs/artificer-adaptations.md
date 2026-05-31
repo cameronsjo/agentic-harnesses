@@ -126,3 +126,16 @@ feedback issue filed upstream.
 - **Fix (consumer):** `data-icon-size="22"` on `<i data-icon="menu">` in `site/src/App.tsx`; `.appbar__menu-btn { color: var(--fg) }` in `site/src/styles.css`. Kept the library glyph — size, not an override of the path.
 - **Wished existed:** a full-height `menu` glyph (bars ≈ y 4/8/12) that reads at 16px; a `.btn--icon--prominent` (or guidance) for icon buttons used as primary controls.
 - **Don't upstream:** the `22` size value, the `.appbar__menu-btn` selector, and the mobile compare carousel composition (product-specific).
+
+## 2026-05-31 — responsive app-shell layer is unowned (cross-consumer)
+
+- **Upstream issue:** cameronsjo/artificer-design-system#116
+- **Type:** gap, Lane 3. Layout sibling of #114 (the hamburger glyph/contrast slice).
+- **Pivot:** A mobile-friendliness pass on the SPA — all hand-rolled on top of Artificer primitives, because Artificer ships nav primitives (`.sidenav`/`.tabs`/`.appbar`) but no canonical responsive **app-shell**.
+- **Friction (the traps):**
+  - `.app-shell` mobile track was a bare `1fr` = `minmax(auto, 1fr)`, which refuses to shrink below content — one wide child blew the page ~2000px wide. Fixed to `minmax(0, 1fr)` (`site/src/styles.css:622`, comment at `:617-621`).
+  - `.compare-grid` filmstrip never reflowed for mobile → rebuilt as a full-bleed scroll-snap carousel: negative-margin breakout (`margin-inline: calc(-1 * var(--s-lg))`, `:303`) + `flex-basis:100%` + dot pager. The mobile rule MUST follow the desktop `flex:0 0 290px` (equal specificity, source order decides — `:293-296`).
+  - Fixed-px single-view SVGs overflowed → `svg { max-width:100%; height:auto }` at mobile (`:287-288, 636-638`).
+- **Cross-consumer:** spec-compare (`/Users/cameron/Projects/spec-compare/site`) re-hand-rolls the identical scaffolding and still carries the bare-`1fr` mobile trap this repo fixed: `.app-shell` `styles.css:32-34` (desktop `minmax(0,1fr)`) vs mobile `:950` (bare `1fr`); `.compare-grid` overflow-x scroller `:170-173` (no reflow); SVG fit `:184, 585`; hamburger `appbar__menu-btn` `App.tsx:68-74`; off-canvas drawer `App.tsx:149`.
+- **Wished existed:** a responsive app-shell pattern, an overflow-safe-track note (`minmax(0,1fr)`), a full-bleed utility, media/diagram-fit guidance, and a drawer pattern.
+- **Don't upstream:** the carousel composition (dot pager, snap topology), the exact breakout values, and per-app graph sizing — product-specific. The missing piece is the shell underneath them.
