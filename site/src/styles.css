@@ -493,8 +493,14 @@ body {
    measure so the disclaimer stays readable. The fine-print line sits quieter. */
 .app-footer p {
   margin: 0;
-  max-width: 70ch;
   line-height: 1.5;
+}
+/* Cap the measure only inside the columns; the fine-print line (a direct child
+   of the footer, outside the grid) stays uncapped so it spans both columns.
+   Scoping the cap here avoids the .app-footer p (0,1,1) vs .footer-fine (0,1,0)
+   specificity collision that kept the fine print pinned to one column. */
+.footer-grid p {
+  max-width: 70ch;
 }
 /* Lay the two substantive blocks side-by-side so the footer uses the full width
    instead of stacking into one tall column down the left edge. */
@@ -512,7 +518,6 @@ body {
   color: var(--accent);
 }
 .footer-fine {
-  max-width: none;
   opacity: 0.8;
 }
 @media (max-width: 800px) {
