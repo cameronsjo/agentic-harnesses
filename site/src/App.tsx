@@ -58,6 +58,12 @@ export function App() {
     return () => cancel?.()
   }, [])
 
+  // The icon script only hydrates `<i data-icon>` once on DOMContentLoaded, which
+  // misses anything React mounts later (the expand-modal close button, the mobile
+  // drawer). observe() re-hydrates and watches for inserted nodes so those icons
+  // aren't blank. Returns a disconnect fn for unmount.
+  useEffect(() => window.ArtificerIcons?.observe(), [])
+
   // Mobile drawer focus management. The drawer is always in the DOM (CSS slides it
   // off-canvas), so when closed we mark it `inert` to keep its buttons out of the tab
   // order — otherwise desktop, where the hamburger is hidden, gains phantom nav stops.

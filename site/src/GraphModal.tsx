@@ -55,7 +55,7 @@ export function GraphModal({ open, onClose, title, children }: Props) {
             aria-label="Close expanded diagram"
             onClick={onClose}
           >
-            <i data-icon="x" />
+            <i data-icon="x" data-icon-size="20" />
           </button>
         </header>
         <div className="graph-modal__body">{children}</div>

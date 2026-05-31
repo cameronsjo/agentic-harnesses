@@ -371,6 +371,11 @@ body {
   font-family: var(--font-mono);
   font-weight: 700;
 }
+/* The ghost close button defaults to fg-secondary on transparent — too faint to
+   spot in the corner. Give it full-contrast at rest (hover still raises the bg). */
+.graph-modal__bar .btn--icon {
+  color: var(--fg);
+}
 .graph-modal__body {
   overflow: auto;
   padding: var(--s-md);
