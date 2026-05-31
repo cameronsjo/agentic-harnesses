@@ -5,7 +5,10 @@ interface Props {
   onClose: () => void
   /** Accessible label / heading for the expanded view (e.g. the harness name). */
   title: string
-  children: ReactNode
+  /** The enlarged diagram (left/main column). */
+  diagram: ReactNode
+  /** The companion panel: pickers, transport, inspector, or event list (right column). */
+  side: ReactNode
 }
 
 /**
@@ -13,8 +16,13 @@ interface Props {
  * Artificer's `.scrim`/`.modal` plus `ArtificerFocus.trap` (Tab cycles within,
  * Esc closes); a scrim click closes; body scroll locks while open. Rendered
  * null when closed, so the background stays interactive-free via the scrim.
+ *
+ * Owns the two-column `diagram | side` layout so every view passes just its two
+ * fragments instead of re-typing the `__layout/__diagram/__side` shell. The side
+ * wrapper is a plain div (not <aside>) so callers can pass their own landmark
+ * (e.g. Hooks' <aside className="hooks-list">) without nesting complementary roles.
  */
-export function GraphModal({ open, onClose, title, children }: Props) {
+export function GraphModal({ open, onClose, title, diagram, side }: Props) {
   const modalRef = useRef<HTMLDivElement>(null)
   // Keep onClose current without re-running the trap effect (which would steal
   // focus back to the first element on every parent render).
@@ -58,7 +66,12 @@ export function GraphModal({ open, onClose, title, children }: Props) {
             <i data-icon="x" data-icon-size="20" />
           </button>
         </header>
-        <div className="graph-modal__body">{children}</div>
+        <div className="graph-modal__body">
+          <div className="graph-modal__layout">
+            <div className="graph-modal__diagram">{diagram}</div>
+            <div className="graph-modal__side">{side}</div>
+          </div>
+        </div>
       </div>
     </div>
   )

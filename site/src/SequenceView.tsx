@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { sharedScenarios } from './data'
 import type { LoopSpec } from './types'
 import { usePlayerTimer } from './player'
-import { TabPicker, TransportBar } from './controls'
+import { ExpandButton, TabPicker, TransportBar } from './controls'
 import { GraphModal } from './GraphModal'
 import { PARTICIPANTS, projectScenario, type Participant } from './sequence'
 
@@ -139,13 +139,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
 
       <div className="seq-body">
         <div className="card graph-pane">
-          <button
-            type="button"
-            className="btn btn--secondary graph-expand"
-            onClick={() => setExpanded(true)}
-          >
-            <span aria-hidden="true">⤢</span> Expand
-          </button>
+          <ExpandButton onClick={() => setExpanded(true)} />
           {diagram}
         </div>
 
@@ -158,15 +152,18 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
         </aside>
       </div>
 
-      <GraphModal open={expanded} onClose={() => setExpanded(false)} title={spec.displayName}>
-        <div className="graph-modal__layout">
-          <div className="graph-modal__diagram">{diagram}</div>
-          <aside className="graph-modal__side">
+      <GraphModal
+        open={expanded}
+        onClose={() => setExpanded(false)}
+        title={spec.displayName}
+        diagram={diagram}
+        side={
+          <>
             {controls}
             {messageCard}
-          </aside>
-        </div>
-      </GraphModal>
+          </>
+        }
+      />
     </section>
   )
 }

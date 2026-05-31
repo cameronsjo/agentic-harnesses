@@ -6,7 +6,7 @@ import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
 import { GraphModal } from './GraphModal'
 import { edgeBetween, usePlayerTimer } from './player'
-import { TabPicker, TransportBar } from './controls'
+import { ExpandButton, TabPicker, TransportBar } from './controls'
 
 interface Props {
   spec: LoopSpec
@@ -82,13 +82,7 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
 
       <div className="player-body">
         <div className="card graph-pane">
-          <button
-            type="button"
-            className="btn btn--secondary graph-expand"
-            onClick={() => setExpanded(true)}
-          >
-            <span aria-hidden="true">⤢</span> Expand
-          </button>
+          <ExpandButton onClick={() => setExpanded(true)} />
           {graph}
         </div>
 
@@ -114,16 +108,19 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
         </aside>
       </div>
 
-      <GraphModal open={expanded} onClose={() => setExpanded(false)} title={spec.displayName}>
-        <div className="graph-modal__layout">
-          <div className="graph-modal__diagram">{graph}</div>
-          <aside className="graph-modal__side">
+      <GraphModal
+        open={expanded}
+        onClose={() => setExpanded(false)}
+        title={spec.displayName}
+        diagram={graph}
+        side={
+          <>
             {scenarioHeader}
             <TransportBar player={player} playLabel="Play" total={sc.steps.length} counterLabel="step" />
             {nodeCard}
-          </aside>
-        </div>
-      </GraphModal>
+          </>
+        }
+      />
     </div>
   )
 }
