@@ -30,3 +30,7 @@ SPA renders loop / sequence / hooks / wire diagrams from JSON specs; `docs/` and
 - **Artificer friction → file upstream** (`cameronsjo/artificer-design-system`, label
   `feedback`, fire-and-forget) and log in `docs/artificer-adaptations.md`.
 - Diagrams theme via Artificer tokens only (`--dia-*`, `--s-*`, `--accent`); dark-first `.surface-tool`.
+- **Mobile/responsive:** shell grid tracks are `minmax(0, 1fr)` — never bare `1fr` (its `auto`
+  minimum blocks shrinking; the page blows out sideways). Mobile overrides go *after* the desktop
+  rules they override (media queries add no specificity). Verify at 390px with `agent-browser`
+  by measuring (`scrollWidth` vs `innerWidth`), not by reading CSS.
