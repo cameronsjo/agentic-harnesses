@@ -82,20 +82,16 @@ export function ScenarioCompare({ scenarioId, onScenarioChange }: Props) {
       window.removeEventListener('resize', update)
     }
   }, [])
-  // On mobile each card == clientWidth, so paging by clientWidth lands exactly one
-  // card over (scroll-snap then settles it); desktop keeps the gentler 0.8 stride.
-  const page = (dir: -1 | 1) => {
-    const el = gridRef.current
-    if (!el) return
-    const stride = window.matchMedia('(max-width: 800px)').matches ? 1 : 0.8
-    el.scrollBy({ left: dir * el.clientWidth * stride, behavior: 'smooth' })
-  }
   const scrollToCard = (i: number) => {
     const el = gridRef.current
     const card = el?.children[i] as HTMLElement | undefined
     if (!el || !card) return
     el.scrollTo({ left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
   }
+  // Chevrons advance one card and center it — the SAME center-on math as the dots
+  // and as a scroll-snap swipe, so all three navigations settle identically.
+  const page = (dir: -1 | 1) =>
+    scrollToCard(Math.max(0, Math.min(specs.length - 1, scroll.active + dir)))
 
   return (
     <section className="compare">
