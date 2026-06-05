@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
+import { onRovingTabKeyDown } from './keyboard'
 import { ScenarioCompare } from './ScenarioCompare'
 import { LoopPlayer } from './LoopPlayer'
 import { HooksView } from './HooksView'
@@ -130,25 +131,25 @@ export function App() {
   // Legend belongs to graph contexts; the wire view draws its own request anatomy.
   const showLegend = harness === null || activeTab !== 'wire'
 
-  // Roving-tabindex arrow nav for the view tablist (WAI-ARIA tabs, automatic
-  // activation): ←/→ cycle, Home/End jump to the ends, and focus follows selection.
-  // React stays the selection owner; we borrow only Artificer's pure nextIndex()
-  // state machine (window.ArtificerTabs) so the arrow/Home/End math isn't re-derived
-  // here — the JS tab *enhancer* is incompatible with controlled rendering (it owns
-  // aria-selected/hidden), so we don't cede the DOM to it. See artificer-adaptations.
-  const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    const cur = availableTabs.indexOf(activeTab)
-    const next = window.ArtificerTabs?.nextIndex(e.key, cur, availableTabs.length)
-    if (next == null) return // not a tab-nav key (or helper absent) → no-op
-    e.preventDefault()
-    setTab(availableTabs[next])
-    const btns = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-    btns?.[next]?.focus()
-  }
-
   return (
     <div className="app container container--lg surface-tool" data-nav-open={navOpen ? '' : undefined}>
-      <a className="skip-link" href="#main">
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(e) => {
+          // Skip to THIS page's <main> by moving focus — never via the bare hash.
+          // On a prose page, letting the browser set #main would trip useRoute
+          // (#main → null) and navigate away from the content we're skipping to.
+          // (#main stays the deliberate return-to-app signal for the brand link,
+          // the "Back to the harnesses" links, and selectHarness — just not here.)
+          e.preventDefault()
+          const main = document.getElementById('main')
+          if (!main) return
+          main.setAttribute('tabindex', '-1') // make the non-interactive <main> a focus target
+          main.focus()
+          main.scrollIntoView()
+        }}
+      >
         Skip to content
       </a>
 
@@ -180,99 +181,105 @@ export function App() {
 
       {route ? (
         // Standalone prose page — replaces the masthead + harness shell, keeps the
-        // appbar/footer chrome. The article carries `id="main"` for the skip-link.
-        <AboutOrDisclosure route={route} />
+        // appbar/footer chrome. The <main> carries `id="main"` for the skip-link.
+        <main id="main">{route === 'about' ? <AboutView /> : <DisclosureView />}</main>
       ) : (
-      <>
-      <section className="intro stack stack--sm">
-        <p className="lede t-body-lg">
-          Coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
-          <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
-          <b className="anchor">gates the dangerous ones</b> — all{' '}
-          <b className="anchor">reconstructed from pinned source</b>.
-        </p>
-        <div className="masthead-meta cluster" aria-label="About this build">
-          <span className="badge badge--ghost">v1</span>
-          <span className="badge badge--ghost">{specs.length} harnesses</span>
-          <span className="badge badge--ghost">source-pinned</span>
-        </div>
-      </section>
-
-      <div className="app-shell">
-        <aside className="app-sidenav">
-          <HarnessNav harness={harness} onSelect={selectHarness} />
-        </aside>
-
-        <main id="main" className="stack stack--lg">
-          {availableTabs.length > 0 && (
-            <div className="tabs" role="tablist" aria-label="View">
-              {availableTabs.map((t) => (
-                <button
-                  key={t}
-                  id={`tab-${t}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === t}
-                  aria-controls="view-panel"
-                  tabIndex={activeTab === t ? 0 : -1}
-                  onClick={() => setTab(t)}
-                  onKeyDown={onTabKeyDown}
-                >
-                  {TAB_LABELS[t]}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {showLegend && <Legend />}
-
-          {specs.length === 0 ? (
-            <p className="empty">
-              <b className="anchor">No loop specs found.</b> Add files under{' '}
-              <code>src/data/loops/</code>.
+        <>
+          <section className="intro stack stack--sm">
+            <p className="lede t-body-lg">
+              Coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
+              <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
+              <b className="anchor">gates the dangerous ones</b> — all{' '}
+              <b className="anchor">reconstructed from pinned source</b>.
             </p>
-          ) : harness === null ? (
-            <ScenarioCompare scenarioId={scenarioId} onScenarioChange={setScenarioId} />
-          ) : (
-            // A harness is selected → the content region IS the active tab's panel.
-            // tabpanel needs no tabIndex: its views already contain focusable controls.
-            <div
-              id="view-panel"
-              role="tabpanel"
-              aria-labelledby={`tab-${activeTab}`}
-              className="stack stack--lg"
-            >
-              {!spec ? (
-                <p className="empty">
-                  <b className="anchor">Harness not found.</b>
-                </p>
-              ) : activeTab === 'hooks' ? (
-                <HooksView />
-              ) : activeTab === 'wire' ? (
-                <WireView />
-              ) : activeTab === 'sequence' ? (
-                <SequenceView spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
-              ) : (
-                <>
-                  {/* Harness-level metadata for the Loop view — the sidenav owns
-                      selection now, so this is just the badges + source-pinned repo link. */}
-                  <div className="harness-meta">
-                    <span className="lang-badge">{spec.language}</span>
-                    <span className="loop-style">{spec.loopStyle}</span>
-                    {spec.repo && (
-                      <a className="repo-link" href={spec.repo} target="_blank" rel="noreferrer">
-                        {spec.repo.replace('https://github.com/', '')}
-                      </a>
-                    )}
-                  </div>
-                  <LoopPlayer spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
-                </>
-              )}
+            <div className="masthead-meta cluster" aria-label="About this build">
+              <span className="badge badge--ghost">v1</span>
+              <span className="badge badge--ghost">{specs.length} harnesses</span>
+              <span className="badge badge--ghost">source-pinned</span>
             </div>
-          )}
-        </main>
-      </div>
-      </>
+          </section>
+
+          <div className="app-shell">
+            <aside className="app-sidenav">
+              <HarnessNav harness={harness} onSelect={selectHarness} />
+            </aside>
+
+            <main id="main" className="stack stack--lg">
+              {availableTabs.length > 0 && (
+                <div className="tabs" role="tablist" aria-label="View">
+                  {availableTabs.map((t) => (
+                    <button
+                      key={t}
+                      id={`tab-${t}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === t}
+                      aria-controls="view-panel"
+                      tabIndex={activeTab === t ? 0 : -1}
+                      onClick={() => setTab(t)}
+                      // Roving-tabindex arrow nav (WAI-ARIA tabs, automatic activation);
+                      // React owns selection — see onRovingTabKeyDown in ./keyboard.
+                      onKeyDown={(e) =>
+                        onRovingTabKeyDown(e, availableTabs.indexOf(activeTab), availableTabs.length, (n) =>
+                          setTab(availableTabs[n]),
+                        )
+                      }
+                    >
+                      {TAB_LABELS[t]}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {showLegend && <Legend />}
+
+              {specs.length === 0 ? (
+                <p className="empty">
+                  <b className="anchor">No loop specs found.</b> Add files under{' '}
+                  <code>src/data/loops/</code>.
+                </p>
+              ) : harness === null ? (
+                <ScenarioCompare scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+              ) : (
+                // A harness is selected → the content region IS the active tab's panel.
+                // tabpanel needs no tabIndex: its views already contain focusable controls.
+                <div
+                  id="view-panel"
+                  role="tabpanel"
+                  aria-labelledby={`tab-${activeTab}`}
+                  className="stack stack--lg"
+                >
+                  {!spec ? (
+                    <p className="empty">
+                      <b className="anchor">Harness not found.</b>
+                    </p>
+                  ) : activeTab === 'hooks' ? (
+                    <HooksView />
+                  ) : activeTab === 'wire' ? (
+                    <WireView />
+                  ) : activeTab === 'sequence' ? (
+                    <SequenceView spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+                  ) : (
+                    <>
+                      {/* Harness-level metadata for the Loop view — the sidenav owns
+                          selection now, so this is just the badges + source-pinned repo link. */}
+                      <div className="harness-meta">
+                        <span className="lang-badge">{spec.language}</span>
+                        <span className="loop-style">{spec.loopStyle}</span>
+                        {spec.repo && (
+                          <a className="repo-link" href={spec.repo} target="_blank" rel="noreferrer">
+                            {spec.repo.replace('https://github.com/', '')}
+                          </a>
+                        )}
+                      </div>
+                      <LoopPlayer spec={spec} scenarioId={scenarioId} onScenarioChange={setScenarioId} />
+                    </>
+                  )}
+                </div>
+              )}
+            </main>
+          </div>
+        </>
       )}
 
       {/* Mobile drawer: scrim + off-canvas sidenav. data-nav-open on .app drives both. */}
@@ -284,15 +291,6 @@ export function App() {
       <AppFooter />
     </div>
   )
-}
-
-/**
- * Standalone prose page host: full-width <main> (carries `id="main"` for the
- * skip-link) wrapping the centered prose article. Rendered in place of the
- * masthead + harness shell when a hash route is active.
- */
-function AboutOrDisclosure({ route }: { route: 'about' | 'disclosure' }) {
-  return <main id="main">{route === 'about' ? <AboutView /> : <DisclosureView />}</main>
 }
 
 /**
