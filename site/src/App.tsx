@@ -6,6 +6,8 @@ import { LoopPlayer } from './LoopPlayer'
 import { HooksView } from './HooksView'
 import { WireView } from './WireView'
 import { SequenceView } from './SequenceView'
+import { AboutView } from './AboutView'
+import { DisclosureView } from './DisclosureView'
 
 // The view within a selected harness. Compare-all (harness === null) has no tabs —
 // the surface *is* the grid.
@@ -20,6 +22,27 @@ const TAB_LABELS: Record<ViewTab, string> = {
 
 const KINDS: NodeKind[] = ['input', 'llm', 'tool', 'approval', 'execute', 'decision', 'terminal']
 
+// Lightweight hash routing for the two standalone prose pages — no router dep.
+// Any hash that isn't a known page (including '', '#main' for the skip-link)
+// resolves to `null` = the harness app. Linkable, shareable, reload-safe, and
+// the browser back button just works (hashchange).
+type Route = 'about' | 'disclosure' | null
+
+function readRoute(): Route {
+  const h = window.location.hash.replace(/^#/, '')
+  return h === 'about' || h === 'disclosure' ? h : null
+}
+
+function useRoute(): Route {
+  const [route, setRoute] = useState<Route>(readRoute)
+  useEffect(() => {
+    const onHash = () => setRoute(readRoute())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+  return route
+}
+
 // Tabs available for a given harness. Hooks/Wire are Claude-Code-pinned deep-dives,
 // not per-harness capabilities — they ride along only when claude-code is selected.
 function tabsFor(harness: string | null): ViewTab[] {
@@ -33,6 +56,7 @@ export function App() {
   const [tab, setTab] = useState<ViewTab>('loop')
   const [scenarioId, setScenarioId] = useState('edit-file') // lifted — persists across switches
   const [navOpen, setNavOpen] = useState(false) // mobile drawer
+  const route = useRoute() // null = harness app; 'about' / 'disclosure' = prose page
 
   const availableTabs = tabsFor(harness)
   const spec = harness ? specs.find((s) => s.harness === harness) : undefined
@@ -47,7 +71,17 @@ export function App() {
   const selectHarness = (h: string | null) => {
     setHarness(h)
     setNavOpen(false)
+    // If a prose page is open (e.g. the drawer was used from #about), picking a
+    // harness should return to the app. Routing back to #main also lands the
+    // skip-anchor; readRoute() maps it to null so the harness view renders.
+    if (route) window.location.hash = '#main'
   }
+
+  // Prose pages are standalone documents — start them at the top, not wherever
+  // the harness app was scrolled. Only fires on a route change into a page.
+  useEffect(() => {
+    if (route) window.scrollTo(0, 0)
+  }, [route])
 
   // The one persistent whimsy moment: the wordmark breathes the ultrathink
   // shimmer (spectrum) for three hue-cycles on load, then drifts glacially.
@@ -144,6 +178,12 @@ export function App() {
         </div>
       </header>
 
+      {route ? (
+        // Standalone prose page — replaces the masthead + harness shell, keeps the
+        // appbar/footer chrome. The article carries `id="main"` for the skip-link.
+        <AboutOrDisclosure route={route} />
+      ) : (
+      <>
       <section className="intro stack stack--sm">
         <p className="lede t-body-lg">
           Coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
@@ -232,6 +272,8 @@ export function App() {
           )}
         </main>
       </div>
+      </>
+      )}
 
       {/* Mobile drawer: scrim + off-canvas sidenav. data-nav-open on .app drives both. */}
       <div className="nav-scrim" onClick={() => setNavOpen(false)} />
@@ -239,48 +281,56 @@ export function App() {
         <HarnessNav harness={harness} onSelect={selectHarness} />
       </aside>
 
-      <footer className="app-footer stack stack--sm">
-        <div className="footer-grid">
-          <section className="footer-col stack stack--xs">
-            <span className="footer-label">Reconstructed</span>
-            <p>
-              <b className="anchor">Independent &amp; unofficial.</b> Every harness here is a
-              reconstruction. The public ones <b className="anchor">cite <code>file:line</code></b> at
-              a <b className="anchor">pinned SHA</b>; Claude Code is pieced together from a{' '}
-              <b className="anchor">recovered snapshot</b> (leak&nbsp;+&nbsp;speculation). Reconstructions
-              can be incomplete, simplified, or out of date, and may not match current behavior.
-            </p>
-          </section>
-          <section className="footer-col stack stack--xs">
-            <span className="footer-label">Disclosure</span>
-            <p>
-              Built with <b className="anchor">Claude</b> and <b className="anchor">Claude&nbsp;Code</b>, on
-              the{' '}
-              <a
-                className="anchor"
-                href="https://cameronsjo.github.io/artificer/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Artificer design system
-              </a>
-              . In the interest of full disclosure:
-              this was written by — and with — a genuine Claude&nbsp;Code partisan. The diagrams still
-              aim to treat every harness on equal terms. Spot a bias or an error?{' '}
-              <a className="repo-link" href="https://github.com/cameronsjo/agentic-harnesses/issues">
-                Open an issue
-              </a>.
-            </p>
-          </section>
-        </div>
-        <p className="t-label-sm footer-fine">
-          No affiliation with, sponsorship by, or endorsement from any project shown. The author
-          works at the same company as Code&nbsp;Puppy&rsquo;s maintainer but does not work on
-          Code&nbsp;Puppy, and has no other ties to the harnesses here. Project names and marks
-          belong to their respective owners.
-        </p>
-      </footer>
+      <AppFooter />
     </div>
+  )
+}
+
+/**
+ * Standalone prose page host: full-width <main> (carries `id="main"` for the
+ * skip-link) wrapping the centered prose article. Rendered in place of the
+ * masthead + harness shell when a hash route is active.
+ */
+function AboutOrDisclosure({ route }: { route: 'about' | 'disclosure' }) {
+  return <main id="main">{route === 'about' ? <AboutView /> : <DisclosureView />}</main>
+}
+
+/**
+ * Slim footer: a one-line colophon + the standalone-page links. The two heavy
+ * disclosure paragraphs moved to the Disclosure page (#disclosure); this keeps
+ * a tagline + links to About / Disclosure / issues. Structured so the deferred
+ * "happy pride" footer variant (Part 4) is a one-line tagline swap.
+ */
+function AppFooter() {
+  return (
+    <footer className="app-footer site-footer">
+      {/* TODO(pride): when @cameronsjo/artificer publishes the "happy pride" footer
+          variant (June, full Whimsy, no trailing period), bump the dep and swap the
+          tagline span below for the primitive. Tracked in the upstream intro
+          2026-06-05-1205-pride-footer-and-nav-primitives.md. */}
+      <span className="footer-tagline">
+        Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
+        <a
+          className="anchor"
+          href="https://cameronsjo.github.io/artificer/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Artificer design system
+        </a>
+      </span>
+      <nav className="footer-links cluster" aria-label="About this site">
+        <a className="anchor" href="#about">
+          About
+        </a>
+        <a className="anchor" href="#disclosure">
+          Disclosure
+        </a>
+        <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
+          Open an issue
+        </a>
+      </nav>
+    </footer>
   )
 }
 
