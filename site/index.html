@@ -43,13 +43,10 @@
       content="Four agentic coding harnesses, their loops reconstructed from source — stepped through the same scenario in lockstep."
     />
     <meta name="twitter:image" content="https://cameronsjo.github.io/agentic-harnesses/artificer/assets/og-image.svg" />
-    <link rel="stylesheet" href="/artificer/artificer.css" />
-    <link rel="stylesheet" href="/artificer/artificer-whimsy.css" />
-    <link rel="stylesheet" href="/artificer/print.css" media="print" />
-    <script src="/artificer/artificer-theme.js" defer></script>
-    <script src="/artificer/artificer-icons.js" defer></script>
-    <script src="/artificer/artificer-focus.js" defer></script>
-    <script src="/artificer/artificer-whimsy.js" defer></script>
+    <!-- Artificer CSS + JS helpers now load from the @cameronsjo/artificer npm
+         package via side-effect imports in src/main.tsx — no vendored <link>/<script>
+         tags here. The favicon/OG <meta> above still point at /artificer/assets/*,
+         which are stable static files kept in public/artificer/assets/. -->
   </head>
   <body>
     <div id="root"></div>

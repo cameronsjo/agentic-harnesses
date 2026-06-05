@@ -6,22 +6,32 @@
 
 ## What you're working with
 
-Artificer ships as **vanilla CSS + plain `<script defer>` helpers**, not a React
-package. We vendor a copy under `site/public/artificer/` and load it from
-`index.html`:
+Artificer ships as **vanilla CSS + plain `<script>` helpers**, not a React
+package. It's published on npm as `@cameronsjo/artificer`; consume it with
+side-effect imports in your entry module (`src/main.tsx`) — CSS first (Vite
+resolves the bundled `@font-face` fonts on import), then the JS helpers, which
+are IIFEs that set `window.*` globals:
 
-```html
-<link rel="stylesheet" href="/artificer/artificer.css" />
-<script src="/artificer/artificer-icons.js" defer></script>
-<script src="/artificer/artificer-focus.js" defer></script>
-<script src="/artificer/artificer-theme.js" defer></script>
-<script src="/artificer/artificer-whimsy.js" defer></script>
+```ts
+import '@cameronsjo/artificer/artificer.css'
+import '@cameronsjo/artificer/whimsy.css'
+import '@cameronsjo/artificer/print.css'   // self-scoped @media print
+import '@cameronsjo/artificer/whimsy.js'   // → window.Whimsy
+import '@cameronsjo/artificer/icons.js'    // → window.ArtificerIcons
+import '@cameronsjo/artificer/focus.js'    // → window.ArtificerFocus
+import '@cameronsjo/artificer/tabs.js'     // → window.ArtificerTabs
 ```
+
+(Earlier this repo vendored a frozen copy under `site/public/artificer/` and
+loaded it from raw `<link>`/`<script>` tags in `index.html` — that's retired;
+the only thing left in `public/artificer/` is `assets/` for favicon + OG image.)
+Skip `theme.js` if you own the toggle in React (below). The package ships **no
+TypeScript types** — keep ambient `*.d.ts` for the `window.Artificer*` globals.
 
 You style with its tokens and classes; you do **not** import components. That
 single fact drives almost every gotcha below.
 
-## The #1 lesson: vendored scripts bind once, before React exists
+## The #1 lesson: the helper scripts bind once, before React exists
 
 Every Artificer helper script wires itself up on `DOMContentLoaded` with a
 **one-shot pass over the static DOM**. A React SPA mounts *after* that event and
@@ -97,7 +107,7 @@ Issues filed from this build, for reference: #79, #81, #83, #84, #88, #89, #91,
 
 ## Starter checklist for a new consumer
 
-1. Vendor `artificer/` into `public/`; link CSS + scripts in `index.html`.
+1. `npm i @cameronsjo/artificer`; side-effect-import its CSS + JS helpers in `src/main.tsx`.
 2. At app mount: `ArtificerIcons.observe()`; re-implement theme in React; wire whimsy/focus via refs/effects.
 3. Wrap root in `.surface-tool`; use `.t-*` type classes for any sans text.
 4. Pick the nav topology: `.sidenav` (sections) + `.tabs` (views) + `.appbar` (chrome); add the `.sidenav button` shim; plan to hand-roll ARIA tabs.
