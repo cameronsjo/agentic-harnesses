@@ -32,6 +32,9 @@ SPA renders loop / sequence / hooks / wire diagrams from JSON specs; `docs/` and
 - **Artificer friction → file upstream** (`cameronsjo/artificer-design-system`, label
   `feedback`, fire-and-forget) and log in `docs/artificer-adaptations.md`.
 - Diagrams theme via Artificer tokens only (`--dia-*`, `--s-*`, `--accent`); dark-first `.surface-tool`.
+- **`.surface-tool` forces mono on every descendant** — prose inside it (footer, About/Disclosure
+  pages) renders mono unless wrapped in `.t-*` type classes (`.t-body-md`, `.t-headline-*`), which set
+  sans at equal specificity but win on source order.
 - **Mobile/responsive:** shell grid tracks are `minmax(0, 1fr)` — never bare `1fr` (its `auto`
   minimum blocks shrinking; the page blows out sideways). Mobile overrides go *after* the desktop
   rules they override (media queries add no specificity). Verify at 390px with `agent-browser`
