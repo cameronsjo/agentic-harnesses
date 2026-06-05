@@ -98,14 +98,14 @@ export function App() {
 
   // Roving-tabindex arrow nav for the view tablist (WAI-ARIA tabs, automatic
   // activation): ←/→ cycle, Home/End jump to the ends, and focus follows selection.
+  // React stays the selection owner; we borrow only Artificer's pure nextIndex()
+  // state machine (window.ArtificerTabs) so the arrow/Home/End math isn't re-derived
+  // here — the JS tab *enhancer* is incompatible with controlled rendering (it owns
+  // aria-selected/hidden), so we don't cede the DOM to it. See artificer-adaptations.
   const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    let next: number
     const cur = availableTabs.indexOf(activeTab)
-    if (e.key === 'ArrowRight') next = (cur + 1) % availableTabs.length
-    else if (e.key === 'ArrowLeft') next = (cur - 1 + availableTabs.length) % availableTabs.length
-    else if (e.key === 'Home') next = 0
-    else if (e.key === 'End') next = availableTabs.length - 1
-    else return
+    const next = window.ArtificerTabs?.nextIndex(e.key, cur, availableTabs.length)
+    if (next == null) return // not a tab-nav key (or helper absent) → no-op
     e.preventDefault()
     setTab(availableTabs[next])
     const btns = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')

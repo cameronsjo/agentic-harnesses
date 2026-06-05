@@ -62,7 +62,7 @@ for what they're named, don't blend:
 Gotchas we filed:
 - `.sidenav` styles only `<a>`, but SPA section-switches are `<button>`s — add a CSS shim replicating `.sidenav a` rules for `.sidenav button`. (#79)
 - `.appbar` sets its own inline padding (double-insets inside a padded container — zero it) and hardcodes `position: sticky` (no static modifier). (#83, #84)
-- `.tabs` ships the *look* (`[aria-selected]` underline) but **no behavior** — no roving tabindex, no arrow-key nav, no tab↔tabpanel wiring. We hand-rolled the full WAI-ARIA Authoring Practices tabs pattern. Budget for this. (#92)
+- `.tabs` ships the *look* (`[aria-selected]` underline); as of v0.12 `tabs.js` also ships the *behavior* — but its `enhance`/`observe` path **owns the DOM** (sets `aria-selected`/`tabIndex`/`panel.hidden`), which fights React-controlled tabs. In an SPA, consume only the pure `ArtificerTabs.nextIndex(key, cur, count)` state machine and keep React as the selection owner. (#92; consumption non-fit logged in `docs/artificer-adaptations.md`)
 
 ## Surface & typography
 

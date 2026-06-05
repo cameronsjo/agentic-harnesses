@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react'
 import type { usePlayerTimer } from './player'
 
 type Player = ReturnType<typeof usePlayerTimer>
@@ -68,6 +69,19 @@ export function ExpandButton({ onClick }: { onClick: () => void }) {
 
 /** A row of pill tabs (harness / scenario / mode pickers) with shared a11y wiring. */
 export function TabPicker({ items, active, onSelect, ariaLabel, className = 'scenario-tabs' }: TabPickerProps) {
+  // These are toggle buttons (`aria-pressed`), a toggle group — NOT the WAI-ARIA
+  // tablist pattern. But keyboard parity is still worth it: roving tabindex + arrow
+  // keys, sharing Artificer's pure nextIndex() state machine with the view tablist
+  // in App.tsx. Tab lands on the active pill; ←/→/Home/End move focus + selection.
+  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const cur = items.findIndex((it) => it.id === active)
+    const next = window.ArtificerTabs?.nextIndex(e.key, cur, items.length)
+    if (next == null) return // not a nav key (or helper absent) → no-op
+    e.preventDefault()
+    onSelect(items[next].id)
+    const btns = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button')
+    btns?.[next]?.focus()
+  }
   return (
     <div className={`${className} cluster`} role="group" aria-label={ariaLabel}>
       {items.map((it) => (
@@ -75,8 +89,10 @@ export function TabPicker({ items, active, onSelect, ariaLabel, className = 'sce
           key={it.id}
           type="button"
           aria-pressed={it.id === active}
+          tabIndex={it.id === active ? 0 : -1}
           className={`btn btn--ghost tab ${it.id === active ? 'tab--active' : ''}`}
           onClick={() => onSelect(it.id)}
+          onKeyDown={onKeyDown}
         >
           {it.label}
         </button>

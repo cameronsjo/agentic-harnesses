@@ -127,6 +127,27 @@ feedback issue filed upstream.
 - **Wished existed:** a full-height `menu` glyph (bars ≈ y 4/8/12) that reads at 16px; a `.btn--icon--prominent` (or guidance) for icon buttons used as primary controls.
 - **Don't upstream:** the `22` size value, the `.appbar__menu-btn` selector, and the mobile compare carousel composition (product-specific).
 
+## 2026-06-05 — JS tab enhancer can't drive React-controlled tabs (only `nextIndex` fits)
+
+- **Upstream issue:** (none — this is a "where it fought us" note, not a gap; the helper is correct)
+- **Type:** misfit (consumption-model), Lane 3.
+- **Context:** v0.12.0 ships `artificer-tabs.js` — the behavior that #92 said was missing. It exposes
+  `ArtificerTabs.enhance(tablist)` / `observe(root)` (auto-wire `[data-tabs]`) **and** a pure
+  `nextIndex(key, current, count, opts)` roving-tabindex state machine.
+- **Friction:** `enhance`/`observe` take ownership of DOM state — they set `aria-selected`, `tabIndex`,
+  and `panel.hidden` directly and toggle panels on click. That collides head-on with React-controlled
+  tabs, where `activeTab` is derived state and the panel is conditionally rendered (not `hidden`-toggled).
+  Ceding the DOM would mean two writers fighting over the same attributes.
+- **Decision:** Keep React as the selection owner; consume **only** the pure `nextIndex()` export to
+  share the arrow/Home/End math (replacing the bespoke modulo in `App.tsx onTabKeyDown`), and reuse it
+  to add roving arrow-key nav to `controls.tsx`'s `TabPicker` (a toggle group — `aria-pressed`, not a
+  tablist — so its semantics stay, only the keyboard state machine is shared). The CSS `.tabs` role
+  contract and ARIA wiring are consumed as before.
+- **Wished existed:** a note in the tabs helper that the `enhance`/`observe` DOM-owning path is for
+  static/vanilla pages, and that controlled frameworks should consume `nextIndex` + the CSS/ARIA
+  contract only. (`nextIndex` being exported at all is exactly right — credit where due.)
+- **Don't upstream:** the harness/Claude-Code-pinned tab topology; the `TabPicker` toggle-group shape.
+
 ## 2026-05-31 — responsive app-shell layer is unowned (cross-consumer)
 
 - **Upstream issue:** cameronsjo/artificer-design-system#116
