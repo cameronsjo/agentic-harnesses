@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Format loosely follows
 ## [Unreleased]
 
 ### Added
+- **About** (`#about`) and **Disclosure** (`#disclosure`) standalone pages, reached from a slimmed footer via lightweight hash routing (no router dep) — linkable, shareable, reload-safe. The old two-column disclaimer footer's prose moved here, leaving a one-line colophon + links.
 - Four new harnesses onboarded (4 → 8): **Claw Code** (Rust), **claux** (Rust), **Hermes Agent** (Python), **llm-tui** (Rust) — loop specs, profiles, and matrix rows/columns, all source-grounded at pinned SHAs. Documented two **exclusions** (`llm-mux`, `openclaw`) in `docs/methodology.md` for lacking a coding loop of their own.
 - Repo scaffold: README, LICENSE (MIT), CONTRIBUTING, docs structure, `.gitignore`.
 - Pinned harness sources (gitignored) for analysis: Claude Code (v2.1.88 recovery),
@@ -40,3 +41,18 @@ All notable changes to this project are documented here. Format loosely follows
   `site/index.html` so the dark-first page no longer risks a theme flash on reload,
   and `scripts/revendor-artificer.sh` to reproduce the fetch. See
   `docs/artificer-adaptations.md`.
+- Visualizer: **stopped vendoring Artificer** — now consumes the published
+  **`@cameronsjo/artificer@^0.12.0`** npm package via side-effect imports in
+  `site/src/main.tsx` (CSS bundled with Vite-fingerprinted fonts; JS helpers set
+  `window.*` globals). Replaces the frozen v0.6→v0.10.1 vendored copy.
+- Visualizer: adopted the package's pure `ArtificerTabs.nextIndex()` roving-tabindex
+  state machine for keyboard nav, shared by the view tablist and the scenario/mode
+  `TabPicker` via one `site/src/keyboard.ts` helper (the `TabPicker` pickers gain
+  arrow-key nav). React stays the selection owner — the JS tab *enhancer* is not used.
+
+### Removed
+
+- Visualizer: the vendored Artificer copy (`site/public/artificer/*.css`/`*.js`/
+  `tokens.json`/fonts) and `scripts/revendor-artificer.sh` — superseded by the npm
+  package. Only `public/artificer/assets/{favicon,og-image}.svg` remain (referenced
+  by `index.html` at stable absolute URLs).

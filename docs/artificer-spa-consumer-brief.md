@@ -40,7 +40,7 @@ those one-shot bindings. This bit us four separate times:
 
 | Helper | Symptom in an SPA | What we did |
 |---|---|---|
-| `artificer-theme.js` | Theme toggle button never responds (handler bound before the button mounted) | Re-implement the toggle in React; drive the same `data-theme` attribute + `artificer.theme` localStorage key yourself. Keep class `.theme-toggle` but **no** `data-theme-toggle` attr, so the vendored script doesn't double-bind. |
+| `artificer-theme.js` | Theme toggle button never responds (handler bound before the button mounted) | Re-implement the toggle in React; drive the same `data-theme` attribute + `artificer.theme` localStorage key yourself. Keep class `.theme-toggle` but **no** `data-theme-toggle` attr — and don't import `theme.js` at all — so nothing double-binds. |
 | `artificer-icons.js` | `<i data-icon="x">` mounted in a modal/drawer renders **blank** (one-shot hydrate already ran) | Call `window.ArtificerIcons.observe()` once at app mount — it re-hydrates and sets a MutationObserver for future nodes. (filed: #95) |
 | `artificer-focus.js` | n/a — it exposes an imperative API, no auto-binding | Call `window.ArtificerFocus.trap(el, { onEscape })` in a `useEffect` when a modal/drawer opens; call the returned `release()` on close. |
 | `artificer-whimsy.js` | Wordmark shimmer never runs (element mounted post-load) | Drive it via a ref: `window.Whimsy?.run(titleRef.current, {...})` in a mount effect. |

@@ -139,10 +139,11 @@ feedback issue filed upstream.
   tabs, where `activeTab` is derived state and the panel is conditionally rendered (not `hidden`-toggled).
   Ceding the DOM would mean two writers fighting over the same attributes.
 - **Decision:** Keep React as the selection owner; consume **only** the pure `nextIndex()` export to
-  share the arrow/Home/End math (replacing the bespoke modulo in `App.tsx onTabKeyDown`), and reuse it
-  to add roving arrow-key nav to `controls.tsx`'s `TabPicker` (a toggle group — `aria-pressed`, not a
-  tablist — so its semantics stay, only the keyboard state machine is shared). The CSS `.tabs` role
-  contract and ARIA wiring are consumed as before.
+  share the arrow/Home/End math. Both call sites — the view tablist in `App.tsx` and the `TabPicker`
+  toggle group in `controls.tsx` (a toggle group — `aria-pressed`, not a tablist — so its semantics
+  stay, only the keyboard state machine is shared) — route through one wrapper, `onRovingTabKeyDown`
+  in `site/src/keyboard.ts`, which is the single place that touches `window.ArtificerTabs` and moves
+  DOM focus. The CSS `.tabs` role contract and ARIA wiring are consumed as before.
 - **Wished existed:** a note in the tabs helper that the `enhance`/`observe` DOM-owning path is for
   static/vanilla pages, and that controlled frameworks should consume `nextIndex` + the CSS/ARIA
   contract only. (`nextIndex` being exported at all is exactly right — credit where due.)
