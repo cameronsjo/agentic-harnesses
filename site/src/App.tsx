@@ -155,7 +155,10 @@ export function App() {
     const target = window.ArtificerTabs?.nextIndex(e.key, cur, availableTabs.length, {
       orientation: 'horizontal',
     })
-    if (target == null) return
+    // Trailing bounds check is defensive: nextIndex's contract is an index in
+    // [0, length), but a library regression returning out-of-range would otherwise
+    // push setTab(undefined) into state. Cheap guard, no behavior change in practice.
+    if (target == null || target < 0 || target >= availableTabs.length) return
     e.preventDefault()
     setTab(availableTabs[target])
     const btns = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
