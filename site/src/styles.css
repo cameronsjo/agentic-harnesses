@@ -579,24 +579,42 @@ a.anchor:hover {
    right; both wrap onto their own line on a narrow viewport. The heavy disclosure
    prose now lives on the #disclosure page (DisclosureView). */
 .site-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   gap: var(--s-sm) var(--s-lg);
   line-height: 1.5;
 }
 .footer-tagline {
+  justify-self: start;
   max-width: 60ch;
 }
-.footer-links {
-  gap: var(--s-md);
-}
-/* The seasonal greeting leads the footer; it carries its own whimsy fill (the
-   June rainbow), so it ignores the footer's --fg-secondary and just owns its size. */
+/* Centered between the colophon (left) and the links (right). Inline-sized so the
+   June rainbow underline (whimsy-underline--on) spans only the text — not the whole
+   row — and nowrap keeps "happy pride" on one line so the wave reads as one stroke.
+   It carries its own whimsy fill, so it ignores the footer's --fg-secondary. */
 .footer-greeting {
+  justify-self: center;
   margin: 0;
   font-size: var(--t-body-lg-size);
+  white-space: nowrap;
+}
+.footer-links {
+  justify-self: end;
+  gap: var(--s-md);
+}
+/* Stack centered on a phone — the three-column row has no room. */
+@media (max-width: 800px) {
+  .site-footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .footer-tagline,
+  .footer-greeting,
+  .footer-links {
+    justify-self: center;
+  }
 }
 
 /* Standalone prose pages (#about / #disclosure): a centered reading column inside

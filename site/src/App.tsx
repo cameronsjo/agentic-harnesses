@@ -330,39 +330,38 @@ export function App() {
  */
 function AppFooter() {
   return (
-    <footer className="app-footer stack stack--sm">
+    <footer className="app-footer site-footer">
+      <span className="footer-tagline">
+        Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
+        <a
+          className="anchor"
+          href="https://cameronsjo.github.io/artificer/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Artificer design system
+        </a>
+      </span>
       {/* Seasonal greeting — Whimsy.greeting() swaps [data-whimsy-greeting] by date:
-          June → "happy pride" (full rainbow wave, no trailing period); off-season →
-          the inline fallback below (graceful with JS off). The swap runs from a mount
-          effect in App(), because Whimsy's DOMContentLoaded auto-init fires before
-          React mounts this footer (same SPA seam as the icons/whimsy helpers). */}
-      <p className="footer-greeting" data-whimsy-greeting>
+          June → "happy pride" (rainbow wave, no trailing period); off-season → the
+          inline fallback (graceful with JS off). An inline element centered in the
+          row's middle column, so the rainbow underline spans only the text — not the
+          screen. greeting() runs from a mount effect in App() (Whimsy's
+          DOMContentLoaded auto-init fires before React mounts this footer). */}
+      <span className="footer-greeting" data-whimsy-greeting>
         kindness is free
-      </p>
-      <div className="site-footer">
-        <span className="footer-tagline">
-          Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
-          <a
-            className="anchor"
-            href="https://cameronsjo.github.io/artificer/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Artificer design system
-          </a>
-        </span>
-        <nav className="footer-links cluster" aria-label="About this site">
-          <a className="anchor" href="#about">
-            About
-          </a>
-          <a className="anchor" href="#disclosure">
-            Disclosure
-          </a>
-          <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
-            Open an issue
-          </a>
-        </nav>
-      </div>
+      </span>
+      <nav className="footer-links cluster" aria-label="About this site">
+        <a className="anchor" href="#about">
+          About
+        </a>
+        <a className="anchor" href="#disclosure">
+          Disclosure
+        </a>
+        <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
+          Open an issue
+        </a>
+      </nav>
     </footer>
   )
 }
