@@ -592,6 +592,12 @@ a.anchor:hover {
 .footer-links {
   gap: var(--s-md);
 }
+/* The seasonal greeting leads the footer; it carries its own whimsy fill (the
+   June rainbow), so it ignores the footer's --fg-secondary and just owns its size. */
+.footer-greeting {
+  margin: 0;
+  font-size: var(--t-body-lg-size);
+}
 
 /* Standalone prose pages (#about / #disclosure): a centered reading column inside
    the tool surface. Body text escapes the .surface-tool mono trap via the `.t-*`

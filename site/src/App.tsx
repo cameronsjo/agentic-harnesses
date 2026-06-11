@@ -98,6 +98,13 @@ export function App() {
   // aren't blank. Returns a disconnect fn for unmount.
   useEffect(() => window.ArtificerIcons?.observe(), [])
 
+  // The footer's seasonal greeting (June → "happy pride"). Whimsy auto-inits on
+  // DOMContentLoaded — before React mounts the footer — so greeting() is re-run
+  // here to swap the React-mounted [data-whimsy-greeting] node.
+  useEffect(() => {
+    window.Whimsy?.greeting()
+  }, [])
+
   // Mobile drawer focus management. The drawer is always in the DOM (CSS slides it
   // off-canvas), so when closed we mark it `inert` to keep its buttons out of the tab
   // order — otherwise desktop, where the hamburger is hidden, gains phantom nav stops.
@@ -323,33 +330,39 @@ export function App() {
  */
 function AppFooter() {
   return (
-    <footer className="app-footer site-footer">
-      {/* TODO(pride): when @cameronsjo/artificer publishes the "happy pride" footer
-          variant (June, full Whimsy, no trailing period), bump the dep and swap the
-          tagline span below for the primitive. Tracked in the upstream intro
-          2026-06-05-1205-pride-footer-and-nav-primitives.md. */}
-      <span className="footer-tagline">
-        Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
-        <a
-          className="anchor"
-          href="https://cameronsjo.github.io/artificer/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Artificer design system
-        </a>
-      </span>
-      <nav className="footer-links cluster" aria-label="About this site">
-        <a className="anchor" href="#about">
-          About
-        </a>
-        <a className="anchor" href="#disclosure">
-          Disclosure
-        </a>
-        <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
-          Open an issue
-        </a>
-      </nav>
+    <footer className="app-footer stack stack--sm">
+      {/* Seasonal greeting — Whimsy.greeting() swaps [data-whimsy-greeting] by date:
+          June → "happy pride" (full rainbow wave, no trailing period); off-season →
+          the inline fallback below (graceful with JS off). The swap runs from a mount
+          effect in App(), because Whimsy's DOMContentLoaded auto-init fires before
+          React mounts this footer (same SPA seam as the icons/whimsy helpers). */}
+      <p className="footer-greeting" data-whimsy-greeting>
+        kindness is free
+      </p>
+      <div className="site-footer">
+        <span className="footer-tagline">
+          Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
+          <a
+            className="anchor"
+            href="https://cameronsjo.github.io/artificer/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Artificer design system
+          </a>
+        </span>
+        <nav className="footer-links cluster" aria-label="About this site">
+          <a className="anchor" href="#about">
+            About
+          </a>
+          <a className="anchor" href="#disclosure">
+            Disclosure
+          </a>
+          <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
+            Open an issue
+          </a>
+        </nav>
+      </div>
     </footer>
   )
 }
