@@ -230,7 +230,7 @@ export function LoopGraph({ spec, activeNodeId, activeEdge, badges, onNodeClick 
                 <circle r="10" fill="var(--accent-fill)" stroke="var(--accent-bright)" strokeWidth="1.5" />
                 <text
                   fill="var(--accent-bright)"
-                  fontSize="11"
+                  fontSize="var(--t-label-xs-size)"
                   fontFamily="var(--font-mono)"
                   fontWeight={700}
                   textAnchor="middle"

@@ -142,7 +142,7 @@ body {
 }
 .step-counter {
   color: var(--fg-secondary);
-  font-size: 0.85rem;
+  font-size: var(--t-body-md-size);
   margin-left: var(--s-sm);
 }
 /* "turn complete" caption — content, not chrome. Sits by the step counter and
@@ -156,7 +156,7 @@ body {
   font-family: var(--font-sans);
   color: var(--fg);
   margin: var(--s-sm) 0 var(--s-md);
-  font-size: 1.05rem;
+  font-size: var(--t-body-lg-size);
 }
 
 /* ---- compare view ---- */
@@ -325,14 +325,14 @@ body {
   margin-bottom: 4px;
 }
 .lang-badge {
-  font-size: 0.72rem;
+  font-size: var(--t-label-sm-size);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   background: var(--steel-fill);
   color: var(--fg);
 }
 .loop-style {
-  font-size: 0.75rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   font-family: var(--font-sans);
   margin-bottom: var(--s-sm);
@@ -341,7 +341,7 @@ body {
 .compare-caption {
   margin-top: var(--s-sm);
   min-height: 3.2em;
-  font-size: 0.8rem;
+  font-size: var(--t-label-md-size);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -364,7 +364,7 @@ body {
 }
 .repo-link {
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: var(--t-body-md-size);
   text-decoration: none;
 }
 .repo-link:hover {
@@ -408,7 +408,9 @@ a.anchor:hover {
   text-align: center;
   padding: 2px 11px 2px 14px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  /* label-sm tier (12px) — bound to the token so the foreignObject node label
+     tracks the type scale; overflow-wrap below handles long identifiers. */
+  font-size: var(--t-label-sm-size);
   line-height: 1.12;
   color: var(--dia-node-fg);
   overflow-wrap: anywhere;
@@ -435,7 +437,7 @@ a.anchor:hover {
   z-index: 1;
   gap: 6px;
   padding: 5px 10px;
-  font-size: 0.8rem;
+  font-size: var(--t-label-md-size);
 }
 /* Large, near-fullscreen panel (Artificer .scrim/.modal supply the overlay + chrome). */
 .graph-modal {
@@ -532,7 +534,7 @@ a.anchor:hover {
   margin-bottom: 4px;
 }
 .node-kind {
-  font-size: 0.75rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -542,7 +544,7 @@ a.anchor:hover {
 .scenario-note {
   font-family: var(--font-sans);
   color: var(--fg-secondary);
-  font-size: 0.88rem;
+  font-size: var(--t-body-md-size);
   line-height: 1.5;
   margin: 0;
 }
@@ -554,7 +556,7 @@ a.anchor:hover {
 /* ---- shared bits ---- */
 .source-ref {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: var(--t-label-sm-size);
   color: var(--accent-bright);
   background: var(--bg);
   padding: 2px 6px;
@@ -576,7 +578,7 @@ a.anchor:hover {
   border-top: 1px solid var(--border);
   color: var(--fg-secondary);
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
 }
 /* The stack utility owns vertical rhythm; drop default <p> margins and cap the
    measure so the disclaimer stays readable. The fine-print line sits quieter. */
@@ -600,7 +602,7 @@ a.anchor:hover {
   align-items: start;
 }
 .footer-label {
-  font-size: 0.68rem;
+  font-size: var(--t-label-xs-size);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
@@ -650,7 +652,7 @@ a.anchor:hover {
 .hooks-hint {
   font-family: var(--font-sans);
   color: var(--fg-secondary);
-  font-size: 0.88rem;
+  font-size: var(--t-body-md-size);
   margin: 0 0 var(--s-md);
   max-width: 70ch;
 }
@@ -699,7 +701,7 @@ a.anchor:hover {
 }
 .event-when {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
   color: var(--fg-secondary);
 }
 .event-controls {
@@ -708,7 +710,7 @@ a.anchor:hover {
   gap: 4px;
 }
 .control-chip {
-  font-size: 0.68rem;
+  font-size: var(--t-label-xs-size);
   padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--bg);
@@ -732,7 +734,7 @@ a.anchor:hover {
   gap: 6px;
 }
 .wire-col-head {
-  font-size: 0.72rem;
+  font-size: var(--t-label-sm-size);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--fg-secondary);
@@ -758,7 +760,7 @@ a.anchor:hover {
 .wire-tool_use { border-left-color: var(--attention); }
 .wire-tool_result { border-left-color: var(--success); }
 .wire-label {
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
 }
 .wire-tags {
   display: flex;
@@ -774,7 +776,7 @@ a.anchor:hover {
 }
 .wire-boundary {
   text-align: center;
-  font-size: 0.7rem;
+  font-size: var(--t-label-xs-size);
   color: var(--fg-secondary);
   border-top: 1px dashed var(--border);
   border-bottom: 1px dashed var(--border);
@@ -782,7 +784,7 @@ a.anchor:hover {
   margin: 2px 0;
 }
 .cache-bp {
-  font-size: 0.68rem;
+  font-size: var(--t-label-xs-size);
   color: var(--accent-bright);
   white-space: nowrap;
 }
@@ -790,7 +792,7 @@ a.anchor:hover {
   margin-top: var(--s-sm);
   padding-top: var(--s-sm);
   border-top: 1px solid var(--border);
-  font-size: 0.78rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   font-family: var(--font-sans);
   display: flex;
@@ -839,14 +841,14 @@ a.anchor:hover {
 }
 .term-title {
   margin-left: var(--s-sm);
-  font-size: 0.74rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
 }
 .terminal-body {
   padding: var(--s-md);
   max-height: 60vh;
   overflow-y: auto;
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
   line-height: 1.5;
 }
 .tline {
@@ -876,7 +878,7 @@ a.anchor:hover {
   padding: 8px 10px;
   border-radius: var(--radius-sm);
   margin: 4px 0;
-  font-size: 0.76rem;
+  font-size: var(--t-label-sm-size);
 }
 .tline--recv .tline-text {
   color: var(--fg);
@@ -904,13 +906,13 @@ a.anchor:hover {
 }
 .tline-annot {
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   padding-left: var(--s-md);
 }
 .tline-ref {
   margin-left: var(--s-md);
-  font-size: 0.7rem;
+  font-size: var(--t-label-xs-size);
 }
 
 /* ---- sequence view ---- */

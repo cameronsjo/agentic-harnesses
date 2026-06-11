@@ -64,9 +64,13 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
               const lit = active && (active.from === p.id || active.to === p.id)
               return (
                 <g key={p.id}>
-                  <line x1={x} y1={HEAD_Y + HEAD_H} x2={x} y2={height} stroke="var(--dia-node-border)" strokeWidth="1.5" strokeDasharray="4 5" />
+                  {/* Lifeline uses --dia-rail again: upstream re-tuned the token
+                      from "--border at 50% opacity" (invisible, the reason for
+                      adaptation #96's --dia-node-border substitution) to
+                      --border-lifted, which now stands visible on the dark canvas. */}
+                  <line x1={x} y1={HEAD_Y + HEAD_H} x2={x} y2={height} stroke="var(--dia-rail)" strokeWidth="1.5" strokeDasharray="4 5" />
                   <rect x={x - 60} y={HEAD_Y} width={120} height={HEAD_H} rx={8} fill={lit ? 'var(--bg-overlay)' : 'var(--dia-node-bg)'} stroke={lit ? 'var(--accent-bright)' : 'var(--dia-node-border)'} strokeWidth={lit ? 2 : 1.5} />
-                  <text x={x} y={HEAD_Y + HEAD_H / 2} fill="var(--dia-node-fg)" fontSize="12" fontFamily="var(--font-mono)" textAnchor="middle" dominantBaseline="central">
+                  <text x={x} y={HEAD_Y + HEAD_H / 2} fill="var(--dia-node-fg)" fontSize="var(--t-label-sm-size)" fontFamily="var(--font-mono)" textAnchor="middle" dominantBaseline="central">
                     {p.label}
                   </text>
                 </g>
@@ -85,7 +89,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
                 return (
                   <g key={i} opacity={isActive ? 1 : 0.55}>
                     <path d={`M ${x} ${y} h 34 v 18 h -30`} fill="none" stroke={color} strokeWidth={isActive ? 2.5 : 1.5} markerEnd={marker} />
-                    <text x={x + 42} y={y + 4} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="11" fontFamily="var(--font-mono)">
+                    <text x={x + 42} y={y + 4} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="var(--t-label-xs-size)" fontFamily="var(--font-mono)">
                       {m.label}
                     </text>
                   </g>
@@ -98,7 +102,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
               return (
                 <g key={i} opacity={isActive ? 1 : 0.55}>
                   <line x1={x1} y1={y} x2={x2} y2={y} stroke={color} strokeWidth={isActive ? 2.5 : 1.5} strokeDasharray={m.return ? '5 4' : undefined} markerEnd={marker} />
-                  <text x={midX} y={y - 6} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="11" fontFamily="var(--font-mono)" textAnchor="middle">
+                  <text x={midX} y={y - 6} fill={isActive ? 'var(--fg)' : 'var(--fg-secondary)'} fontSize="var(--t-label-xs-size)" fontFamily="var(--font-mono)" textAnchor="middle">
                     {m.label}
                   </text>
                 </g>
