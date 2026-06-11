@@ -6,6 +6,14 @@ site/node_modules/
 site/dist/
 site/.vite/
 
+# Artificer runtime files — GENERATED from the pinned @cameronsjo/artificer
+# package by scripts/vendor-artificer.mjs (predev/prebuild). The lockfile is the
+# single version source of truth; only assets/ (fonts, favicon, og) stays committed
+# (version-stable url() paths). The `*` globs don't reach into assets/.
+site/public/artificer/*.css
+site/public/artificer/*.js
+site/public/artificer/*.json
+
 # Node / tooling
 node_modules/
 *.log

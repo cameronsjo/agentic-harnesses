@@ -14,19 +14,9 @@ body {
 }
 
 /* ---- appbar + intro band ---- */
-/* Artificer's .appbar carries its own `padding: 0 var(--s-md)` for a full-bleed
-   bar, but ours sits INSIDE .container--lg (which already pads the inline edges),
-   so that padding double-insets the brand one --s-md past the lede / sidenav
-   below it. Zero it (higher-specificity selector beats the vendored rule + its
-   safe-area variant) so the wordmark lines up flush-left with the content column. */
-.app .appbar {
-  padding-inline: 0;
-  /* Non-sticky (experiment): a compact tool surface doesn't need the bar eating
-     56px at every scroll position, and a static bar removes the two-sticky-planes
-     seam where scrolling content slid between the sticky appbar and the sticky
-     sidenav. Artificer hardcodes position:sticky; toggle requested upstream (#84). */
-  position: static;
-}
+/* The appbar's contained-padding + static-position overrides (#83, #84) are
+   retired: v0.18 ships `.appbar--contained` and `.appbar--static`, applied on the
+   header in App.tsx. Nothing to override here anymore. */
 /* The appbar is Artificer chrome (.appbar / .appbar__brand.wordmark); only the
    brand's whimsy shimmer needs a nudge — clip the flowing gradient at the
    wordmark's own size and tracking rather than the .whimsy default. */
@@ -142,7 +132,7 @@ body {
 }
 .step-counter {
   color: var(--fg-secondary);
-  font-size: 0.85rem;
+  font-size: var(--t-body-md-size);
   margin-left: var(--s-sm);
 }
 /* "turn complete" caption — content, not chrome. Sits by the step counter and
@@ -156,7 +146,7 @@ body {
   font-family: var(--font-sans);
   color: var(--fg);
   margin: var(--s-sm) 0 var(--s-md);
-  font-size: 1.05rem;
+  font-size: var(--t-body-lg-size);
 }
 
 /* ---- compare view ---- */
@@ -325,14 +315,14 @@ body {
   margin-bottom: 4px;
 }
 .lang-badge {
-  font-size: 0.72rem;
+  font-size: var(--t-label-sm-size);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   background: var(--steel-fill);
   color: var(--fg);
 }
 .loop-style {
-  font-size: 0.75rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   font-family: var(--font-sans);
   margin-bottom: var(--s-sm);
@@ -341,7 +331,7 @@ body {
 .compare-caption {
   margin-top: var(--s-sm);
   min-height: 3.2em;
-  font-size: 0.8rem;
+  font-size: var(--t-label-md-size);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -364,7 +354,7 @@ body {
 }
 .repo-link {
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: var(--t-body-md-size);
   text-decoration: none;
 }
 .repo-link:hover {
@@ -408,7 +398,9 @@ a.anchor:hover {
   text-align: center;
   padding: 2px 11px 2px 14px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  /* label-sm tier (12px) — bound to the token so the foreignObject node label
+     tracks the type scale; overflow-wrap below handles long identifiers. */
+  font-size: var(--t-label-sm-size);
   line-height: 1.12;
   color: var(--dia-node-fg);
   overflow-wrap: anywhere;
@@ -429,18 +421,17 @@ a.anchor:hover {
   position: relative;
 }
 .graph-expand {
+  /* Position + gap only — size (padding + font) comes from .btn--sm now (#91 absorbed). */
   position: absolute;
   top: var(--s-sm);
   right: var(--s-sm);
   z-index: 1;
   gap: 6px;
-  padding: 5px 10px;
-  font-size: 0.8rem;
 }
 /* Large, near-fullscreen panel (Artificer .scrim/.modal supply the overlay + chrome). */
 .graph-modal {
-  width: min(96vw, 1100px);
-  max-width: min(96vw, 1100px);
+  /* Width comes from .modal--xl now (max-width: min(96vw, 1100px), #88 absorbed);
+     keep the diagram-viewer height + zero padding + column layout it doesn't own. */
   max-height: 92vh;
   padding: 0;
   display: flex;
@@ -532,7 +523,7 @@ a.anchor:hover {
   margin-bottom: 4px;
 }
 .node-kind {
-  font-size: 0.75rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -542,7 +533,7 @@ a.anchor:hover {
 .scenario-note {
   font-family: var(--font-sans);
   color: var(--fg-secondary);
-  font-size: 0.88rem;
+  font-size: var(--t-body-md-size);
   line-height: 1.5;
   margin: 0;
 }
@@ -554,7 +545,7 @@ a.anchor:hover {
 /* ---- shared bits ---- */
 .source-ref {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: var(--t-label-sm-size);
   color: var(--accent-bright);
   background: var(--bg);
   padding: 2px 6px;
@@ -570,50 +561,72 @@ a.anchor:hover {
   padding: var(--s-2xl);
   text-align: center;
 }
+/* The footer is chrome, not tool content — keep it sans even inside .surface-tool
+   (whose `*` rule would otherwise force mono on the links/labels). Equal specificity
+   to `.surface-tool *`; styles.css loads after Artificer, so source order wins. */
+.app-footer,
+.app-footer * {
+  font-family: var(--font-sans);
+}
 .app-footer {
   margin-top: var(--s-2xl);
   padding-top: var(--s-md);
   border-top: 1px solid var(--border);
   color: var(--fg-secondary);
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
 }
-/* The stack utility owns vertical rhythm; drop default <p> margins and cap the
-   measure so the disclaimer stays readable. The fine-print line sits quieter. */
-.app-footer p {
-  margin: 0;
+/* Slim footer: a one-line colophon on the left, the standalone-page links on the
+   right; both wrap onto their own line on a narrow viewport. The heavy disclosure
+   prose now lives on the #disclosure page (DisclosureView). */
+.site-footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--s-sm) var(--s-lg);
   line-height: 1.5;
 }
-/* Cap the measure only inside the columns; the fine-print line (a direct child
-   of the footer, outside the grid) stays uncapped so it spans both columns.
-   Scoping the cap here avoids the .app-footer p (0,1,1) vs .footer-fine (0,1,0)
-   specificity collision that kept the fine print pinned to one column. */
-.footer-grid p {
-  max-width: 70ch;
+.footer-tagline {
+  justify-self: start;
+  max-width: 60ch;
 }
-/* Lay the two substantive blocks side-by-side so the footer uses the full width
-   instead of stacking into one tall column down the left edge. */
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-xl);
-  align-items: start;
+/* Centered between the colophon (left) and the links (right). Inline-sized so the
+   June rainbow underline (whimsy-underline--on) spans only the text — not the whole
+   row — and nowrap keeps "happy pride" on one line so the wave reads as one stroke.
+   It carries its own whimsy fill, so it ignores the footer's --fg-secondary. */
+.footer-greeting {
+  justify-self: center;
+  margin: 0;
+  font-size: var(--t-body-lg-size);
+  white-space: nowrap;
 }
-.footer-label {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  color: var(--accent);
+.footer-links {
+  justify-self: end;
+  gap: var(--s-md);
 }
-.footer-fine {
-  opacity: 0.8;
-}
+/* Stack centered on a phone — the three-column row has no room. */
 @media (max-width: 800px) {
-  .footer-grid {
+  .site-footer {
     grid-template-columns: 1fr;
-    gap: var(--s-md);
+    justify-items: center;
+    text-align: center;
   }
+  .footer-tagline,
+  .footer-greeting,
+  .footer-links {
+    justify-self: center;
+  }
+}
+
+/* Standalone prose pages (#about / #disclosure): a centered reading column inside
+   the tool surface. Body text escapes the .surface-tool mono trap via the `.t-*`
+   type classes (sans on a tool surface); this just owns the measure + rhythm. */
+.prose-page {
+  max-width: var(--editorial-measure, 66ch);
+  margin-inline: auto;
+  padding-block: var(--s-xl);
+}
+.prose-page code {
+  font-family: var(--font-mono);
 }
 
 /* Tablet breakpoint (matches Artificer --bp-tablet: 800px). The persistent
@@ -650,7 +663,7 @@ a.anchor:hover {
 .hooks-hint {
   font-family: var(--font-sans);
   color: var(--fg-secondary);
-  font-size: 0.88rem;
+  font-size: var(--t-body-md-size);
   margin: 0 0 var(--s-md);
   max-width: 70ch;
 }
@@ -699,7 +712,7 @@ a.anchor:hover {
 }
 .event-when {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
   color: var(--fg-secondary);
 }
 .event-controls {
@@ -708,7 +721,7 @@ a.anchor:hover {
   gap: 4px;
 }
 .control-chip {
-  font-size: 0.68rem;
+  font-size: var(--t-label-xs-size);
   padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--bg);
@@ -732,7 +745,7 @@ a.anchor:hover {
   gap: 6px;
 }
 .wire-col-head {
-  font-size: 0.72rem;
+  font-size: var(--t-label-sm-size);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--fg-secondary);
@@ -758,7 +771,7 @@ a.anchor:hover {
 .wire-tool_use { border-left-color: var(--attention); }
 .wire-tool_result { border-left-color: var(--success); }
 .wire-label {
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
 }
 .wire-tags {
   display: flex;
@@ -774,7 +787,7 @@ a.anchor:hover {
 }
 .wire-boundary {
   text-align: center;
-  font-size: 0.7rem;
+  font-size: var(--t-label-xs-size);
   color: var(--fg-secondary);
   border-top: 1px dashed var(--border);
   border-bottom: 1px dashed var(--border);
@@ -782,7 +795,7 @@ a.anchor:hover {
   margin: 2px 0;
 }
 .cache-bp {
-  font-size: 0.68rem;
+  font-size: var(--t-label-xs-size);
   color: var(--accent-bright);
   white-space: nowrap;
 }
@@ -790,7 +803,7 @@ a.anchor:hover {
   margin-top: var(--s-sm);
   padding-top: var(--s-sm);
   border-top: 1px solid var(--border);
-  font-size: 0.78rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   font-family: var(--font-sans);
   display: flex;
@@ -839,14 +852,14 @@ a.anchor:hover {
 }
 .term-title {
   margin-left: var(--s-sm);
-  font-size: 0.74rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
 }
 .terminal-body {
   padding: var(--s-md);
   max-height: 60vh;
   overflow-y: auto;
-  font-size: 0.82rem;
+  font-size: var(--t-label-md-size);
   line-height: 1.5;
 }
 .tline {
@@ -876,7 +889,7 @@ a.anchor:hover {
   padding: 8px 10px;
   border-radius: var(--radius-sm);
   margin: 4px 0;
-  font-size: 0.76rem;
+  font-size: var(--t-label-sm-size);
 }
 .tline--recv .tline-text {
   color: var(--fg);
@@ -904,13 +917,13 @@ a.anchor:hover {
 }
 .tline-annot {
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: var(--t-label-sm-size);
   color: var(--fg-secondary);
   padding-left: var(--s-md);
 }
 .tline-ref {
   margin-left: var(--s-md);
-  font-size: 0.7rem;
+  font-size: var(--t-label-xs-size);
 }
 
 /* ---- sequence view ---- */

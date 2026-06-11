@@ -13,6 +13,14 @@ interface WhimsyApi {
   ignite(el: Element | null): void
   /** Manually remove the flowing-gradient state. */
   clear(el: Element | null): void
+  /**
+   * Swap every `[data-whimsy-greeting]` under `root` to its seasonal footer line —
+   * June → "happy pride" (full rainbow wave); off-season → the element's own inline
+   * text (the JS-disabled fallback). Idempotent (a done-flag skips swapped nodes).
+   */
+  greeting(root?: Document | Element): void
+  /** Auto-hydrate + greet nodes inserted after first paint (SPA). Returns a disconnect fn. */
+  observe(root?: Document | Element): () => void
 }
 
 interface Window {

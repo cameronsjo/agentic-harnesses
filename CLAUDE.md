@@ -16,8 +16,10 @@ SPA renders loop / sequence / hooks / wire diagrams from JSON specs; `docs/` and
 - `site/` — Vite + React 18 + TS SPA; source in `site/src/`.
 - `site/src/data/loops/*.json` — harness loop specs, **auto-discovered** by `data.ts`.
   Add a harness by dropping a JSON here; no nav edits needed.
-- `site/public/artificer/` — vendored Artificer design system (CSS + `<script>` helpers);
-  revendor via `scripts/revendor-artificer.sh`.
+- `site/public/artificer/` — Artificer design system (CSS + `<script>` helpers), **generated**
+  from the pinned npm package `@cameronsjo/artificer` by `scripts/vendor-artificer.mjs`
+  (runs on `predev`/`prebuild`). The `*.{css,js,json}` are gitignored; only `assets/`
+  (fonts, favicon, og) is committed. Bump the version in `site/package.json`, not the files.
 - `sources/<harness>/` — pinned source clones the diagrams cite (`file:line`).
 - `docs/` — methodology, comparison, per-harness writeups.
 
