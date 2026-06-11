@@ -561,50 +561,48 @@ a.anchor:hover {
   padding: var(--s-2xl);
   text-align: center;
 }
+/* The footer is chrome, not tool content — keep it sans even inside .surface-tool
+   (whose `*` rule would otherwise force mono on the links/labels). Equal specificity
+   to `.surface-tool *`; styles.css loads after Artificer, so source order wins. */
+.app-footer,
+.app-footer * {
+  font-family: var(--font-sans);
+}
 .app-footer {
   margin-top: var(--s-2xl);
   padding-top: var(--s-md);
   border-top: 1px solid var(--border);
   color: var(--fg-secondary);
-  font-family: var(--font-sans);
   font-size: var(--t-label-md-size);
 }
-/* The stack utility owns vertical rhythm; drop default <p> margins and cap the
-   measure so the disclaimer stays readable. The fine-print line sits quieter. */
-.app-footer p {
-  margin: 0;
+/* Slim footer: a one-line colophon on the left, the standalone-page links on the
+   right; both wrap onto their own line on a narrow viewport. The heavy disclosure
+   prose now lives on the #disclosure page (DisclosureView). */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-sm) var(--s-lg);
   line-height: 1.5;
 }
-/* Cap the measure only inside the columns; the fine-print line (a direct child
-   of the footer, outside the grid) stays uncapped so it spans both columns.
-   Scoping the cap here avoids the .app-footer p (0,1,1) vs .footer-fine (0,1,0)
-   specificity collision that kept the fine print pinned to one column. */
-.footer-grid p {
-  max-width: 70ch;
+.footer-tagline {
+  max-width: 60ch;
 }
-/* Lay the two substantive blocks side-by-side so the footer uses the full width
-   instead of stacking into one tall column down the left edge. */
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-xl);
-  align-items: start;
+.footer-links {
+  gap: var(--s-md);
 }
-.footer-label {
-  font-size: var(--t-label-xs-size);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  color: var(--accent);
+
+/* Standalone prose pages (#about / #disclosure): a centered reading column inside
+   the tool surface. Body text escapes the .surface-tool mono trap via the `.t-*`
+   type classes (sans on a tool surface); this just owns the measure + rhythm. */
+.prose-page {
+  max-width: var(--editorial-measure, 66ch);
+  margin-inline: auto;
+  padding-block: var(--s-xl);
 }
-.footer-fine {
-  opacity: 0.8;
-}
-@media (max-width: 800px) {
-  .footer-grid {
-    grid-template-columns: 1fr;
-    gap: var(--s-md);
-  }
+.prose-page code {
+  font-family: var(--font-mono);
 }
 
 /* Tablet breakpoint (matches Artificer --bp-tablet: 800px). The persistent
