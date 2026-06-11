@@ -98,18 +98,28 @@ export function App() {
 
   // Roving-tabindex arrow nav for the view tablist (WAI-ARIA tabs, automatic
   // activation): ←/→ cycle, Home/End jump to the ends, and focus follows selection.
+  // The index math is sourced from ArtificerTabs.nextIndex — the upstream
+  // WAI-ARIA state machine (artificer-tabs.js), which retires the hand-rolled
+  // duplicate this app used to carry (adaptation #92). React keeps owning the DOM:
+  // selection (setTab) and focus-follows-selection. That split — state machine
+  // from the module, framework owns the DOM — is the React-consumer rule; full
+  // enhance() is rejected (it toggles panel.hidden / aria-selected on nodes React
+  // owns, and snapshots a tab set that's dynamic per harness here).
   const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    let next: number
     const cur = availableTabs.indexOf(activeTab)
-    if (e.key === 'ArrowRight') next = (cur + 1) % availableTabs.length
-    else if (e.key === 'ArrowLeft') next = (cur - 1 + availableTabs.length) % availableTabs.length
-    else if (e.key === 'Home') next = 0
-    else if (e.key === 'End') next = availableTabs.length - 1
-    else return
+    // nextIndex yields `undefined` when the global is absent (the <script defer>
+    // hasn't loaded / was stripped) and `null` when the key isn't a tab-nav key —
+    // both mean "do nothing", so a loose `== null` collapses them BEFORE we
+    // preventDefault / move selection. No inline-math fallback: re-deriving the
+    // index here would resurrect the duplicated state machine this change retires.
+    const target = window.ArtificerTabs?.nextIndex(e.key, cur, availableTabs.length, {
+      orientation: 'horizontal',
+    })
+    if (target == null) return
     e.preventDefault()
-    setTab(availableTabs[next])
+    setTab(availableTabs[target])
     const btns = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-    btns?.[next]?.focus()
+    btns?.[target]?.focus()
   }
 
   return (
