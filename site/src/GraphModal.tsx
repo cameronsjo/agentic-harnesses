@@ -49,7 +49,7 @@ export function GraphModal({ open, onClose, title, diagram, side }: Props) {
       }}
     >
       <div
-        className="modal graph-modal"
+        className="modal modal--xl graph-modal"
         role="dialog"
         aria-modal="true"
         aria-label={`${title} — expanded diagram`}

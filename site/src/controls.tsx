@@ -60,7 +60,7 @@ interface TabPickerProps {
  */
 export function ExpandButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" className="btn btn--secondary graph-expand" onClick={onClick}>
+    <button type="button" className="btn btn--secondary btn--sm graph-expand" onClick={onClick}>
       <span aria-hidden="true">⤢</span> Expand
     </button>
   )

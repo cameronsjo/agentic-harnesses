@@ -128,7 +128,11 @@ export function App() {
         Skip to content
       </a>
 
-      <header className="appbar">
+      {/* .appbar--contained: our bar sits inside .container--lg, which owns the
+          inline gutter — zero the full-bleed padding (was local override #83).
+          .appbar--static: opt out of sticky for this compact tool surface (#84).
+          Both shipped as modifiers in v0.18, retiring the styles.css overrides. */}
+      <header className="appbar appbar--contained appbar--static">
         <button
           type="button"
           ref={menuBtnRef}

@@ -14,19 +14,9 @@ body {
 }
 
 /* ---- appbar + intro band ---- */
-/* Artificer's .appbar carries its own `padding: 0 var(--s-md)` for a full-bleed
-   bar, but ours sits INSIDE .container--lg (which already pads the inline edges),
-   so that padding double-insets the brand one --s-md past the lede / sidenav
-   below it. Zero it (higher-specificity selector beats the vendored rule + its
-   safe-area variant) so the wordmark lines up flush-left with the content column. */
-.app .appbar {
-  padding-inline: 0;
-  /* Non-sticky (experiment): a compact tool surface doesn't need the bar eating
-     56px at every scroll position, and a static bar removes the two-sticky-planes
-     seam where scrolling content slid between the sticky appbar and the sticky
-     sidenav. Artificer hardcodes position:sticky; toggle requested upstream (#84). */
-  position: static;
-}
+/* The appbar's contained-padding + static-position overrides (#83, #84) are
+   retired: v0.18 ships `.appbar--contained` and `.appbar--static`, applied on the
+   header in App.tsx. Nothing to override here anymore. */
 /* The appbar is Artificer chrome (.appbar / .appbar__brand.wordmark); only the
    brand's whimsy shimmer needs a nudge — clip the flowing gradient at the
    wordmark's own size and tracking rather than the .whimsy default. */
@@ -431,18 +421,17 @@ a.anchor:hover {
   position: relative;
 }
 .graph-expand {
+  /* Position + gap only — size (padding + font) comes from .btn--sm now (#91 absorbed). */
   position: absolute;
   top: var(--s-sm);
   right: var(--s-sm);
   z-index: 1;
   gap: 6px;
-  padding: 5px 10px;
-  font-size: var(--t-label-md-size);
 }
 /* Large, near-fullscreen panel (Artificer .scrim/.modal supply the overlay + chrome). */
 .graph-modal {
-  width: min(96vw, 1100px);
-  max-width: min(96vw, 1100px);
+  /* Width comes from .modal--xl now (max-width: min(96vw, 1100px), #88 absorbed);
+     keep the diagram-viewer height + zero padding + column layout it doesn't own. */
   max-height: 92vh;
   padding: 0;
   display: flex;
