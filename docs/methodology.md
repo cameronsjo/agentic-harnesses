@@ -47,12 +47,27 @@ For each harness: the agent loop entrypoint (turn/session loop), the model-call 
 
 ## Considered but not onboarded
 
-Not every project from the "claw / lobster" wave models cleanly as a coding loop. The bar for onboarding is concrete: there must be a real **model → tool dispatch → loop** to reconstruct. A project that has no turn loop, no tool dispatch, and no approval gate cannot be profiled without **inventing** nodes — and inventing structure is exactly the anti-pattern this repo exists to avoid. Two were evaluated and deliberately excluded:
+Not every project marketed as a coding agent models cleanly as a coding loop. The bar for onboarding is concrete: there must be a real **model → tool dispatch → loop** to reconstruct. A project that has no turn loop, no tool dispatch, and no approval gate cannot be profiled without **inventing** nodes — and inventing structure is exactly the anti-pattern this repo exists to avoid. Six were evaluated and deliberately excluded, and they miss the bar from two different directions.
+
+**The dependency-manifest probe.** The cheapest reliable test for the bar is the project's own manifest: a thing that calls a model has a model client. Open `package.json` / `Cargo.toml` / `go.mod` and look for an Anthropic, OpenAI, Vercel AI SDK, or equivalent HTTP-to-a-model dependency. If none is there, the project is not making model calls — it is wrapping something that does, and the loop worth visualizing belongs to that something. The probe is fast and hard to argue with, and it decided four of the six exclusions below.
+
+### Below and beside the loop
 
 - **`llm-mux`** — a provider **router / multiplexer**. It load-balances and fails over between LLM backends behind one endpoint. There is no turn loop, no tool dispatch, and no approval gate; it sits *below* a harness, not beside one. Onboarding it would mean fabricating a loop it does not have.
 - **`openclaw`** — a **gateway that delegates** coding to external agents. It routes requests to other runtimes rather than running its own model→tool→loop cycle. The coding loop lives in whatever agent it dispatches to, so there is nothing of its own to reconstruct; profiling it would just re-describe its delegates.
 
-Both fail the model→tool→loop bar. Their honest deliverable is this documented exclusion, not a manufactured spec. If either grows a real coding loop later, it can be revisited against the same bar.
+### Above the loop
+
+These are **orchestration layers**: they drive Claude Code and Codex as their execution substrate — installing plugins, skills, and hooks into those tools, then dispatching work at them. The loop they run is therefore a loop this repo has *already onboarded*, and profiling one would produce Claude Code's spec with a different wrapper drawn around it. Each was confirmed by the manifest probe above.
+
+- **`automagik-dev/genie`** (TypeScript) — a workflow CLI whose runtime dependencies are exactly `@inquirer/prompts`, `commander`, `nats`, and `zod`; no LLM client anywhere. It installs version-matched plugins into Claude Code and Codex, so its skills are the methodology and its CLI is state plus dispatch. The model call it orchestrates is Claude Code's.
+- **`mindfold-ai/Trellis`** (TypeScript) — a spec/task/memory framework that writes `.trellis/` files and injects them into roughly twenty other tools via committed `.claude/`, `.codex/`, `.cursor/`, `.opencode/`, and `.pi/` adapter directories. `packages/cli` depends on `chalk`, `commander`, `figlet`, `giget`, `inquirer`, `undici`, and `zod`; `packages/core` has **no dependencies at all**. It is scaffolding *for* a harness, and every harness it targets supplies the loop.
+- **`cosmix/loom`** (Rust) — an installer for agents, skills, and hooks into `~/.claude/`. Its `loom/src/claude.rs` is described in its own header as *"Shared Claude binary resolution utilities"* — it locates the `claude` executable on `PATH` rather than calling a model; the `reqwest` / `minisign-verify` / `zip` / `semver` cluster in `Cargo.toml` is the self-updater, not an API client. The loop is Claude Code's, unchanged.
+- **`superplanehq/superplane`** (Go) — an event-driven **control plane**: durable DAG runs, approval steps, git-backed app definitions. An LLM is one *component type* here, sitting beside CI, Kubernetes, and incident tooling; there is no coding turn loop at any altitude. It is the furthest of the four from the bar.
+
+A note on why this group needs naming at all: three of the four describe themselves in harness vocabulary. Trellis's GitHub tagline is literally "The best agent harness" and it carries the `harness` topic, while its own README calls it "an engineering framework for AI coding" and its core package ships zero dependencies. The word has drifted since this repo drew its line, so the exclusion has to be stated rather than assumed.
+
+All six fail the model→tool→loop bar. Their honest deliverable is this documented exclusion, not a manufactured spec. If any grows a real coding loop later, it can be revisited against the same bar.
 
 ## Caveats
 
