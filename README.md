@@ -81,7 +81,7 @@ npm run dev
 
 ## Scope
 
-Eight harnesses, analyzed deeply — not a survey of the wider field. A broader landscape (aider, Codex CLI, Gemini CLI, Goose, Crush, …) is explicitly out of scope. Projects without a coding loop of their own (routers, gateways) are documented as exclusions rather than profiled — see [methodology](docs/methodology.md#considered-but-not-onboarded).
+Eight harnesses, analyzed deeply — not a survey of the wider field. A broader landscape (aider, Codex CLI, Gemini CLI, Goose, Crush, …) is explicitly out of scope. Projects without a coding loop of their own (routers, gateways, and orchestration layers that drive another harness) are documented as exclusions rather than profiled — see [methodology](docs/methodology.md#considered-but-not-onboarded).
 
 ## License
 

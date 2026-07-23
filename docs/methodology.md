@@ -47,7 +47,7 @@ For each harness: the agent loop entrypoint (turn/session loop), the model-call 
 
 ## Considered but not onboarded
 
-Not every project marketed as a coding agent models cleanly as a coding loop. The bar for onboarding is concrete: there must be a real **model → tool dispatch → loop** to reconstruct. A project that has no turn loop, no tool dispatch, and no approval gate cannot be profiled without **inventing** nodes — and inventing structure is exactly the anti-pattern this repo exists to avoid. Six were evaluated and deliberately excluded, and they miss the bar from two different directions.
+Not every project marketed as a coding agent models cleanly as a coding loop. The bar for onboarding is concrete: there must be a real **model → tool dispatch → loop** to reconstruct. A project that has no turn loop, no tool dispatch, and no approval gate cannot be profiled without **inventing** nodes — and inventing structure is exactly the anti-pattern this repo exists to avoid. Six were evaluated and deliberately excluded. What separates them is positional — where each sits relative to the loop it is not.
 
 **The dependency-manifest probe.** The cheapest reliable test for the bar is the project's own manifest: a thing that calls a model has a model client. Open `package.json` / `Cargo.toml` / `go.mod` and look for an Anthropic, OpenAI, Vercel AI SDK, or equivalent HTTP-to-a-model dependency. If none is there, the project is not making model calls — it is wrapping something that does, and the loop worth visualizing belongs to that something. The probe is fast and hard to argue with, and it decided four of the six exclusions below.
 
