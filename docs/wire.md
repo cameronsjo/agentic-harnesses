@@ -43,9 +43,9 @@ Caching is where Claude Code does the most work. `getCacheControl({ scope, query
 
 Claude Code speaks **Anthropic-native** tool calling. The response streams `tool_use` content blocks; the loop filters for `type === 'tool_use'` (`src/query.ts`), preserves each `tool_use.id`, runs the tool, and sends back matching `tool_result` blocks keyed by `tool_use_id`. Because `stop_reason === 'tool_use'` is unreliable, the loop detects tool calls by watching the *stream* for `tool_use` blocks rather than trusting the stop reason. A normalizer guarantees every `tool_use` gets a paired `tool_result`, even on interrupt.
 
-## The four harnesses, briefly
+## Four harnesses on the wire, briefly
 
-The other three reach the same Anthropic endpoint (and others) through abstraction layers rather than the SDK directly:
+The other three reach the same Anthropic endpoint (and others) through abstraction layers rather than the SDK directly. This table covers the four harnesses onboarded when the wire analysis was done; the four added later (Claw Code, claux, Hermes Agent, llm-tui) have loop specs and profiles but no wire-level read yet:
 
 | Dimension | Claude Code | OpenCode | pi | code_puppy |
 |---|---|---|---|---|
