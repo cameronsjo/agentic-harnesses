@@ -3,6 +3,7 @@ import wireData from './data/wire/claude-code.json'
 import { usePlayerTimer } from './player'
 import { TabPicker, TransportBar } from './controls'
 import { CurlWalkthrough } from './CurlWalkthrough'
+import { Anchored } from './Anchored'
 
 interface Part {
   id: string
@@ -66,12 +67,14 @@ function LayersView() {
 
   return (
     <>
-      <p className="scenario-title">What Claude Code sends over the wire</p>
+      <p className="scenario-title">
+        <Anchored text="What Claude Code **sends over the wire** — and what **streams back**" />
+      </p>
       <TransportBar player={player} playLabel="Assemble" total={timeline.length} counterLabel="step" />
 
       <div className="wire-body">
         <div className="wire-columns">
-          <div className="wire-col">
+          <div className="card wire-col">
             <header className="wire-col-head">POST /v1/messages — request</header>
             {wire.request.map((part, i) => {
               const revealed = i < revealedReq
@@ -89,17 +92,22 @@ function LayersView() {
                   className={`wire-block wire-${part.kind} ${revealed ? '' : 'wire-dim'} ${isActive ? 'wire-active' : ''}`}
                 >
                   <span className="wire-label">{part.label}</span>
-                  <span className="wire-tags">
+                  <span className="wire-tags cluster">
                     {part.cached && <span className="badge badge--success">cached</span>}
                     {part.scope === 'global' && <span className="badge badge--accent">global</span>}
-                    {part.breakpoint && <span className="cache-bp" title="cache breakpoint">⟐ breakpoint</span>}
+                    {part.breakpoint && (
+                      <span className="badge cache-bp" title="cache breakpoint">
+                        <span className="dot" />
+                        breakpoint
+                      </span>
+                    )}
                   </span>
                 </div>
               )
             })}
           </div>
 
-          <div className="wire-col">
+          <div className="card wire-col">
             <header className="wire-col-head">response — streamed</header>
             {wire.response.map((part, i) => {
               const revealed = i < revealedResp
@@ -124,13 +132,15 @@ function LayersView() {
 
         <aside className="inspector">
           {active && (
-            <div className="node-card">
+            <div className="card card--active node-card">
               <div className="node-card-head">
                 <b>{active.part.label}</b>
               </div>
               <div className="node-kind">{active.phase}</div>
               {active.part.sourceRef && <code className="source-ref">{active.part.sourceRef}</code>}
-              <p className="node-note">{active.part.note}</p>
+              <p className="node-note">
+                <Anchored text={active.part.note} />
+              </p>
             </div>
           )}
         </aside>

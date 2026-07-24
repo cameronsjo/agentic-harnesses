@@ -352,6 +352,11 @@ body {
   min-height: 0;
   margin-bottom: 0;
 }
+/* Inside an inspector the meta row is the first child, so it supplies no margin
+   of its own — the panel's own spacing already positions it. */
+.harness-meta--flush {
+  margin: 0;
+}
 .repo-link {
   color: var(--accent);
   font-size: var(--t-body-md-size);
@@ -789,11 +794,9 @@ a.anchor:hover {
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: var(--s-md);
 }
+/* .card supplies bg / border / radius / padding; keep only the layout — same
+   split the loop pane uses. */
 .wire-col {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--s-md);
   display: flex;
   flex-direction: column;
   gap: 6px;
