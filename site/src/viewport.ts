@@ -20,7 +20,7 @@ export interface Transform {
 
 export const IDENTITY: Transform = { scale: 1, x: 0, y: 0 }
 
-export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 export interface FitInput {
   contentW: number

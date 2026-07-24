@@ -8,6 +8,7 @@ import {
   ZOOM_STEP,
   type Transform,
 } from './viewport'
+import { ExpandButton } from './controls'
 
 /** Trackpad pinch arrives as ctrl+wheel; divisor tunes it to roughly one step per gesture. */
 const WHEEL_DIVISOR = 260
@@ -22,8 +23,8 @@ interface Props {
    * (e.g. "Claude Code loop graph").
    */
   label: string
-  /** Extra classes for the outer element, e.g. the `card graph-pane` shell. */
-  className?: string
+  /** When set, renders the pane's expand-to-modal trigger wired to this handler. */
+  onExpand?: () => void
 }
 
 /**
@@ -37,8 +38,13 @@ interface Props {
  * Fit is the resting state and re-applies on container resize, but only until
  * the user adjusts something; after that their framing is preserved through
  * resizes rather than being yanked back to fit.
+ *
+ * Owns the whole `.graph-pane--framed` shell rather than being dropped inside
+ * one: the modifier and this component are a matched pair (without it the pane
+ * keeps centering and offering its own overflow, which fights the frame), and a
+ * mount site that forgot the class would break layout silently.
  */
-export function GraphViewport({ children, label, className }: Props) {
+export function GraphViewport({ children, label, onExpand }: Props) {
   const paneRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const [transform, setTransform] = useState<Transform>(IDENTITY)
@@ -175,7 +181,8 @@ export function GraphViewport({ children, label, className }: Props) {
   const percent = Math.round(transform.scale * 100)
 
   return (
-    <div className={className}>
+    <div className="card graph-pane graph-pane--framed">
+      {onExpand && <ExpandButton onClick={onExpand} />}
       <div
         ref={paneRef}
         className="graph-viewport"
@@ -201,7 +208,7 @@ export function GraphViewport({ children, label, className }: Props) {
         </div>
       </div>
 
-      <div className="graph-viewport__controls cluster">
+      <div className="graph-viewport__controls cluster cluster--end">
         <button
           type="button"
           className="btn btn--ghost btn--sm btn--icon"

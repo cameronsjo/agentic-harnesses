@@ -453,11 +453,10 @@ a.anchor:hover {
   /* Deliberately untransitioned: a transition would lag the drag, and its
      absence is also how this honors prefers-reduced-motion (issue #3). */
 }
+/* .cluster supplies flex + wrap + align + gap; --gap is its documented hook for
+   a tighter row, and .cluster--end handles the alignment. */
 .graph-viewport__controls {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--s-2xs);
+  --gap: var(--s-xs);
   margin-top: var(--s-xs);
 }
 .graph-viewport__level {
@@ -830,10 +829,10 @@ a.anchor:hover {
 .wire-label {
   font-size: var(--t-label-md-size);
 }
+/* .cluster supplies flex + wrap + align + gap; only the tighter gap is local.
+   Redeclaring display/align here would just shadow the primitive. */
 .wire-tags {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  --gap: var(--s-xs);
 }
 .wire-dim {
   opacity: 0.28;

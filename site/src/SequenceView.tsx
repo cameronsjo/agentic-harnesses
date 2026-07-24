@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { sharedScenarios } from './data'
 import type { LoopSpec } from './types'
 import { usePlayerTimer } from './player'
-import { ExpandButton, TabPicker, TransportBar } from './controls'
+import { TabPicker, TransportBar } from './controls'
 import { GraphModal } from './GraphModal'
 import { PARTICIPANTS, projectScenario, type Participant } from './sequence'
 import { Anchored } from './Anchored'
@@ -165,10 +165,9 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
       )}
 
       <div className="seq-body">
-        <div className="card graph-pane graph-pane--framed">
-          <ExpandButton onClick={() => setExpanded(true)} />
-          <GraphViewport label={`${spec.displayName} sequence diagram`}>{diagram}</GraphViewport>
-        </div>
+        <GraphViewport label={`${spec.displayName} sequence diagram`} onExpand={() => setExpanded(true)}>
+          {diagram}
+        </GraphViewport>
 
         <aside className="inspector">
           <div className="harness-meta harness-meta--flush">

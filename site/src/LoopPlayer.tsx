@@ -7,7 +7,7 @@ import { LoopGraph } from './LoopGraph'
 import { GraphViewport } from './GraphViewport'
 import { GraphModal } from './GraphModal'
 import { edgeBetween, usePlayerTimer } from './player'
-import { ExpandButton, TabPicker, TransportBar } from './controls'
+import { TabPicker, TransportBar } from './controls'
 
 interface Props {
   spec: LoopSpec
@@ -82,10 +82,9 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
       {scenarioHeader}
 
       <div className="player-body">
-        <div className="card graph-pane graph-pane--framed">
-          <ExpandButton onClick={() => setExpanded(true)} />
-          <GraphViewport label={`${spec.displayName} loop graph`}>{graph}</GraphViewport>
-        </div>
+        <GraphViewport label={`${spec.displayName} loop graph`} onExpand={() => setExpanded(true)}>
+          {graph}
+        </GraphViewport>
 
         <aside className="inspector">
           <TransportBar player={player} playLabel="Play" />
