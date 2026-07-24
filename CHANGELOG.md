@@ -7,6 +7,7 @@ All notable changes to this project are documented here. Format loosely follows
 
 ### Added
 - Four new harnesses onboarded (4 → 8): **Claw Code** (Rust), **claux** (Rust), **Hermes Agent** (Python), **llm-tui** (Rust) — loop specs, profiles, and matrix rows/columns, all source-grounded at pinned SHAs. Documented two **exclusions** (`llm-mux`, `openclaw`) in `docs/methodology.md` for lacking a coding loop of their own.
+- A third **exclusion** category in `docs/methodology.md` — *orchestration layers above the loop*: **`genie`**, **`Trellis`**, and **`loom`** drive Claude Code and Codex as their execution substrate and own no model call, so the loop worth visualizing belongs to the substrate — already onboarded here in Claude Code's case, out of scope in Codex's. Records the **dependency-manifest probe** (a project that calls a model has a model client) as the test that decided all three, dated so the reads can be re-run.
 - Repo scaffold: README, LICENSE (MIT), CONTRIBUTING, docs structure, `.gitignore`.
 - Pinned harness sources (gitignored) for analysis: Claude Code (v2.1.88 recovery),
   OpenCode, pi, code_puppy. SHAs recorded in `docs/methodology.md`.

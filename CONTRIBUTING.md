@@ -1,6 +1,6 @@
 # Contributing
 
-This is a research repo: deep source-grounded comparison of four agentic coding harnesses, plus an interactive loop visualizer.
+This is a research repo: deep source-grounded comparison of eight agentic coding harnesses, plus an interactive loop visualizer.
 
 ## Ground rules
 
@@ -8,7 +8,7 @@ This is a research repo: deep source-grounded comparison of four agentic coding 
 - **Harness sources are analyzed in place, never vendored.** They live in `sources/` (gitignored), pinned to the SHAs recorded in [`docs/methodology.md`](docs/methodology.md). Re-clone with the SHAs there to reproduce.
 - **The loop spec is the single source of truth.** Both the prose docs and the visualizer read from it. Update the JSON first, then the prose.
 - **Keep the node vocabulary fixed** (`input | llm | tool | approval | execute | decision | terminal`). If a harness genuinely doesn't fit, extend the schema deliberately and note it — don't overload an existing kind.
-- **Scenario IDs must stay in parity** across all four harnesses (`edit-file`, `denied-tool`, `multi-tool`, `plain-answer`). The side-by-side comparison depends on it.
+- **Scenario IDs must stay in parity** across all eight harnesses (`edit-file`, `denied-tool`, `multi-tool`, `plain-answer`). The side-by-side comparison depends on it, and `npm run validate` enforces it.
 - **Anchor scan-words in `note` / `title` prose with `**…**`.** The visualizer renders `**bolded**` spans in loop-spec `note` and `title` strings as Artificer anchor words — bold 3–5 per note so the bolded path reads on its own. Only paired `**` is parsed; no other Markdown. The marker is the *only* formatting allowed in these fields, so the prose stays byte-identical with the markers stripped.
 
 ## Workflow
