@@ -4,6 +4,28 @@ How this project bends the Artificer design system, and why. Each entry mirrors 
 feedback issue filed upstream. Entries marked **→ Shed in v0.18.0** are kept for
 the historical *why*; upstream now covers them (see the v0.18.0 crossing below).
 
+## 2026-07-23 — the spacing scale has no step below `--s-xs`
+
+- **Upstream issue:** not yet filed — candidate for the next `/artificer-feedback` batch.
+- **Type:** gap, Lane 3.
+- **Friction:** a control row wanted a gap tighter than `--s-xs`, and `--s-2xs` reads
+  like it should exist — the scale runs `xs · sm · md · lg · xl · 2xl · 3xl`, so it
+  extends with a `2x` step on the **large** end but stops dead at the small end. Writing
+  `gap: var(--s-2xs)` produced no error, no warning, and no visible console complaint.
+- **Why it bites harder than a typo:** an unresolvable `var()` makes the whole
+  declaration **invalid at computed-value time**, so `gap` silently falls back to its
+  initial value. On an element that also carries `.cluster`, that invalid local rule
+  still **wins the cascade** and beats the primitive's correct gap — so adding the
+  primitive appeared to do nothing. A misspelled token is not inert; it is an override
+  that computes to nothing.
+- **Fix (consumer):** dropped the local `gap` entirely and used `.cluster`'s documented
+  `--gap` hook (`--gap: var(--s-xs)`), with `.cluster--end` for alignment.
+- **Wished existed:** either a `--s-2xs` step for control-density rows, or a documented
+  statement that `--s-xs` is the floor. A build-time check for unknown `--s-*` / `--t-*`
+  names would catch the whole class — this is the second time a token name has been
+  assumed rather than looked up (cf. `--dia-rail` in the v0.18.0 entry).
+- **Don't upstream:** the specific control-row composition.
+
 ## 2026-06-10 — v0.10.1 → v0.18.1 (npm delivery, re-true, adaptations shed)
 
 - **Upstream issue:** filed this session via `/artificer-feedback` (the skill assembles it).
@@ -69,6 +91,14 @@ duplicated state machine the migration retires.
 hand-rolled counterpart for any (no menus, trees, toasts, stats, or KPI strips). The
 compare carousel's dot/chevron pager is bespoke carousel navigation, not `.pagination`
 page-list semantics — kept as-is.
+
+> **Corrected 2026-07-23.** This sweep only covered the **newly minted** 0.11–0.18
+> primitives, so it missed hand-rolled equivalents of primitives that had shipped
+> all along. The wire view carried two: `.wire-col` re-declared `.card`'s
+> background/border/radius/padding, and `.wire-tags` re-declared `.cluster`'s
+> flex/align/gap. Both predate the sweep and neither was flagged. **A mint-scoped
+> sweep is not an audit** — the next one should diff local rules against the whole
+> primitive set, not just the diff since the last upgrade.
 
 ### Notes
 
