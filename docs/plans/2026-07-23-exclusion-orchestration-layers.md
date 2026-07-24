@@ -38,17 +38,6 @@ exclusions (verified: `grep -rn "excluded\|not onboarded" site/src` returns noth
 
 ## Plan
 
-### 0. Enter a worktree first
-
-Branch-mode repo, protected primary checkout — the first `Edit` in `/Users/cameron/Projects/agentic-harnesses`
-will be blocked. `EnterWorktree` (base `origin/main` is correct here; the session is on `main`), then
-push `-u` and open a draft PR per `cadence-forge:using-worktrees` § Session Entry Posture.
-
-**Trap:** a stale worktree already exists at `.claude/worktrees/artificer-0-18` holding a full duplicate
-of every file in this plan. Confirm each edit lands in the *new* worktree — re-`Read` each file at the
-new path before the first `Edit` there (absolute paths read before entry silently keep editing the
-origin checkout).
-
 ### 1. `docs/methodology.md` § "Considered but not onboarded"
 
 The section currently reads "Two were evaluated and deliberately excluded" and closes with "Both fail
@@ -103,13 +92,16 @@ Docs-only, so the gate is consistency rather than tests:
 5. `cadence-forge:polish docs` before the PR — this is prose *about* the system, not behavior Claude
    executes, so it routes to the docs variant.
 
-## Notes on process
+## Alternatives declined
 
-- **Panel skipped, said out loud:** a four-file prose addition with no logic, no security surface, and
-  no new artifact does not warrant a 2–3 seat adversarial plan panel. If Cameron wants one, the seats
-  would be `cadence:plan-reviewer` on internal consistency and `cameron-review` on whether the category
-  earns its place.
-- **Alternatives declined:** (a) *just the read, no repo change* — the finding evaporates and the next
-  session re-derives it; (b) *give the above-the-loop layer its own docs page or comparison axis* —
-  defensible given Trellis's 13k stars, but it is a different project than "visualize harness loops"
-  and would pull the repo's scope sideways. Cameron picked the exclusions-doc route.
+- *Just the read, no repo change* — the finding evaporates and the next session re-derives it.
+- *Give the above-the-loop layer its own docs page or comparison axis* — defensible given Trellis's
+  13k stars, but it is a different project than "visualize harness loops" and would pull the repo's
+  scope sideways. Cameron picked the exclusions-doc route.
+
+## Outcome
+
+Executed as planned, with one correction found in review: `superplane` was dropped from the
+above-the-loop group. It installs nothing into Claude Code or Codex — it is a control plane where an
+LLM sits beside CI and Kubernetes — so it failed the group's own defining sentence. The shipped
+exclusion list is five, not six.

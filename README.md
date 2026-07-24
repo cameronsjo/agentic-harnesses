@@ -19,7 +19,7 @@ It ships with an **interactive visualizer** (`site/`) that animates each loop st
 | **Hermes Agent** | [`NousResearch/hermes-agent`](https://github.com/NousResearch/hermes-agent) | Python | — | The structural outlier: a normal per-turn loop **plus** a self-improving skill/memory meta-loop that runs *between* turns. Gates only dangerous shell commands. |
 | **llm-tui** | [`ducks/llm-tui`](https://github.com/ducks/llm-tui) | Rust | — | The maximal-approval baseline: an event-driven TUI where **every** tool call waits for a `y/n/a/q` keypress, home-sandboxed by construction. |
 
-> Six projects were evaluated and **excluded** for having no model→tool→loop of their own. Two sit *below or beside* a harness — **`llm-mux`** (a provider router/multiplexer) and **`openclaw`** (a gateway that delegates coding to external agents). Four sit *above* one, driving Claude Code and Codex as their execution substrate — **`genie`**, **`Trellis`**, **`loom`**, and **`superplane`**. See [methodology → Considered but not onboarded](docs/methodology.md#considered-but-not-onboarded).
+> Five projects were evaluated and **excluded** for having no model→tool→loop of their own. Two sit *below or beside* a harness — **`llm-mux`** (a provider router/multiplexer) and **`openclaw`** (a gateway that delegates coding to external agents). Three sit *above* one, driving Claude Code and Codex as their execution substrate — **`genie`**, **`Trellis`**, and **`loom`**. See [methodology → Considered but not onboarded](docs/methodology.md#considered-but-not-onboarded).
 
 ## The Loop, as a First-Class Object
 

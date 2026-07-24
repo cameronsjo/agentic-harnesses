@@ -1,6 +1,6 @@
 # Comparison Matrices
 
-Side-by-side comparison of eight agentic coding harnesses, grounded in source (see [methodology](methodology.md)). Every characterization here traces to a profile and a `sourceRef` in the [loop specs](../site/src/data/loops/). (Six further projects — `llm-mux`, `openclaw`, `genie`, `Trellis`, `loom`, and `superplane` — were [evaluated and excluded](methodology.md#considered-but-not-onboarded) for lacking a coding loop of their own.)
+Side-by-side comparison of eight agentic coding harnesses, grounded in source (see [methodology](methodology.md)). Every characterization here traces to a profile and a `sourceRef` in the [loop specs](../site/src/data/loops/). (Five further projects — `llm-mux`, `openclaw`, `genie`, `Trellis`, and `loom` — were [evaluated and excluded](methodology.md#considered-but-not-onboarded) for lacking a coding loop of their own.)
 
 ## Quick Comparison
 
