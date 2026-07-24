@@ -97,7 +97,9 @@ function LayersView() {
                     {part.scope === 'global' && <span className="badge badge--accent">global</span>}
                     {part.breakpoint && (
                       <span className="badge cache-bp" title="cache breakpoint">
-                        <span className="dot" />
+                        {/* .dot supplies shape only — without a tier variant it
+                            has no background and renders invisible. */}
+                        <span className="dot dot--accent" />
                         breakpoint
                       </span>
                     )}

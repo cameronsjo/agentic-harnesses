@@ -39,10 +39,10 @@ interface Props {
  * the user adjusts something; after that their framing is preserved through
  * resizes rather than being yanked back to fit.
  *
- * Owns the whole `.graph-pane--framed` shell rather than being dropped inside
- * one: the modifier and this component are a matched pair (without it the pane
- * keeps centering and offering its own overflow, which fights the frame), and a
- * mount site that forgot the class would break layout silently.
+ * Owns the whole `.graph-pane` card shell rather than being dropped inside one,
+ * so a mount site cannot forget a piece of it. That ownership is also why
+ * `.graph-pane` no longer centers or scrolls: every pane holds a frame now, and
+ * those rules only ever fought it.
  */
 export function GraphViewport({ children, label, onExpand }: Props) {
   const paneRef = useRef<HTMLDivElement>(null)
@@ -73,37 +73,49 @@ export function GraphViewport({ children, label, onExpand }: Props) {
   }, [fitTransform])
 
   /**
-   * Zoom about a fixed point so the diagram grows toward the cursor. Button and
-   * keyboard zoom pass no origin and get the pane center.
+   * Every transform change that came from the user also marks the view adjusted,
+   * which is what stops a resize from yanking their framing back to fit. Naming
+   * the pairing once keeps the three input paths — drag, zoom, keyboard — from
+   * each having to remember it.
    */
-  const zoomAbout = useCallback((factor: number, originX?: number, originY?: number) => {
-    setTransform((prev) => {
-      const pane = paneRef.current
-      if (!pane) return prev
-      return computeZoom(prev, factor, originX ?? pane.clientWidth / 2, originY ?? pane.clientHeight / 2)
-    })
+  const adjust = useCallback((updater: (prev: Transform) => Transform) => {
+    setTransform(updater)
     setAdjusted(true)
   }, [])
 
-  // Mirror `adjusted` into a ref so the ResizeObserver below reads the current
-  // value without re-subscribing on every interaction.
-  const adjustedRef = useRef(adjusted)
-  adjustedRef.current = adjusted
+  /**
+   * Zoom about a fixed point so the diagram grows toward the cursor. Button and
+   * keyboard zoom pass no origin and get the pane center.
+   */
+  const zoomAbout = useCallback(
+    (factor: number, originX?: number, originY?: number) => {
+      adjust((prev) => {
+        const pane = paneRef.current
+        if (!pane) return prev
+        return computeZoom(prev, factor, originX ?? pane.clientWidth / 2, originY ?? pane.clientHeight / 2)
+      })
+    },
+    [adjust],
+  )
 
   // Fit once the content has a measurable size, and re-fit on resize until the
   // user takes over. ResizeObserver covers both the pane (window/layout changes)
   // and the content (a different harness spec swapping in).
+  //
+  // `adjusted` is a real dependency rather than a ref mirror: fitTransform is
+  // stable, so this only re-subscribes on the genuine false→true→false
+  // transitions (first interaction, then Fit), not per input event.
   useEffect(() => {
     const pane = paneRef.current
     const content = contentRef.current
     if (!pane || !content) return
     const observer = new ResizeObserver(() => {
-      if (!adjustedRef.current) setTransform(fitTransform())
+      if (!adjusted) setTransform(fitTransform())
     })
     observer.observe(pane)
     observer.observe(content)
     return () => observer.disconnect()
-  }, [fitTransform])
+  }, [fitTransform, adjusted])
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Left button / touch / pen only, and never start a drag from a control.
@@ -129,12 +141,11 @@ export function GraphViewport({ children, label, onExpand }: Props) {
       endDrag(e)
       return
     }
-    setTransform((prev) => ({
+    adjust((prev) => ({
       ...prev,
       x: drag.baseX + (e.clientX - drag.startX),
       y: drag.baseY + (e.clientY - drag.startY),
     }))
-    setAdjusted(true)
   }
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -161,10 +172,7 @@ export function GraphViewport({ children, label, onExpand }: Props) {
   }, [zoomAbout])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const pan = (dx: number, dy: number) => {
-      setTransform((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }))
-      setAdjusted(true)
-    }
+    const pan = (dx: number, dy: number) => adjust((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }))
     switch (e.key) {
       case 'ArrowLeft': pan(KEY_PAN, 0); break
       case 'ArrowRight': pan(-KEY_PAN, 0); break
@@ -181,7 +189,7 @@ export function GraphViewport({ children, label, onExpand }: Props) {
   const percent = Math.round(transform.scale * 100)
 
   return (
-    <div className="card graph-pane graph-pane--framed">
+    <div className="card graph-pane">
       {onExpand && <ExpandButton onClick={onExpand} />}
       <div
         ref={paneRef}
