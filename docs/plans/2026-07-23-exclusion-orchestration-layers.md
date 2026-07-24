@@ -20,7 +20,7 @@ calls a model has a model client. None of the four does.
 | `automagik-dev/genie` (TS, 325★) | Runtime deps are exactly `@inquirer/prompts`, `commander`, `nats`, `zod` — no LLM client. Installs version-matched plugins into Claude Code and Codex; its skills are the methodology, the CLI is state + dispatch. |
 | `mindfold-ai/Trellis` (TS, 13k★) | `packages/cli` deps: `chalk`, `commander`, `figlet`, `giget`, `inquirer`, `undici`, `zod`. `packages/core` deps: **none**. Ships `.claude/`, `.codex/`, `.cursor/`, `.opencode/`, `.pi/` adapter dirs — it writes `.trellis/` spec/task/memory files and injects them into ~20 other tools. |
 | `cosmix/loom` (Rust, 52★) | `loom/src/claude.rs` is *"Shared Claude binary resolution utilities"* — it locates the `claude` executable on PATH. No LLM client in `Cargo.toml`; `reqwest`+`minisign-verify`+`zip`+`semver` is the self-updater. Installs agents/skills/hooks into `~/.claude/`. |
-| `superplanehq/superplane` (Go, 4.3k★) | An event-driven control plane — durable DAG runs, approvals, git-backed apps. LLM is one *component type* beside CI, Kubernetes, and incident tooling. No coding turn loop at all; the furthest from the bar of the four. |
+| `superplanehq/superplane` (Go, 4.3k★) | An event-driven control plane — durable DAG runs, approvals, git-backed apps. LLM is one *component type* beside CI, Kubernetes, and incident tooling (`pkg/integrations/` holds 48 vendors, with `claude` and `openai` siblings to `circleci` and `pagerduty`). **This row also claimed "no coding turn loop at all" — that was wrong, see Outcome.** |
 
 Worth naming in the doc: Trellis's GitHub tagline is literally "The best agent harness" and it carries
 the `harness` topic, while its own README calls it "an engineering framework for AI coding" and its
@@ -105,3 +105,13 @@ Executed as planned, with one correction found in review: `superplane` was dropp
 above-the-loop group. It installs nothing into Claude Code or Codex — it is a control plane where an
 LLM sits beside CI and Kubernetes — so it failed the group's own defining sentence. The shipped
 exclusion list is five, not six.
+
+A fact-check then found the entry was also **factually wrong**, which the drop had already made moot.
+This plan's claim of "no coding turn loop at all" is false: `pkg/workers/agent_stream_worker.go`
+runs `streamProviderTurn`, a real loop that streams provider events, executes app-specific tools when
+the provider asks for them, and feeds results back. What is true is narrower — the model reasoning is
+delegated to Anthropic's hosted Managed Agents API rather than implemented in-process, and there is
+no third-party LLM SDK in `go.mod`, only a hand-rolled client at `pkg/agents/anthropic/client.go`.
+
+That near-miss is why § "Considered but not onboarded" now states the dependency-manifest probe's
+failure mode: superplane is the worked example of a clean manifest hiding a real loop.
