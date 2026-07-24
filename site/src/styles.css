@@ -383,6 +383,13 @@ a.anchor:hover {
   justify-content: center;
   overflow-x: auto;
 }
+/* A pane whose diagram sits in a GraphViewport frames and clips itself, so the
+   pane must stop centering and stop offering its own horizontal scroll —
+   otherwise the frame and the pane compete for the same overflow. */
+.graph-pane--framed {
+  display: block;
+  overflow-x: visible;
+}
 
 /* Loop-graph node label — rendered in a foreignObject (see LoopGraph) so text
    wraps inside the box instead of spilling past it. Centered both axes; the left
@@ -412,6 +419,48 @@ a.anchor:hover {
 }
 .loop-node-line {
   display: block;
+}
+
+/* ---- pan / zoom / fit frame (GraphViewport, issue #3) ---- */
+/* The frame clips; the content layer is absolutely positioned so its natural
+   size never drives the frame's height, and transform-origin 0 0 makes the
+   component's `translate(x,y) scale(k)` map content point p to x + k·p. */
+.graph-viewport {
+  position: relative;
+  overflow: hidden;
+  height: clamp(340px, 58vh, 620px);
+  cursor: grab;
+  /* Vertical page scroll still belongs to the page; horizontal drag is ours. */
+  touch-action: pan-y;
+}
+.graph-viewport:active {
+  cursor: grabbing;
+}
+.graph-viewport:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: -2px;
+}
+.graph-viewport__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  /* Deliberately untransitioned: a transition would lag the drag, and its
+     absence is also how this honors prefers-reduced-motion (issue #3). */
+}
+.graph-viewport__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2xs);
+  margin-top: var(--s-xs);
+}
+.graph-viewport__level {
+  font-family: var(--font-mono);
+  font-size: var(--t-label-xs-size);
+  color: var(--fg-secondary);
+  min-width: 4ch;
+  text-align: center;
 }
 
 /* ---- expand-to-modal (GraphModal) ---- */
@@ -650,12 +699,17 @@ a.anchor:hover {
   .inspector {
     position: static;
   }
-  /* Shrink single-view diagrams (loop / sequence / hooks all wrap their SVG in
-     .graph-pane) to the viewport instead of demanding sideways scroll. Desktop
-     keeps full size + the pane's overflow-x scroll; richer pan/zoom is issue #3. */
-  .graph-pane svg {
+  /* Shrink single-view diagrams to the viewport instead of demanding sideways
+     scroll. Desktop keeps full size + the pane's overflow-x scroll. Panes that
+     carry a GraphViewport are excluded: the frame's fit already sizes the
+     diagram, and capping the SVG here would fight every zoom above 100%. */
+  .graph-pane:not(.graph-pane--framed) svg {
     max-width: 100%;
     height: auto;
+  }
+  /* Shorter frame on a phone so the diagram doesn't eat the whole screen. */
+  .graph-viewport {
+    height: clamp(260px, 45vh, 380px);
   }
 }
 

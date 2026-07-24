@@ -4,6 +4,7 @@ import { KIND_LABEL } from './types'
 import { scenario } from './data'
 import { Anchored } from './Anchored'
 import { LoopGraph } from './LoopGraph'
+import { GraphViewport } from './GraphViewport'
 import { GraphModal } from './GraphModal'
 import { edgeBetween, usePlayerTimer } from './player'
 import { ExpandButton, TabPicker, TransportBar } from './controls'
@@ -81,9 +82,9 @@ export function LoopPlayer({ spec, scenarioId, onScenarioChange }: Props) {
       {scenarioHeader}
 
       <div className="player-body">
-        <div className="card graph-pane">
+        <div className="card graph-pane graph-pane--framed">
           <ExpandButton onClick={() => setExpanded(true)} />
-          {graph}
+          <GraphViewport label={`${spec.displayName} loop graph`}>{graph}</GraphViewport>
         </div>
 
         <aside className="inspector">

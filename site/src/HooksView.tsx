@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { specByHarness } from './data'
 import { LoopGraph } from './LoopGraph'
+import { GraphViewport } from './GraphViewport'
 import { GraphModal } from './GraphModal'
 import { ExpandButton } from './controls'
 import hooksData from './data/hooks/claude-code-events.json'
@@ -95,9 +96,9 @@ export function HooksView() {
       </p>
 
       <div className="hooks-body">
-        <div className="card graph-pane">
+        <div className="card graph-pane graph-pane--framed">
           <ExpandButton onClick={() => setExpanded(true)} />
-          {graph}
+          <GraphViewport label={`${spec.displayName} loop graph`}>{graph}</GraphViewport>
         </div>
 
         {eventList}
