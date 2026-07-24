@@ -26,23 +26,35 @@
     <title>Agentic Harness Loops</title>
     <meta
       name="description"
-      content="Four agentic coding harnesses — Claude Code, opencode, pi, and code-puppy — with their run loops, tool dispatch, and approval gates reconstructed from pinned source. Step the same scenario through all four in lockstep."
+      content="Eight agentic coding harnesses — Claude Code, OpenCode, Code Puppy, Claw Code, Hermes Agent, llm-tui, claux, and pi — with their run loops, tool dispatch, and approval gates reconstructed from pinned source. Step the same scenario through all eight in lockstep."
     />
     <link rel="icon" type="image/svg+xml" href="/artificer/assets/favicon.svg" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cameronsjo.github.io/agentic-harnesses/" />
     <meta property="og:title" content="Agentic Harness Loops" />
     <meta
       property="og:description"
-      content="Four agentic coding harnesses, their loops reconstructed from source — stepped through the same scenario in lockstep."
+      content="Eight agentic coding harnesses, their loops reconstructed from source — stepped through the same scenario in lockstep."
     />
-    <meta property="og:image" content="https://cameronsjo.github.io/agentic-harnesses/artificer/assets/og-image.svg" />
+    <!-- Social crawlers reject SVG (X and LinkedIn outright) and don't resolve
+         relative paths, so both image tags carry an absolute URL to a raster.
+         og-image.png is generated from og-image.svg alongside it:
+         rsvg-convert -w 1200 -h 630 site/public/og-image.svg -o site/public/og-image.png -->
+    <meta property="og:image" content="https://cameronsjo.github.io/agentic-harnesses/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Agentic Harness Loops — eight harnesses, with a diagram of a four-step agent loop cycling from prompt to model to tools to result."
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Agentic Harness Loops" />
     <meta
       name="twitter:description"
-      content="Four agentic coding harnesses, their loops reconstructed from source — stepped through the same scenario in lockstep."
+      content="Eight agentic coding harnesses, their loops reconstructed from source — stepped through the same scenario in lockstep."
     />
-    <meta name="twitter:image" content="https://cameronsjo.github.io/agentic-harnesses/artificer/assets/og-image.svg" />
+    <meta name="twitter:image" content="https://cameronsjo.github.io/agentic-harnesses/og-image.png" />
     <link rel="stylesheet" href="/artificer/artificer.css" />
     <link rel="stylesheet" href="/artificer/artificer-whimsy.css" />
     <link rel="stylesheet" href="/artificer/print.css" media="print" />
