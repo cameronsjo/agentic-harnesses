@@ -1,5 +1,45 @@
 # Artificer adaptations
 
+## 2026-08-02 — v0.18.1 → v0.21.0 (npm was stale since June; real 99+163+40-line delta)
+
+- **Upstream issue:** none filed this session — a version-bump + reword pass, not a
+  friction session. `@cameronsjo/artificer@0.21.0` had just published to npm (0.19.0
+  and 0.20.0 were never published at all, so npm sat at 0.18.1 since June).
+- **Install path unchanged:** pin bumped in `site/package.json`, `npm install`,
+  `scripts/vendor-artificer.mjs` re-ran via `prebuild` and re-stamped
+  `public/artificer/artificer.css` to `--art-version: "0.21.0"`. `src/primitives.json`
+  is now part of the vendored payload (new upstream mint ledger, `#190`/`#191`).
+- **Build, tests, validate all pass unchanged** — no code in this app broke across the
+  0.18.1→0.21.0 crossing.
+- **Newly-absorbed upstream — NOT migrated this session (out of scope for a version bump
+  + reword), flagged for a follow-up pass:**
+  - **#79 `.sidenav a, .sidenav button`** — upstream now styles both selectors
+    natively (comment cites mirroring `.tabs`). This repo's `.sidenav button` shim in
+    `site/src/styles.css:61-90` is now redundant but harmless (identical rules, source
+    order gives ours no effect over upstream's).
+  - **#114 hamburger glyph** — `menu` icon path is now `M3 4h10M3 8h10M3 12h10`
+    (upstream comment cites `#114` directly) — full-height bars, no longer squished.
+    This repo's `data-icon-size="32"` override in `App.tsx:204` and the
+    `.appbar__menu-btn { color: var(--fg) }` boost in `styles.css` can likely shrink or
+    drop once someone re-checks the glyph at default size. Also ships
+    `.btn--icon-prominent` for the same friction (icon button resting at `--fg` instead
+    of `--fg-secondary`) — a cleaner primitive than the hand-rolled color override.
+  - **#116 responsive app-shell** — `.app-shell` / `.app-shell__content` primitives now
+    ship (`primitives.json` mint), including the `minmax(0, 1fr)` overflow-safe mobile
+    track this repo already carries by hand at `styles.css:622`. Re-platforming onto
+    the primitive is a real refactor, not a reword — left as a follow-up.
+  - **#97 footer/colophon** — `.colophon` / `.colophon__label` / `.colophon__fine` ship,
+    with the sans-escape from `.surface-tool`'s mono trap built in. This repo's
+    hand-rolled `.app-footer` + `.footer-fine` (styles.css:564-571) do the same job and
+    are candidates to retire in favor of the primitive.
+- **Kept (still unowned upstream, re-checked this version):**
+  - No change found for the sole remaining "architectural" item from the v0.18.0 entry
+    that isn't listed above — re-verify against the full ledger on the next real
+    friction session rather than this reword pass.
+- **Lane:** 3 (no palette/token value changes touched this app's code; the pin bump and
+  footer reword are the only diffs).
+
+
 How this project bends the Artificer design system, and why. Each entry mirrors a
 feedback issue filed upstream. Entries marked **→ Shed in v0.18.0** are kept for
 the historical *why*; upstream now covers them (see the v0.18.0 crossing below).

@@ -352,7 +352,7 @@ function AppFooter() {
           screen. greeting() runs from a mount effect in App() (Whimsy's
           DOMContentLoaded auto-init fires before React mounts this footer). */}
       <span className="footer-greeting" data-whimsy-greeting>
-        kindness is free
+        kindness is a choice
       </span>
       <nav className="footer-links cluster" aria-label="About this site">
         <a className="anchor" href="#about">
