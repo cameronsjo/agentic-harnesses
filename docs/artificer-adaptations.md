@@ -1,5 +1,19 @@
 # Artificer adaptations
 
+## 2026-08-02 — v0.21.0 → v0.22.0 (#97 `.colophon__spine` adopted)
+
+- **Upstream issue:** cameronsjo/artificer-design-system#97 — closed by adoption.
+- `@cameronsjo/artificer` bumped to the exact pin `0.22.0`, which mints
+  `.colophon__spine` on the existing `.colophon` primitive. Retired the
+  hand-rolled `AppFooter` grid (`.app-footer`, `.site-footer`'s `1fr auto 1fr`
+  track, `.footer-tagline`, `.footer-greeting`, `.footer-links`, and the
+  `.app-footer, .app-footer *` sans-font specificity fix — `.colophon` now
+  carries that escape itself) in favor of the primitive's three positional
+  slots (first/middle/last). No footer CSS remains in `site/src/styles.css`.
+- `AboutView.tsx` / `DisclosureView.tsx` keep their own small `.stack`-based
+  footers — unrelated, left alone.
+- **#97 is now Adopted** — see the two "Kept" mentions below, both superseded.
+
 ## 2026-08-02 — v0.18.1 → v0.21.0 (npm was stale since June; real 99+163+40-line delta)
 
 - **Upstream issue:** none filed this session — a version-bump + reword pass, not a
@@ -31,7 +45,8 @@
   - **#97 footer/colophon** — `.colophon` / `.colophon__label` / `.colophon__fine` ship,
     with the sans-escape from `.surface-tool`'s mono trap built in. This repo's
     hand-rolled `.app-footer` + `.footer-fine` (styles.css:564-571) do the same job and
-    are candidates to retire in favor of the primitive.
+    are candidates to retire in favor of the primitive. **→ Adopted in v0.22.0** (see
+    the 2026-08-02 entry above).
 - **Kept (still unowned upstream, re-checked this version):**
   - No change found for the sole remaining "architectural" item from the v0.18.0 entry
     that isn't listed above — re-verify against the full ledger on the next real
@@ -87,7 +102,8 @@ the historical *why*; upstream now covers them (see the v0.18.0 crossing below).
   (squished 3-bar at y=6/8/10), so `data-icon-size="22"` + `.appbar__menu-btn { color:
   var(--fg) }` stay. Re-tested this version: not absorbed.
 - **#97 footer / `.surface-tool` mono** — no footer/colophon primitive; the mono-prose
-  trap is unchanged. Architectural.
+  trap is unchanged. Architectural. **→ Adopted in v0.22.0** (see the 2026-08-02 entry
+  above).
 - **#116 responsive app-shell** — still no canonical app-shell; the hand-rolled grid +
   carousel stay. Architectural.
 
