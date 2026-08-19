@@ -124,6 +124,8 @@ body {
     min-width: 44px;
   }
 }
+/* The vendored .appbar__brand is flex: 1 (basis 0) — with a child .wordmark carrier it only gets its grow-share (the spacer claims the rest), so the title ellipsizes even when room is free. Content basis fixes it; min-width: 0 still allows shrink-to-ellipsis when space truly runs out. (Upstream fix in flight.) */
+.appbar__brand { flex: 1 1 auto; }
 /* The hamburger keeps the .btn--ghost default (--fg-secondary): at 32px the glyph
    reads clearly without full --fg, which is glaringly bright on the dark bar. */
 /* Short intro band below the appbar (lede + build badges). Not sticky. */
