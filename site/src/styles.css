@@ -19,30 +19,6 @@ body {
   padding-right: max(var(--s-lg), env(safe-area-inset-right));
 }
 
-/* Safe-area shims for the mobile drawer, mirrored from upstream Artificer's
-   .nav-drawer / .nav-drawer > .sidenav rules (src/artificer.css). Retire once
-   this repo's Artificer pin ships viewport-fit=cover support for consumers
-   without their own shim (docs/artificer-adaptations.md). */
-.nav-drawer {
-  padding-bottom: 0;
-}
-.nav-drawer > .sidenav {
-  min-height: 100%;
-  height: auto;
-  padding-bottom: calc(var(--s-md) + env(safe-area-inset-bottom, 0px));
-}
-
-/* Touch stuck-hover reset — a finger tap on .sidenav items leaves the :hover
-   style stuck after the touch ends (no mouseleave event on touch). Mirrors
-   upstream's @media (hover: none) treatment. */
-@media (hover: none) {
-  .sidenav a:hover,
-  .sidenav button:hover {
-    background: none;
-    color: var(--fg-secondary);
-  }
-}
-
 /* ---- theme toggle: topbar vs. drawer footer ---- */
 /* Below the tablet breakpoint the topbar collapses to the hamburger, so its
    theme toggle copy hides in favor of the drawer-footer instance (mirrors
@@ -54,35 +30,6 @@ body {
     display: none;
   }
 }
-/* .sidenav__footer, mirrored from upstream Artificer's source (not yet in
-   the 0.22.1 npm publish this repo pins — verified against the vendored
-   public/artificer/artificer.css). Retire once a future publish ships it
-   (docs/artificer-adaptations.md). */
-.sidenav__footer {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-sm);
-  min-height: 44px;
-  padding: var(--s-sm) var(--s-sm) 0;
-  border-top: 1px solid var(--border);
-  font-family: var(--font-interface);
-  font-size: var(--t-label-md-size);
-  color: var(--fg-secondary);
-}
-/* .sidenav button strips/stretches any button in the nav — restore the toggle pill in the footer row (upstream gap, being fixed in a-d-s) */
-.sidenav__footer .theme-toggle {
-  width: auto;
-  flex: none;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  padding: 6px 10px;
-  font-family: var(--font-interface);
-  font-size: var(--t-label-xs-size);
-  font-weight: 500;
-}
-
 /* ---- appbar + intro band ---- */
 /* The appbar's contained-padding + static-position overrides (#83, #84) are
    retired: v0.18 ships `.appbar--contained` and `.appbar--static`, applied on the
@@ -94,38 +41,6 @@ body {
   font-size: inherit;
   letter-spacing: inherit;
 }
-/* Ellipsis carriers, mirrored from upstream Artificer's source (its
-   .appbar__brand.wordmark / .appbar__brand > .wordmark rules; not yet in
-   the 0.22.1 npm publish this repo pins — verified against the vendored
-   public/artificer/artificer.css). Filed as agentic-harnesses#20. This
-   site's brand link composes as .appbar__brand > span.whimsy.wordmark, so
-   it needs the child-carrier form: the .wordmark child yields its trailing
-   content (including the burnished stop) to text-overflow: ellipsis before
-   the flex container hard-clips it mid-glyph. Retire once a future publish
-   ships these rules (tracked in docs/artificer-adaptations.md). */
-.appbar__brand {
-  white-space: nowrap;
-}
-.appbar__brand.wordmark,
-.appbar__brand > .wordmark {
-  display: block;
-  width: auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  align-content: center;
-}
-.appbar__brand.wordmark {
-  flex: 1 1 auto;
-}
-@media (pointer: coarse) {
-  .appbar__brand.wordmark,
-  .appbar__brand > .wordmark {
-    min-width: 44px;
-  }
-}
-/* The vendored .appbar__brand is flex: 1 (basis 0) — with a child .wordmark carrier it only gets its grow-share (the spacer claims the rest), so the title ellipsizes even when room is free. Content basis fixes it; min-width: 0 still allows shrink-to-ellipsis when space truly runs out. (Upstream fix in flight.) */
-.appbar__brand { flex: 1 1 auto; }
 /* The hamburger keeps the .btn--ghost default (--fg-secondary): at 32px the glyph
    reads clearly without full --fg, which is glaringly bright on the dark bar. */
 /* Short intro band below the appbar (lede + build badges). Not sticky. */

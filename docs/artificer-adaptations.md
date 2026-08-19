@@ -1,5 +1,64 @@
 # Artificer adaptations
 
+## 2026-08-19 — v0.22.1 → v0.23.0, #21 shims retired (verify-then-delete)
+
+Artificer 0.23.0 published to npm shipping everything the mobile-fixes round
+of shims mirrored. Executed #21: for each shim, grepped the installed
+`node_modules/@cameronsjo/artificer/src/artificer.css` to confirm the
+upstream rule was present at 0.23.0 before deleting.
+
+**Retired (confirmed present upstream, byte-equivalent or better):**
+
+- **Brand ellipsis carriers** (`.appbar__brand.wordmark` /
+  `.appbar__brand > .wordmark`, + the coarse-pointer `min-width: 44px`
+  re-floor) — present verbatim (`artificer.css:1773-1779, 1917`).
+- **`.appbar__brand { white-space: nowrap }`** — folded into upstream's base
+  `.appbar__brand` rule now (`:1761`); the standalone override is redundant.
+- **`brand-flex-basis` one-liner** (`.appbar__brand { flex: 1 1 auto }`) —
+  upstream's `.appbar__brand` now declares `flex: 1 1 auto` natively
+  (`:1756`), with a comment citing the exact `#127` shrink-without-losing-content-basis
+  reasoning this repo's shim used. Verified via `PR #24`.
+- **Drawer safe-area relocation** (`.nav-drawer > .sidenav`'s
+  `padding-bottom: calc(var(--s-md) + env(safe-area-inset-bottom, 0px))`,
+  bottom inset moved off `.nav-drawer` itself) — present verbatim
+  (`:1883-1884`); this repo's extra `.nav-drawer { padding-bottom: 0 }` and
+  `.nav-drawer > .sidenav { min-height: 100%; height: auto }` were already
+  redundant (upstream's base `.nav-drawer > .sidenav` rule already sets
+  `min-height: 100%`, and nothing sets a `.nav-drawer` bottom padding to
+  zero against).
+- **Stuck-hover reset** — upstream now gates `.sidenav a:hover` /
+  `.sidenav button:hover` inside `@media (hover: hover)` (`:1620-1623`)
+  rather than shipping an unconditional `:hover` this repo had to counter
+  with `@media (hover: none)`. Functionally equivalent, upstream's approach
+  is cleaner (scopes the hover rule itself, not a countermanding reset) —
+  deleted this repo's reset.
+- **`.sidenav__footer`** — present verbatim (`:1704-1711`), same shape as
+  upstream's own #17 pattern this repo mirrored ahead of publish.
+- **`.sidenav__footer .theme-toggle` pill restore** — present verbatim,
+  including the exact comment explaining the `.sidenav button` nav-row reset
+  it counters (`:1712-1722`).
+
+**Kept (app-specific, not shims — no upstream equivalent to retire against):**
+
+- **`.compare-dot` `min-width`/`min-height: 8px` floor** — permanent. This
+  is the sanctioned pattern for overriding Artificer's `@media (pointer:
+  coarse)` 44px button escalation on an intentionally-small control; no
+  upstream primitive replaces a bespoke dot-pager pip.
+- **`.app` container gutter `max(var(--s-lg), env(safe-area-inset-*))`** —
+  permanent. `.app` is this site's own root class (composed with
+  `.container.container--lg`), not an Artificer-owned selector; upstream has
+  no equivalent to retire against.
+- **`viewport-fit=cover`** in `site/index.html`'s viewport meta — permanent,
+  app-level HTML, not CSS Artificer ships.
+- **`.topbar-theme-toggle` hide at `<=800px`** — permanent. App-specific
+  placement logic (which of the two toggle instances is visible), not a
+  shim mirroring an upstream rule.
+
+Re-verified `npm run build` / `npm test` (31/31) / `npx tsc --noEmit` clean
+after every deletion.
+
+- **Lane:** 3.
+
 ## 2026-08-19 — on-device fixes: container gutter + drawer toggle pill
 
 Cameron's on-device check on the mobile-fixes 0.22.1 build (previous entry)
