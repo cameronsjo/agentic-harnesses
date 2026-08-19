@@ -1,5 +1,52 @@
 # Artificer adaptations
 
+## 2026-08-18 — v0.21.0 → v0.22.1, mobile shims + canonical theme toggle
+
+- **Upstream issues:** cameronsjo/agentic-harnesses#20 (brand ellipsis + legacy
+  theme toggle), #12 (compare-dot pip size), #21 (retirement tracker for the
+  shims below).
+- **Install path unchanged:** pin bumped in `site/package.json`, `npm install`.
+- **`.compare-dot` pip size (#12):** Artificer's `@media (pointer: coarse) {
+  button { min-width/min-height: 44px } }` (since v0.13.0) inflated the bare
+  `<button>` dot pager pips from an 8px visual dot to a 44px blob on real
+  touch devices. Added `min-width`/`min-height: 8px` in
+  `site/src/styles.css`. WCAG-safe: the existing `::before` `inset: -18px`
+  hit area already meets the 44px touch-target floor independent of the
+  paint size.
+- **Brand ellipsis (#20):** mirrored upstream's `.appbar__brand.wordmark` /
+  `.appbar__brand > .wordmark` ellipsis-carrier rules + the coarse-pointer
+  `min-width: 44px` re-floor into `site/src/styles.css` (this repo's pin
+  predates 0.22.1 where those rules ship). Fixes a mid-glyph hard-clip on
+  ~440px viewports — `text-overflow` is inert on the flex `.appbar__brand`
+  container, so the truncation needed a block-level carrier.
+- **Safe-area (new this session):** added `viewport-fit=cover` to
+  `site/index.html`'s viewport meta (was entirely missing, so
+  `env(safe-area-inset-*)` resolved to 0 everywhere). Mirrored upstream's
+  `.nav-drawer` / `.nav-drawer > .sidenav` inset-padding shim (bottom inset
+  lives on the scrolling `.sidenav` child, not the drawer) and added
+  left/right inset padding on `.app`. Added an `@media (hover: none)` reset
+  to clear the stuck `:hover` state a finger tap leaves on `.sidenav` items.
+- **Canonical theme toggle:** `ThemeToggle` in `site/src/App.tsx` was
+  hand-rolled legacy markup (`className="theme-toggle"` + a `.dot` + text
+  label, with its own `useState`/`useEffect` tracking `data-theme` +
+  `localStorage`). Replaced with the canonical empty
+  `<button className="theme-toggle theme-toggle--inline" data-theme-toggle
+  aria-label="Toggle theme" />` — the vendored `artificer-theme.js`
+  (v0.19.0+) auto-observes SPA mounts and injects the glyph itself, keeping
+  every instance on the page in sync with no React state. Mobile placement:
+  the topbar instance hides `<=640px`; a new `.sidenav__footer` row in the
+  drawer (mirrored from upstream's own #17 pattern, shipped at 0.22.1)
+  becomes the mobile home for the control. `HarnessNav` takes an optional
+  `footer` prop so only the drawer instance renders the footer row.
+- **Shims are temporary — see #21.** `.compare-dot`'s floor, the brand
+  ellipsis carriers, and the safe-area padding are all rules this repo's
+  Artificer pin doesn't yet ship (or, for `.sidenav__footer`, hadn't yet
+  adopted). Retire each at the first Artificer bump past 0.22.1 that either
+  ships the rule natively or supersedes it — diff against the newly-vendored
+  `public/artificer/artificer.css` rather than assuming.
+- **Lane:** 3 (no palette/token value changes; all shims mirror upstream
+  selectors and rule shapes verbatim).
+
 ## 2026-08-02 — v0.18.1 → v0.21.0 (npm was stale since June; real 99+163+40-line delta)
 
 - **Upstream issue:** none filed this session — a version-bump + reword pass, not a
@@ -260,7 +307,7 @@ page-list semantics — kept as-is.
 - **Pivot:** A mobile-friendliness pass on the SPA — all hand-rolled on top of Artificer primitives, because Artificer ships nav primitives (`.sidenav`/`.tabs`/`.appbar`) but no canonical responsive **app-shell**.
 - **Friction (the traps):**
   - `.app-shell` mobile track was a bare `1fr` = `minmax(auto, 1fr)`, which refuses to shrink below content — one wide child blew the page ~2000px wide. Fixed to `minmax(0, 1fr)` (`site/src/styles.css:622`, comment at `:617-621`).
-  - `.compare-grid` filmstrip never reflowed for mobile → rebuilt as a full-bleed scroll-snap carousel: negative-margin breakout (`margin-inline: calc(-1 * var(--s-lg))`, `:303`) + `flex-basis:100%` + dot pager. The mobile rule MUST follow the desktop `flex:0 0 290px` (equal specificity, source order decides — `:293-296`).
+  - `.compare-grid` filmstrip never reflowed for mobile → rebuilt as a full-bleed scroll-snap carousel: negative-margin breakout (`margin-inline: calc(-1 * var(--s-lg))`, `:303`) + `flex-basis:100%` + dot pager. The mobile rule MUST follow the desktop `flex:0 0 290px` (equal specificity, source order decides — `:293-296`). **2026-08-18:** the dot pager's `.compare-dot` also needed a `min-width`/`min-height: 8px` floor against Artificer's `@media (pointer: coarse)` 44px button escalation — see the 0.22.1 mobile-fixes entry above.
   - Fixed-px single-view SVGs overflowed → `svg { max-width:100%; height:auto }` at mobile (`:287-288, 636-638`).
 - **Cross-consumer:** spec-compare (`/Users/cameron/Projects/spec-compare/site`) re-hand-rolls the identical scaffolding and still carries the bare-`1fr` mobile trap this repo fixed: `.app-shell` `styles.css:32-34` (desktop `minmax(0,1fr)`) vs mobile `:950` (bare `1fr`); `.compare-grid` overflow-x scroller `:170-173` (no reflow); SVG fit `:184, 585`; hamburger `appbar__menu-btn` `App.tsx:68-74`; off-canvas drawer `App.tsx:149`.
 - **Wished existed:** a responsive app-shell pattern, an overflow-safe-track note (`minmax(0,1fr)`), a full-bleed utility, media/diagram-fit guidance, and a drawer pattern.
