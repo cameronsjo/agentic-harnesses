@@ -341,41 +341,48 @@ export function App() {
  * disclosure paragraphs moved to the Disclosure page (#disclosure); this keeps
  * a tagline + links to About / Disclosure / issues. Structured so the deferred
  * "happy pride" footer variant (Part 4) is a one-line tagline swap.
+ *
+ * Built on Artificer's `.colophon` / `.colophon__spine` primitive (#97) —
+ * positional slots (first starts, last ends, middle centers), all type
+ * treatment and the mobile stack come from the package. No footer CSS here.
  */
 function AppFooter() {
   return (
-    <footer className="app-footer site-footer">
-      <span className="footer-tagline">
-        Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
-        <a
-          className="anchor"
-          href="https://cameronsjo.github.io/artificer/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Artificer design system
-        </a>
-      </span>
-      {/* Seasonal greeting — Whimsy.greeting() swaps [data-whimsy-greeting] by date:
-          June → "happy pride" (rainbow wave, no trailing period); off-season → the
-          inline fallback (graceful with JS off). An inline element centered in the
-          row's middle column, so the rainbow underline spans only the text — not the
-          screen. greeting() runs from a mount effect in App() (Whimsy's
-          DOMContentLoaded auto-init fires before React mounts this footer). */}
-      <span className="footer-greeting" data-whimsy-greeting>
-        kindness is a choice
-      </span>
-      <nav className="footer-links cluster" aria-label="About this site">
-        <a className="anchor" href="#about">
-          About
-        </a>
-        <a className="anchor" href="#disclosure">
-          Disclosure
-        </a>
-        <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
-          Open an issue
-        </a>
-      </nav>
+    <footer className="colophon">
+      <div className="container">
+        <div className="colophon__spine">
+          <span>
+            Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
+            <a
+              className="anchor"
+              href="https://cameronsjo.github.io/artificer/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Artificer design system
+            </a>
+          </span>
+          {/* Seasonal greeting — Whimsy.greeting() swaps [data-whimsy-greeting] by date:
+              June → "happy pride" (rainbow wave); off-season → the inline fallback
+              (graceful with JS off). greeting() runs from a mount effect in App()
+              (Whimsy's DOMContentLoaded auto-init fires before React mounts this
+              footer). */}
+          <span data-whimsy-greeting data-whimsy-greeting-class="whimsy--glacial">
+            kindness is a choice.
+          </span>
+          <nav className="cluster" aria-label="About this site">
+            <a className="anchor" href="#about">
+              About
+            </a>
+            <a className="anchor" href="#disclosure">
+              Disclosure
+            </a>
+            <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
+              Open an issue
+            </a>
+          </nav>
+        </div>
+      </div>
     </footer>
   )
 }
