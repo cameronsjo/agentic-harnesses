@@ -24,6 +24,35 @@ body {
   font-size: inherit;
   letter-spacing: inherit;
 }
+/* Ellipsis carriers, mirrored from upstream Artificer >=0.22.1 (its
+   .appbar__brand.wordmark / .appbar__brand > .wordmark rules, filed as
+   agentic-harnesses#20). This site's brand link composes as
+   .appbar__brand > span.whimsy.wordmark, so it needs the child-carrier
+   form: the .wordmark child yields its trailing content (including the
+   burnished stop) to text-overflow: ellipsis before the flex container
+   hard-clips it mid-glyph. Retire once this repo's Artificer pin ships
+   these rules upstream (tracked in docs/artificer-adaptations.md). */
+.appbar__brand {
+  white-space: nowrap;
+}
+.appbar__brand.wordmark,
+.appbar__brand > .wordmark {
+  display: block;
+  width: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-content: center;
+}
+.appbar__brand.wordmark {
+  flex: 1 1 auto;
+}
+@media (pointer: coarse) {
+  .appbar__brand.wordmark,
+  .appbar__brand > .wordmark {
+    min-width: 44px;
+  }
+}
 /* The hamburger keeps the .btn--ghost default (--fg-secondary): at 32px the glyph
    reads clearly without full --fg, which is glaringly bright on the dark bar. */
 /* Short intro band below the appbar (lede + build badges). Not sticky. */
