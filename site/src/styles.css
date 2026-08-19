@@ -11,6 +11,32 @@ body {
    vertical rhythm here so the shell doesn't fight the system container. */
 .app {
   padding-block: var(--s-lg) var(--s-2xl);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Safe-area shims for the mobile drawer, mirrored from upstream Artificer's
+   .nav-drawer / .nav-drawer > .sidenav rules (src/artificer.css). Retire once
+   this repo's Artificer pin ships viewport-fit=cover support for consumers
+   without their own shim (docs/artificer-adaptations.md). */
+.nav-drawer {
+  padding-bottom: 0;
+}
+.nav-drawer > .sidenav {
+  min-height: 100%;
+  height: auto;
+  padding-bottom: calc(var(--s-md) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Touch stuck-hover reset — a finger tap on .sidenav items leaves the :hover
+   style stuck after the touch ends (no mouseleave event on touch). Mirrors
+   upstream's @media (hover: none) treatment. */
+@media (hover: none) {
+  .sidenav a:hover,
+  .sidenav button:hover {
+    background: none;
+    color: var(--fg-secondary);
+  }
 }
 
 /* ---- appbar + intro band ---- */
