@@ -11,6 +11,61 @@ body {
    vertical rhythm here so the shell doesn't fight the system container. */
 .app {
   padding-block: var(--s-lg) var(--s-2xl);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Safe-area shims for the mobile drawer, mirrored from upstream Artificer's
+   .nav-drawer / .nav-drawer > .sidenav rules (src/artificer.css). Retire once
+   this repo's Artificer pin ships viewport-fit=cover support for consumers
+   without their own shim (docs/artificer-adaptations.md). */
+.nav-drawer {
+  padding-bottom: 0;
+}
+.nav-drawer > .sidenav {
+  min-height: 100%;
+  height: auto;
+  padding-bottom: calc(var(--s-md) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Touch stuck-hover reset — a finger tap on .sidenav items leaves the :hover
+   style stuck after the touch ends (no mouseleave event on touch). Mirrors
+   upstream's @media (hover: none) treatment. */
+@media (hover: none) {
+  .sidenav a:hover,
+  .sidenav button:hover {
+    background: none;
+    color: var(--fg-secondary);
+  }
+}
+
+/* ---- theme toggle: topbar vs. drawer footer ---- */
+/* Below the tablet breakpoint the topbar collapses to the hamburger, so its
+   theme toggle copy hides in favor of the drawer-footer instance (mirrors
+   upstream Artificer's #17 drawer-footer pattern). Both instances share
+   data-theme-toggle, so artificer-theme.js keeps them in sync regardless of
+   which one is visible. */
+@media (max-width: 800px) {
+  .topbar-theme-toggle {
+    display: none;
+  }
+}
+/* .sidenav__footer, mirrored from upstream Artificer's source (not yet in
+   the 0.22.1 npm publish this repo pins — verified against the vendored
+   public/artificer/artificer.css). Retire once a future publish ships it
+   (docs/artificer-adaptations.md). */
+.sidenav__footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-sm);
+  min-height: 44px;
+  padding: var(--s-sm) var(--s-sm) 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-interface);
+  font-size: var(--t-label-md-size);
+  color: var(--fg-secondary);
 }
 
 /* ---- appbar + intro band ---- */
@@ -23,6 +78,36 @@ body {
 .appbar__brand .whimsy {
   font-size: inherit;
   letter-spacing: inherit;
+}
+/* Ellipsis carriers, mirrored from upstream Artificer's source (its
+   .appbar__brand.wordmark / .appbar__brand > .wordmark rules; not yet in
+   the 0.22.1 npm publish this repo pins — verified against the vendored
+   public/artificer/artificer.css). Filed as agentic-harnesses#20. This
+   site's brand link composes as .appbar__brand > span.whimsy.wordmark, so
+   it needs the child-carrier form: the .wordmark child yields its trailing
+   content (including the burnished stop) to text-overflow: ellipsis before
+   the flex container hard-clips it mid-glyph. Retire once a future publish
+   ships these rules (tracked in docs/artificer-adaptations.md). */
+.appbar__brand {
+  white-space: nowrap;
+}
+.appbar__brand.wordmark,
+.appbar__brand > .wordmark {
+  display: block;
+  width: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-content: center;
+}
+.appbar__brand.wordmark {
+  flex: 1 1 auto;
+}
+@media (pointer: coarse) {
+  .appbar__brand.wordmark,
+  .appbar__brand > .wordmark {
+    min-width: 44px;
+  }
 }
 /* The hamburger keeps the .btn--ghost default (--fg-secondary): at 32px the glyph
    reads clearly without full --fg, which is glaringly bright on the dark bar. */
@@ -182,6 +267,8 @@ body {
   position: relative; /* anchors the expanded hit area */
   width: 8px;
   height: 8px;
+  min-width: 8px;
+  min-height: 8px;
   padding: 0;
   border: none;
   border-radius: 50%;

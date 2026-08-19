@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
@@ -213,7 +213,9 @@ export function App() {
         </a>
         <span className="appbar__spacer" />
         <div className="appbar__actions">
-          <ThemeToggle />
+          {/* Hidden <=640px — the drawer footer below is the mobile home for
+              this control (matches upstream Artificer's #17 pattern). */}
+          <ThemeToggle className="topbar-theme-toggle" />
         </div>
       </header>
 
@@ -317,7 +319,16 @@ export function App() {
       {/* Mobile drawer: scrim + off-canvas sidenav. data-nav-open on .app drives both. */}
       <div className="nav-scrim" onClick={() => setNavOpen(false)} />
       <aside id="nav-drawer" className="nav-drawer" ref={drawerRef}>
-        <HarnessNav harness={harness} onSelect={selectHarness} />
+        <HarnessNav
+          harness={harness}
+          onSelect={selectHarness}
+          footer={
+            <div className="sidenav__footer">
+              <span>Theme</span>
+              <ThemeToggle />
+            </div>
+          }
+        />
       </aside>
 
       <AppFooter />
@@ -385,9 +396,11 @@ function AppFooter() {
 function HarnessNav({
   harness,
   onSelect,
+  footer,
 }: {
   harness: string | null
   onSelect: (h: string | null) => void
+  footer?: ReactNode
 }) {
   return (
     <nav className="sidenav" aria-label="Harnesses">
@@ -411,45 +424,28 @@ function HarnessNav({
           <span className="label">{s.displayName}</span>
         </button>
       ))}
+
+      {footer}
     </nav>
   )
 }
 
-const THEME_KEY = 'artificer.theme'
-
-function readTheme(): 'light' | 'dark' {
-  const attr = document.documentElement.getAttribute('data-theme')
-  if (attr === 'light' || attr === 'dark') return attr
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-}
-
 /**
- * Owns the theme toggle in React. The vendored artificer-theme.js binds on
- * DOMContentLoaded — before this SPA mounts — so its click handler never
- * attaches. We drive the same `data-theme` attribute + `artificer.theme` key here.
+ * Canonical Artificer theme toggle: an empty [data-theme-toggle] button. The
+ * vendored artificer-theme.js auto-observes SPA mounts (v0.19.0+) and injects
+ * the half-circle glyph itself, syncing every instance on the page — so the
+ * topbar and drawer-footer copies below stay in lockstep without any React
+ * theme state. The pre-paint bootstrap in index.html still sets data-theme
+ * before first render; this component owns nothing beyond the empty button.
  */
-function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(readTheme)
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    try {
-      localStorage.setItem(THEME_KEY, theme)
-    } catch {
-      // localStorage unavailable (private mode etc.) — theme still applies for the session.
-    }
-  }, [theme])
-
+function ThemeToggle({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      className="theme-toggle"
-      aria-label="Toggle light or dark theme"
-      onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
-    >
-      <span className="dot" />
-      <span>{theme === 'light' ? 'Light' : 'Dark'}</span>
-    </button>
+      className={className ? `theme-toggle theme-toggle--inline ${className}` : 'theme-toggle theme-toggle--inline'}
+      data-theme-toggle
+      aria-label="Toggle theme"
+    />
   )
 }
 
