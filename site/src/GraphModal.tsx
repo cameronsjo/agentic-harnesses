@@ -30,7 +30,12 @@ export function GraphModal({ open, onClose, title, diagram, side }: Props) {
   onCloseRef.current = onClose
 
   useEffect(() => {
-    if (!open) return
+    if (!open || !modalRef.current) return
+    // Narrowed (not `modalRef.current` inline): the react adapter's own Modal
+    // primitive declares a second, non-nullable `Window.ArtificerFocus.trap`
+    // global (dist/react/primitives.d.ts) alongside the package's canonical
+    // nullable one (types/focus.d.ts, imported via artificer-modules.d.ts) --
+    // narrowing here satisfies whichever of the two merged signatures wins.
     const handle = window.ArtificerFocus?.trap(modalRef.current, { onEscape: () => onCloseRef.current() })
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
