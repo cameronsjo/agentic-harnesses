@@ -45,7 +45,7 @@ body {
    upstream Artificer's #17 drawer-footer pattern). Both instances share
    data-theme-toggle, so artificer-theme.js keeps them in sync regardless of
    which one is visible. */
-@media (max-width: 640px) {
+@media (max-width: 800px) {
   .topbar-theme-toggle {
     display: none;
   }

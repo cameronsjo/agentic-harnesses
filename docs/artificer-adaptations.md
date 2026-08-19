@@ -36,7 +36,8 @@
   aria-label="Toggle theme" />` — the vendored `artificer-theme.js`
   (v0.19.0+) auto-observes SPA mounts and injects the glyph itself, keeping
   every instance on the page in sync with no React state. Mobile placement:
-  the topbar instance hides `<=640px`; a new `.sidenav__footer` row in the
+  the topbar instance hides `<=800px` (the drawer/hamburger takeover
+  breakpoint — `.appbar__menu-btn`); a new `.sidenav__footer` row in the
   drawer (mirrored from upstream's own #17 pattern — also verified absent
   from the published 0.22.1) becomes the mobile home for the control.
   `HarnessNav` takes an optional `footer` prop so only the drawer instance
