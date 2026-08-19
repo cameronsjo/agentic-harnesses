@@ -1,4 +1,14 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type KeyboardEvent } from 'react'
+import {
+  AppShell,
+  AppShellContent,
+  Appbar,
+  NavDrawer,
+  SideNav,
+  SideNavFooter,
+  ThemeToggle,
+  type SideNavGroup,
+} from '@cameronsjo/artificer/react'
 import { specs } from './data'
 import { KIND_COLOR, KIND_LABEL, type NodeKind } from './types'
 import { ScenarioCompare } from './ScenarioCompare'
@@ -50,6 +60,30 @@ function tabsFor(harness: string | null): ViewTab[] {
   return ['loop', 'sequence', ...(harness === 'claude-code' ? (['hooks', 'wire'] as ViewTab[]) : [])]
 }
 
+// The between-surface spine: "Compare all" plus one item per harness. These switch
+// app state rather than navigate, so each SideNavItem carries onSelect, not href.
+// Rendered twice (persistent rail + drawer) from the same source of truth — the
+// chrome adapter's SideNav owns the markup, this just shapes the data.
+function harnessGroups(harness: string | null, onSelect: (h: string | null) => void): SideNavGroup[] {
+  return [
+    {
+      key: 'overview',
+      label: 'Overview',
+      items: [{ key: 'compare-all', label: 'Compare all', active: harness === null, onSelect: () => onSelect(null) }],
+    },
+    {
+      key: 'harnesses',
+      label: 'Harnesses',
+      items: specs.map((s) => ({
+        key: s.harness,
+        label: s.displayName,
+        active: harness === s.harness,
+        onSelect: () => onSelect(s.harness),
+      })),
+    },
+  ]
+}
+
 export function App() {
   // Single source of truth. harness === null is the "Compare all" surface.
   const [harness, setHarness] = useState<string | null>(null)
@@ -85,10 +119,13 @@ export function App() {
 
   // The one persistent whimsy moment: the wordmark breathes the ultrathink
   // shimmer (spectrum) for three hue-cycles on load, then drifts glacially.
-  // React mounts after DOMContentLoaded, so the ref-driven run() is the hook.
-  const titleRef = useRef<HTMLSpanElement>(null)
+  // The Appbar chrome component owns the wordmark markup (brandWhimsy prop
+  // adds .whimsy), so there's no ref to attach here — query the DOM node it
+  // renders after mount instead. React mounts after DOMContentLoaded, so
+  // this run() is still the hook regardless.
   useEffect(() => {
-    const cancel = window.Whimsy?.run(titleRef.current, { loops: 3, settle: 'glacial' })
+    const el = document.querySelector<HTMLElement>('.appbar__brand .wordmark')
+    const cancel = window.Whimsy?.run(el, { loops: 3, settle: 'glacial' })
     return () => cancel?.()
   }, [])
 
@@ -105,34 +142,9 @@ export function App() {
     window.Whimsy?.greeting()
   }, [])
 
-  // Mobile drawer focus management. The drawer is always in the DOM (CSS slides it
-  // off-canvas), so when closed we mark it `inert` to keep its buttons out of the tab
-  // order — otherwise desktop, where the hamburger is hidden, gains phantom nav stops.
-  // When open we trap focus (Esc / scrim close it; release restores focus to the
-  // hamburger). Graceful no-op if the vendored helper is absent.
-  const drawerRef = useRef<HTMLElement>(null)
-  const menuBtnRef = useRef<HTMLButtonElement>(null)
-  // useLayoutEffect (not useEffect) so `inert` lands before the browser paints —
-  // otherwise the drawer is briefly live in the tab order on first render. `inert`
-  // is the single authority for both keyboard tab-order and the a11y tree, so the
-  // markup carries no separate aria-hidden that could drift out of sync with it.
-  useLayoutEffect(() => {
-    const el = drawerRef.current
-    if (!el) return
-    if (!navOpen) {
-      el.setAttribute('inert', '')
-      return
-    }
-    el.removeAttribute('inert')
-    const handle = window.ArtificerFocus?.trap(el, { onEscape: () => setNavOpen(false) })
-    // On close, return focus to the hamburger regardless of how the drawer was
-    // dismissed — the trap's own restore targets whatever was focused at open
-    // time, which a scrim click (focus moves to body/scrim) leaves wrong.
-    return () => {
-      handle?.release()
-      menuBtnRef.current?.focus()
-    }
-  }, [navOpen])
+  // Mobile drawer focus management (inert while closed, focus-trapped while open,
+  // Esc/scrim close it) now lives entirely in the NavDrawer chrome component —
+  // no local ref/effect needed.
 
   // Legend belongs to graph contexts; the wire view draws its own request anatomy.
   const showLegend = harness === null || activeTab !== 'wire'
@@ -166,7 +178,7 @@ export function App() {
   }
 
   return (
-    <div className="app container container--lg surface-tool" data-nav-open={navOpen ? '' : undefined}>
+    <div className="app container container--lg surface-tool">
       <a
         className="skip-link"
         href="#main"
@@ -187,37 +199,23 @@ export function App() {
         Skip to content
       </a>
 
-      {/* .appbar--contained: our bar sits inside .container--lg, which owns the
-          inline gutter — zero the full-bleed padding (was local override #83).
-          .appbar--static: opt out of sticky for this compact tool surface (#84).
-          Both shipped as modifiers in v0.18, retiring the styles.css overrides. */}
-      <header className="appbar appbar--contained appbar--static">
-        <button
-          type="button"
-          ref={menuBtnRef}
-          className="btn btn--ghost btn--icon appbar__menu-btn"
-          aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-          aria-expanded={navOpen}
-          aria-controls="nav-drawer"
-          onClick={() => setNavOpen((v) => !v)}
-        >
-          <i data-icon="menu" data-icon-size="32" />
-        </button>
-        <a className="appbar__brand" href="#main">
-          {/* .wordmark (and its ::after accent period) rides the inline span, not
-              the flex .appbar__brand — otherwise the period becomes a flex child
-              and the container's gap pushes it off as "harness ·." */}
-          <span className="whimsy wordmark" ref={titleRef}>
-            agentic harnesses
-          </span>
-        </a>
-        <span className="appbar__spacer" />
-        <div className="appbar__actions">
-          {/* Hidden <=640px — the drawer footer below is the mobile home for
-              this control (matches upstream Artificer's #17 pattern). */}
-          <ThemeToggle className="topbar-theme-toggle" />
-        </div>
-      </header>
+      {/* contained: our bar sits inside .container--lg, which owns the inline
+          gutter — zero the full-bleed padding. sticky={false}: opt out of
+          sticky for this compact tool surface. brandWhimsy: the wordmark is
+          the sanctioned .whimsy home in the bar. */}
+      <Appbar
+        brand="agentic harnesses"
+        brandHref="#main"
+        brandWhimsy
+        contained
+        sticky={false}
+        menu={{ controls: 'nav-drawer', open: navOpen, onClick: () => setNavOpen((v) => !v) }}
+        actions={
+          // Hidden <=800px — the drawer footer below is the mobile home for
+          // this control (matches upstream Artificer's #17 pattern).
+          <ThemeToggle inline className="topbar-theme-toggle" />
+        }
+      />
 
       {route ? (
         // Standalone prose page — replaces the masthead + harness shell, keeps the
@@ -239,12 +237,14 @@ export function App() {
             </div>
           </section>
 
-          <div className="app-shell">
-            <aside className="app-sidenav">
-              <HarnessNav harness={harness} onSelect={selectHarness} />
-            </aside>
+          <AppShell rail="200px" gap="var(--s-lg)">
+            <SideNav
+              groups={harnessGroups(harness, selectHarness)}
+              sticky
+              style={{ '--sidenav-sticky-top': 'var(--s-md)' } as CSSProperties}
+            />
 
-            <main id="main" className="stack stack--lg">
+            <AppShellContent id="main" className="stack stack--lg">
               {availableTabs.length > 0 && (
                 <div className="tabs" role="tablist" aria-label="View">
                   {availableTabs.map((t) => (
@@ -311,25 +311,14 @@ export function App() {
                   )}
                 </div>
               )}
-            </main>
-          </div>
+            </AppShellContent>
+          </AppShell>
         </>
       )}
 
-      {/* Mobile drawer: scrim + off-canvas sidenav. data-nav-open on .app drives both. */}
-      <div className="nav-scrim" onClick={() => setNavOpen(false)} />
-      <aside id="nav-drawer" className="nav-drawer" ref={drawerRef}>
-        <HarnessNav
-          harness={harness}
-          onSelect={selectHarness}
-          footer={
-            <div className="sidenav__footer">
-              <span>Theme</span>
-              <ThemeToggle />
-            </div>
-          }
-        />
-      </aside>
+      <NavDrawer open={navOpen} onClose={() => setNavOpen(false)} id="nav-drawer" label="Harnesses">
+        <SideNav groups={harnessGroups(harness, selectHarness)} footer={<SideNavFooter />} />
+      </NavDrawer>
 
       <AppFooter />
     </div>
@@ -384,68 +373,6 @@ function AppFooter() {
         </div>
       </div>
     </footer>
-  )
-}
-
-/**
- * The between-surface spine: "Compare all" plus one item per harness. These switch
- * app state rather than navigate, so they're <button>s — Artificer styles only
- * `.sidenav a`, so styles.css carries a matching `.sidenav button` shim. Rendered
- * twice (persistent aside + mobile drawer) from the same source of truth.
- */
-function HarnessNav({
-  harness,
-  onSelect,
-  footer,
-}: {
-  harness: string | null
-  onSelect: (h: string | null) => void
-  footer?: ReactNode
-}) {
-  return (
-    <nav className="sidenav" aria-label="Harnesses">
-      <div className="sidenav__group">Overview</div>
-      <button
-        type="button"
-        aria-current={harness === null ? 'page' : undefined}
-        onClick={() => onSelect(null)}
-      >
-        <span className="label">Compare all</span>
-      </button>
-
-      <div className="sidenav__group">Harnesses</div>
-      {specs.map((s) => (
-        <button
-          key={s.harness}
-          type="button"
-          aria-current={harness === s.harness ? 'page' : undefined}
-          onClick={() => onSelect(s.harness)}
-        >
-          <span className="label">{s.displayName}</span>
-        </button>
-      ))}
-
-      {footer}
-    </nav>
-  )
-}
-
-/**
- * Canonical Artificer theme toggle: an empty [data-theme-toggle] button. The
- * vendored artificer-theme.js auto-observes SPA mounts (v0.19.0+) and injects
- * the half-circle glyph itself, syncing every instance on the page — so the
- * topbar and drawer-footer copies below stay in lockstep without any React
- * theme state. The pre-paint bootstrap in index.html still sets data-theme
- * before first render; this component owns nothing beyond the empty button.
- */
-function ThemeToggle({ className }: { className?: string }) {
-  return (
-    <button
-      type="button"
-      className={className ? `theme-toggle theme-toggle--inline ${className}` : 'theme-toggle theme-toggle--inline'}
-      data-theme-toggle
-      aria-label="Toggle theme"
-    />
   )
 }
 
