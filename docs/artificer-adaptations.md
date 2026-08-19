@@ -1,5 +1,67 @@
 # Artificer adaptations
 
+## 2026-08-19 — v0.23.0 → v0.24.1, chrome components adopted
+
+Migrated App.tsx onto `@cameronsjo/artificer/react`'s compiled chrome
+adapter — `Appbar`, `NavDrawer`, `SideNav`, `SideNavFooter`, `ThemeToggle`,
+`AppShell`/`AppShellContent`. All hand-rolled appbar/drawer/sidenav/toggle
+markup is gone from App.tsx, replaced by imports.
+
+**Divergences closed** (previously tracked entries this repo carried by
+hand — now the canonical component owns the markup, so there's nothing
+local left to diverge):
+
+- **#79 `.sidenav`/`.nav-drawer` hand-rolled inert + focus-trap glue** — the
+  `drawerRef`/`menuBtnRef`/`useLayoutEffect` that toggled `inert` and drove
+  `ArtificerFocus.trap` by hand (2026-05-31 entry) is gone; `NavDrawer` owns
+  all of it internally, including the scrim and the `[data-nav-open]` host
+  attribute (previously set on the outer `.app` div by hand).
+- **#114 hamburger glyph/contrast** — the app's `data-icon-size="32"` +
+  `.appbar__menu-btn { color: var(--fg) }` overrides (2026-05-31 entry) are
+  gone; `Appbar`'s `menu` prop renders the button itself, at whatever size
+  and `.btn--icon-prominent` contrast the component ships. Un-verified
+  whether the default now reads as well as the old override at a glance —
+  flagged for the next on-device pass rather than assumed.
+- **#116 responsive app-shell** — the hand-rolled `.app-shell` grid CSS +
+  `.app-sidenav` sticky wrapper (2026-05-31 entry) are gone, replaced by
+  `<AppShell rail="200px" gap="var(--s-lg)">` + `<AppShellContent>` and
+  `<SideNav sticky style={{'--sidenav-sticky-top': 'var(--s-md)'}}>`. The
+  vendored `.app-shell` CSS is built for a full-page shell (an optional
+  `bar` grid row for a child `.appbar`); this app doesn't put the appbar
+  inside the shell, so that row stays empty — the `min-height: 100dvh` on
+  `.app-shell` still applies to the sidebar+content region alone, which
+  could read as extra trailing space below short content. Flagged, not
+  fixed locally — matches how this composition was specced.
+
+**One real upstream type conflict, worked around, not silently absorbed:**
+the react adapter's own `Modal` primitive (`dist/react/primitives.d.ts`)
+declares a second, narrower `Window.ArtificerFocus.trap` global
+(non-nullable `el: HTMLElement`) alongside the canonical nullable one
+(`types/focus.d.ts`). Both merge into the same ambient `Window` interface;
+the narrower one won at `GraphModal.tsx`'s call site. Fixed there by
+narrowing `modalRef.current` before the call (satisfies either merged
+signature) rather than casting around it.
+
+**Types:** `src/focus.d.ts` / `icons.d.ts` / `tabs.d.ts` / `whimsy.d.ts`
+(hand-transcribed ambient globals) replaced by one
+`src/artificer-modules.d.ts` of type-only imports
+(`import type {} from '@cameronsjo/artificer/theme.js'`, etc.) — pulls in
+the package's own shipped `declare global` blocks instead of a hand-kept
+copy that could drift. Runtime is unchanged: the vendored `<script defer>`
+tags in `index.html` still ship the actual behavior.
+
+**Kept — app-specific, no chrome-component equivalent to migrate onto:**
+
+- `.compare-dot`'s `min-width`/`min-height: 8px` floor (dot-pager pips).
+- `.app`'s container gutter `max(var(--s-lg), env(safe-area-inset-*))`.
+- `viewport-fit=cover` in `site/index.html`'s viewport meta.
+- `.topbar-theme-toggle` hide at `<=800px` (now passed as the imported
+  `ThemeToggle`'s `className`, same rule, same selector).
+
+`npm run build`, `npm test` (31/31), and `npx tsc --noEmit` all clean.
+
+- **Lane:** 3.
+
 ## 2026-08-19 — v0.22.1 → v0.23.0, #21 shims retired (verify-then-delete)
 
 Artificer 0.23.0 published to npm shipping everything the mobile-fixes round
