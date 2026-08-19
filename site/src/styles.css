@@ -56,20 +56,17 @@ body {
   margin-top: var(--s-xs);
 }
 
-/* ---- app shell: [ sidenav | content ] ---- */
-.app-shell {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: var(--s-lg);
-  align-items: start;
-}
-/* The persistent sidenav rides alongside the scrolling content. With the appbar
-   now static (no 56px bar to clear) it sticks to a small top inset. Hidden below
-   the tablet breakpoint — the drawer takes over. */
-.app-sidenav {
-  position: sticky;
-  top: var(--s-md);
-}
+/* ---- app shell ----
+   Owned by the vendored .app-shell + the AppShell component's rail/gap props
+   (App.tsx passes rail="200px" gap="var(--s-lg)"; SideNav's `sticky` prop
+   carries align-self via .sidenav--sticky). A local grid-template-columns
+   here — written pre-0.24, without the [rail]/[main-start]/[main-end] named
+   lines — orphaned the vendored .app-shell__content and .sidenav placements
+   onto implicit columns, leaving the explicit tracks empty on the left.
+   Deleted (desktop AND the ≤800px re-template below), not repaired: the
+   vendored sheet already does both correctly. Same bug/fix as
+   spec-compare#33. .app-sidenav was a dead class from the pre-migration
+   wrapper. */
 
 /* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
    switch SPA state rather than navigate, so they're <button>s. Replicate the
@@ -596,17 +593,9 @@ a.anchor:hover {
    sidenav yields to the drawer, and the two-pane inspectors stack — aligned so
    nav and content reflow at the same width. */
 @media (max-width: 800px) {
-  .app-shell {
-    /* minmax(0, 1fr), not a bare 1fr: bare `1fr` resolves to minmax(auto, 1fr),
-       whose auto minimum refuses to shrink below the content's min-content — so a
-       wide child (the compare filmstrip) blows the single column past the viewport
-       and the whole page scrolls sideways. minmax(0, …) lets the column shrink and
-       the child's own overflow-x:auto take over. (Desktop already uses minmax(0,1fr).) */
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .app-sidenav {
-    display: none;
-  }
+  /* .app-shell collapse is the vendored sheet's job (named lines intact);
+     the old nameless local re-template lived here — see the app-shell note
+     above. */
   .player-body {
     grid-template-columns: 1fr;
   }
