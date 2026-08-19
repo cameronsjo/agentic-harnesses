@@ -1,5 +1,31 @@
 # Artificer adaptations
 
+## 2026-08-19 — on-device fixes: container gutter + drawer toggle pill
+
+Cameron's on-device check on the mobile-fixes 0.22.1 build (previous entry)
+found two remaining bugs, both also present on spec-compare — see #21.
+
+- **Edge-butted content:** `.app`'s safe-area shim
+  (`padding-left: env(safe-area-inset-left, 0px)`) is a longhand that
+  overrides the vendored `.container { padding-inline: var(--s-lg) }` at
+  equal specificity (later sheet). In portrait, the inset is 0, so the
+  longhand zeroed the gutter entirely and content butted the viewport
+  edges. Fixed to `max(var(--s-lg), env(safe-area-inset-left))` (and the
+  `-right` counterpart) in `site/src/styles.css` — the gutter floor never
+  drops below the app's own `--s-lg`, and only grows for a real notch/pill
+  inset.
+- **Giant drawer theme toggle:** the `.sidenav__footer` toggle sits inside
+  `.sidenav`, so `.sidenav button { width: 100%; background: none; border:
+  0; font: inherit }` (upstream) stripped the toggle's pill styling and
+  stretched it full-width. Added `.sidenav__footer .theme-toggle` in
+  `site/src/styles.css` to restore `width: auto`, the raised background,
+  border, and padding — wins on specificity (two classes vs. one class +
+  tag) regardless of source order.
+- **Shims added to the #21 tracker:** the container-gutter `max()` and the
+  `.sidenav__footer .theme-toggle` pill restoration join the prior round's
+  shims — all rules the published 0.22.1 npm package doesn't cover.
+- **Lane:** 3.
+
 ## 2026-08-18 — v0.21.0 → v0.22.1, mobile shims + canonical theme toggle
 
 - **Upstream issues:** cameronsjo/agentic-harnesses#20 (brand ellipsis + legacy

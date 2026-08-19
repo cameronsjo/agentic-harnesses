@@ -11,8 +11,12 @@ body {
    vertical rhythm here so the shell doesn't fight the system container. */
 .app {
   padding-block: var(--s-lg) var(--s-2xl);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  /* max(), not env() alone: .app is also .container.container--lg, whose
+     padding-inline: var(--s-lg) these longhands override at equal
+     specificity (later sheet). A bare env() zeroed the gutter in portrait
+     (no inset), butting content against the viewport edges. */
+  padding-left: max(var(--s-lg), env(safe-area-inset-left));
+  padding-right: max(var(--s-lg), env(safe-area-inset-right));
 }
 
 /* Safe-area shims for the mobile drawer, mirrored from upstream Artificer's
@@ -66,6 +70,17 @@ body {
   font-family: var(--font-interface);
   font-size: var(--t-label-md-size);
   color: var(--fg-secondary);
+}
+/* .sidenav button strips/stretches any button in the nav — restore the toggle pill in the footer row (upstream gap, being fixed in a-d-s) */
+.sidenav__footer .theme-toggle {
+  width: auto;
+  flex: none;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  font-family: var(--font-interface);
+  font-size: var(--t-label-xs-size);
+  font-weight: 500;
 }
 
 /* ---- appbar + intro band ---- */
