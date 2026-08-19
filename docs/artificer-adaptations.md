@@ -15,10 +15,12 @@
   paint size.
 - **Brand ellipsis (#20):** mirrored upstream's `.appbar__brand.wordmark` /
   `.appbar__brand > .wordmark` ellipsis-carrier rules + the coarse-pointer
-  `min-width: 44px` re-floor into `site/src/styles.css` (this repo's pin
-  predates 0.22.1 where those rules ship). Fixes a mid-glyph hard-clip on
-  ~440px viewports — `text-overflow` is inert on the flex `.appbar__brand`
-  container, so the truncation needed a block-level carrier.
+  `min-width: 44px` re-floor into `site/src/styles.css`. **Verified against
+  the vendored `public/artificer/artificer.css` at 0.22.1: these rules are
+  not in the published npm package** — they exist only in upstream's
+  in-progress source. Fixes a mid-glyph hard-clip on ~440px viewports —
+  `text-overflow` is inert on the flex `.appbar__brand` container, so the
+  truncation needed a block-level carrier.
 - **Safe-area (new this session):** added `viewport-fit=cover` to
   `site/index.html`'s viewport meta (was entirely missing, so
   `env(safe-area-inset-*)` resolved to 0 everywhere). Mirrored upstream's
@@ -35,15 +37,17 @@
   (v0.19.0+) auto-observes SPA mounts and injects the glyph itself, keeping
   every instance on the page in sync with no React state. Mobile placement:
   the topbar instance hides `<=640px`; a new `.sidenav__footer` row in the
-  drawer (mirrored from upstream's own #17 pattern, shipped at 0.22.1)
-  becomes the mobile home for the control. `HarnessNav` takes an optional
-  `footer` prop so only the drawer instance renders the footer row.
+  drawer (mirrored from upstream's own #17 pattern — also verified absent
+  from the published 0.22.1) becomes the mobile home for the control.
+  `HarnessNav` takes an optional `footer` prop so only the drawer instance
+  renders the footer row.
 - **Shims are temporary — see #21.** `.compare-dot`'s floor, the brand
-  ellipsis carriers, and the safe-area padding are all rules this repo's
-  Artificer pin doesn't yet ship (or, for `.sidenav__footer`, hadn't yet
-  adopted). Retire each at the first Artificer bump past 0.22.1 that either
-  ships the rule natively or supersedes it — diff against the newly-vendored
-  `public/artificer/artificer.css` rather than assuming.
+  ellipsis carriers, the `.sidenav__footer` rules, and the safe-area padding
+  are all rules the *published* 0.22.1 npm package doesn't yet ship (checked
+  directly against `site/public/artificer/artificer.css` after vendoring,
+  not assumed from the version number). Retire each at the first Artificer
+  publish that ships the rule natively or supersedes it — re-diff against
+  the newly-vendored `public/artificer/artificer.css` at that time.
 - **Lane:** 3 (no palette/token value changes; all shims mirror upstream
   selectors and rule shapes verbatim).
 

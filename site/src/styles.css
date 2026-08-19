@@ -50,9 +50,10 @@ body {
     display: none;
   }
 }
-/* .sidenav__footer, mirrored from upstream Artificer >=0.22.1
-   (src/artificer.css) since this repo's pin predates it. Retire once the
-   pinned version ships it (docs/artificer-adaptations.md). */
+/* .sidenav__footer, mirrored from upstream Artificer's source (not yet in
+   the 0.22.1 npm publish this repo pins — verified against the vendored
+   public/artificer/artificer.css). Retire once a future publish ships it
+   (docs/artificer-adaptations.md). */
 .sidenav__footer {
   margin-top: auto;
   display: flex;
@@ -78,14 +79,15 @@ body {
   font-size: inherit;
   letter-spacing: inherit;
 }
-/* Ellipsis carriers, mirrored from upstream Artificer >=0.22.1 (its
-   .appbar__brand.wordmark / .appbar__brand > .wordmark rules, filed as
-   agentic-harnesses#20). This site's brand link composes as
-   .appbar__brand > span.whimsy.wordmark, so it needs the child-carrier
-   form: the .wordmark child yields its trailing content (including the
-   burnished stop) to text-overflow: ellipsis before the flex container
-   hard-clips it mid-glyph. Retire once this repo's Artificer pin ships
-   these rules upstream (tracked in docs/artificer-adaptations.md). */
+/* Ellipsis carriers, mirrored from upstream Artificer's source (its
+   .appbar__brand.wordmark / .appbar__brand > .wordmark rules; not yet in
+   the 0.22.1 npm publish this repo pins — verified against the vendored
+   public/artificer/artificer.css). Filed as agentic-harnesses#20. This
+   site's brand link composes as .appbar__brand > span.whimsy.wordmark, so
+   it needs the child-carrier form: the .wordmark child yields its trailing
+   content (including the burnished stop) to text-overflow: ellipsis before
+   the flex container hard-clips it mid-glyph. Retire once a future publish
+   ships these rules (tracked in docs/artificer-adaptations.md). */
 .appbar__brand {
   white-space: nowrap;
 }
