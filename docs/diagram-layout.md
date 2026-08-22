@@ -47,6 +47,26 @@ So the gutter is `round(APEX_FRAC · ctrlDist_outer) + LABEL_ROOM` (`APEX_FRAC =
 `LABEL_ROOM` / `MIN_SIDE` for margin, **not** `LANE_BASE` / `LANE_STEP` — those
 control arc fan spacing (readability), and shrinking them re-crowds the arcs.
 
+## A layer above: the viewport frame
+
+These three rules govern the SVG's **intrinsic** framing — the viewBox the renderer
+emits. Since issue #3 the single-harness, Hooks, and Sequence panels additionally sit
+inside a `GraphViewport` (`site/src/GraphViewport.tsx`), which fits, pans, and zooms
+that finished SVG by transforming a wrapper element around it.
+
+The two layers are independent, and that matters when a diagram *looks* wrong:
+
+- **Lopsided boxes, tangled arcs, labels colliding** → an intrinsic-framing problem.
+  One of the three rules above is slipping. Fix it in `LoopGraph.tsx`.
+- **Legible but too small, or scrolled off-frame** → a viewport-fit problem, not a
+  layout one. The fit scale is `min(paneW/contentW, paneH/contentH, 1)`, so a tall
+  graph in a short pane fits small *by design* and the user zooms. Check
+  `site/src/viewport.ts` and the pane height in `.graph-viewport`.
+
+The Compare grid deliberately has **no** viewport frame — it scale-fits each column so
+the set stays glanceable (issue #7 covers panning across that row). So a compare
+column that reads small is still an intrinsic-framing question.
+
 ## Verifying
 
 Run `npm run dev` and check both contexts:

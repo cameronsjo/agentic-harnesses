@@ -6,6 +6,8 @@ All notable changes to this project are documented here. Format loosely follows
 ## [Unreleased]
 
 ### Added
+- **Pan / zoom / fit controls** on the Loop, Hooks, and Sequence diagram panels (#3): drag to pan, ctrl-or-pinch wheel and +/− to zoom, Fit to reframe, all keyboard-reachable. Implemented as a content-agnostic `GraphViewport` that transforms a wrapper rather than the SVG's `viewBox`, so the diagrams stay pure renderers and the same frame can mount around the compare row for #7. Pan/zoom math is pure and unit-tested in `site/src/viewport.ts`.
+- A **social preview image for this project** (`site/public/og-image.{svg,png}`), replacing the design system's own marketing card that the site had inherited by pointing at the vendored package assets.
 - Four new harnesses onboarded (4 → 8): **Claw Code** (Rust), **claux** (Rust), **Hermes Agent** (Python), **llm-tui** (Rust) — loop specs, profiles, and matrix rows/columns, all source-grounded at pinned SHAs. Documented two **exclusions** (`llm-mux`, `openclaw`) in `docs/methodology.md` for lacking a coding loop of their own.
 - A third **exclusion** category in `docs/methodology.md` — *orchestration layers above the loop*: **`genie`**, **`Trellis`**, and **`loom`** drive Claude Code and Codex as their execution substrate and own no model call, so the loop worth visualizing belongs to the substrate — already onboarded here in Claude Code's case, out of scope in Codex's. Records the **dependency-manifest probe** (a project that calls a model has a model client) as the test that decided all three, dated so the reads can be re-run.
 - Repo scaffold: README, LICENSE (MIT), CONTRIBUTING, docs structure, `.gitignore`.
@@ -24,6 +26,7 @@ All notable changes to this project are documented here. Format loosely follows
 
 ### Changed
 
+- Visualizer: brought the **Across the wire**, **Sequence**, and **curl walkthrough** views onto the shared design language — they predated it and still wore the older surface. Hand-rolled cards replaced by the `.card` primitive, tag rows by `.cluster`, and anchor words added to the 10 wire notes and 4 curl annotations that carried none.
 - Visualizer: applied the Artificer design system properly within the existing
   layout — a masthead (kicker / wordmark / lede / meta badges), anchor words
   across prose, system `.card` / `.container--lg` / `.dot` utilities replacing
@@ -41,3 +44,9 @@ All notable changes to this project are documented here. Format loosely follows
   `site/index.html` so the dark-first page no longer risks a theme flash on reload,
   and `scripts/revendor-artificer.sh` to reproduce the fetch. See
   `docs/artificer-adaptations.md`.
+
+### Fixed
+
+- **Social preview cards rendered with no image.** Both `og:image` and `twitter:image` pointed at an SVG, a format X and LinkedIn reject outright. Now a 1200×630 PNG at an absolute URL, with the `og:url` / `og:image:type` / `width` / `height` / `alt` tags that were missing.
+- **Site metadata still said four harnesses** in three places (`description`, `og:description`, `twitter:description`) and named only the original four, when eight ship in `site/src/data/loops/`. The pass that corrected stale counts in `CONTRIBUTING.md` and `docs/wire.md` missed `site/index.html`.
+- **The Sequence view printed literal `**` asterisks** in its message inspector. Its notes come from the loop spec's `node.note`, which carries anchor markers — the Loop view renders the identical strings through `Anchored`, so the two views disagreed on the same data.

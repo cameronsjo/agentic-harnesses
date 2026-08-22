@@ -73,6 +73,8 @@ The `site/` app animates each loop and compares scenarios across harnesses. Navi
 - **Hooks & events** — Claude Code's lifecycle hooks overlaid on its loop (click a node to see what fires) — Claude Code only
 - **Across the wire** — Claude Code's request/response, as a **curl walkthrough** (hand-run the round-trips) or a layered request-assembly view, with cache breakpoints — Claude Code only
 
+The **Loop**, **Sequence**, and **Hooks** diagrams sit in a pan/zoom frame: drag to pan, `+`/`−` or ctrl-scroll to zoom, **Fit** to reframe, and arrow keys once the frame has focus. Each also expands to a full-screen viewer. **Compare all** deliberately keeps its scale-to-fit columns so the set stays glanceable.
+
 ```bash
 cd site
 npm install

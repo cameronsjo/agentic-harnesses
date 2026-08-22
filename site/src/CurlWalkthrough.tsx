@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import data from './data/wire/curl-walkthrough.json'
 import { usePlayerTimer } from './player'
 import { TransportBar } from './controls'
+import { Anchored } from './Anchored'
 
 interface Line {
   kind: string
@@ -46,7 +47,11 @@ export function CurlWalkthrough() {
                   {ln.text}
                   {active && <span className="tcursor">▋</span>}
                 </pre>
-                {ln.annotation && <div className="tline-annot">↳ {ln.annotation}</div>}
+                {ln.annotation && (
+                  <div className="tline-annot">
+                    ↳ <Anchored text={ln.annotation} />
+                  </div>
+                )}
                 {ln.ref && <code className="source-ref tline-ref">{ln.ref}</code>}
               </div>
             )

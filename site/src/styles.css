@@ -368,6 +368,11 @@ body {
   min-height: 0;
   margin-bottom: 0;
 }
+/* Inside an inspector the meta row is the first child, so it supplies no margin
+   of its own — the panel's own spacing already positions it. */
+.harness-meta--flush {
+  margin: 0;
+}
 .repo-link {
   color: var(--accent);
   font-size: var(--t-body-md-size);
@@ -393,11 +398,14 @@ a.anchor:hover {
   gap: var(--s-lg);
   align-items: start;
 }
-/* .card supplies bg / border / radius / padding; keep only the layout. */
+/* .card supplies bg / border / radius / padding. Every pane now holds a
+   GraphViewport, which frames and clips its own diagram, so the pane wants
+   neither the centering nor the horizontal scroll it used to carry — those
+   competed with the frame for the same overflow. Block layout and visible
+   overflow are the CSS defaults, so all that is left here is the positioning
+   context the expand trigger anchors to. */
 .graph-pane {
-  display: flex;
-  justify-content: center;
-  overflow-x: auto;
+  position: relative;
 }
 
 /* Loop-graph node label — rendered in a foreignObject (see LoopGraph) so text
@@ -430,12 +438,47 @@ a.anchor:hover {
   display: block;
 }
 
+/* ---- pan / zoom / fit frame (GraphViewport, issue #3) ---- */
+/* The frame clips; the content layer is absolutely positioned so its natural
+   size never drives the frame's height, and transform-origin 0 0 makes the
+   component's `translate(x,y) scale(k)` map content point p to x + k·p. */
+.graph-viewport {
+  position: relative;
+  overflow: hidden;
+  height: clamp(340px, 58vh, 620px);
+  cursor: grab;
+  /* Vertical page scroll still belongs to the page; horizontal drag is ours. */
+  touch-action: pan-y;
+}
+.graph-viewport:active {
+  cursor: grabbing;
+}
+.graph-viewport__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  /* Deliberately untransitioned: a transition would lag the drag, and its
+     absence is also how this honors prefers-reduced-motion (issue #3). */
+}
+/* .cluster supplies flex + wrap + align + gap; --gap is its documented hook for
+   a tighter row, and .cluster--end handles the alignment. */
+.graph-viewport__controls {
+  --gap: var(--s-xs);
+  margin-top: var(--s-xs);
+}
+.graph-viewport__level {
+  font-family: var(--font-mono);
+  font-size: var(--t-label-xs-size);
+  color: var(--fg-secondary);
+  min-width: 4ch;
+  text-align: center;
+}
+
 /* ---- expand-to-modal (GraphModal) ---- */
 /* Trigger parked in the graph pane's corner — always visible (.btn--secondary
-   gives it a solid chip so it reads as a control), just made compact. */
-.graph-pane {
-  position: relative;
-}
+   gives it a solid chip so it reads as a control), just made compact. It
+   anchors to .graph-pane's positioning context, declared above. */
 .graph-expand {
   /* Position + gap only — size (padding + font) comes from .btn--sm now (#91 absorbed). */
   position: absolute;
@@ -602,12 +645,13 @@ a.anchor:hover {
   .inspector {
     position: static;
   }
-  /* Shrink single-view diagrams (loop / sequence / hooks all wrap their SVG in
-     .graph-pane) to the viewport instead of demanding sideways scroll. Desktop
-     keeps full size + the pane's overflow-x scroll; richer pan/zoom is issue #3. */
-  .graph-pane svg {
-    max-width: 100%;
-    height: auto;
+  /* The old rule here capped diagram SVGs to the viewport width so a narrow
+     screen didn't demand sideways scroll. GraphViewport's fit now does that
+     job — and better, since it scales rather than clipping — so the cap is
+     gone: it would have fought every zoom above 100%. */
+  /* Shorter frame on a phone so the diagram doesn't eat the whole screen. */
+  .graph-viewport {
+    height: clamp(260px, 45vh, 380px);
   }
 }
 
@@ -687,11 +731,9 @@ a.anchor:hover {
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: var(--s-md);
 }
+/* .card supplies bg / border / radius / padding; keep only the layout — same
+   split the loop pane uses. */
 .wire-col {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--s-md);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -725,10 +767,10 @@ a.anchor:hover {
 .wire-label {
   font-size: var(--t-label-md-size);
 }
+/* .cluster supplies flex + wrap + align + gap; only the tighter gap is local.
+   Redeclaring display/align here would just shadow the primitive. */
 .wire-tags {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  --gap: var(--s-xs);
 }
 .wire-dim {
   opacity: 0.28;

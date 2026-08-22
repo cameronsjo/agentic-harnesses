@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import { sharedScenarios } from './data'
 import type { LoopSpec } from './types'
 import { usePlayerTimer } from './player'
-import { ExpandButton, TabPicker, TransportBar } from './controls'
+import { TabPicker, TransportBar } from './controls'
 import { GraphModal } from './GraphModal'
 import { PARTICIPANTS, projectScenario, type Participant } from './sequence'
+import { Anchored } from './Anchored'
+import { GraphViewport } from './GraphViewport'
 
 const MARGIN = 70
 const LANE_GAP = 180
@@ -28,10 +30,16 @@ interface Props {
 
 /** A message-passing-over-time view of a loop scenario: lifelines + animated arrows. */
 export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
-  const messages = useMemo(() => {
-    const sc = spec?.scenarios.find((s) => s.id === scenarioId) ?? spec?.scenarios[0]
-    return spec && sc ? projectScenario(spec, sc) : []
-  }, [spec, scenarioId])
+  // Falls back to the first scenario so an id from another harness's tab set
+  // still renders something rather than blanking the view.
+  const scenario = useMemo(
+    () => spec?.scenarios.find((s) => s.id === scenarioId) ?? spec?.scenarios[0],
+    [spec, scenarioId],
+  )
+  const messages = useMemo(
+    () => (spec && scenario ? projectScenario(spec, scenario) : []),
+    [spec, scenario],
+  )
 
   // Floor at 1 so a scenario that projects to no messages can't underflow the timer
   // (mirrors ScenarioCompare's maxSteps guard). active stays undefined and renders nothing.
@@ -125,7 +133,7 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
   )
 
   const messageCard = active && (
-    <div className="node-card">
+    <div className="card card--active node-card">
       <div className="node-card-head">
         <b>
           {active.from} → {active.to}
@@ -133,7 +141,14 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
       </div>
       <div className="node-kind">{active.label}</div>
       {active.sourceRef && <code className="source-ref">{active.sourceRef}</code>}
-      {active.note && <p className="node-note">{active.note}</p>}
+      {/* Notes come from the loop spec's node.note, which carries **…** anchor
+          markers — rendered raw they showed literal asterisks instead of the
+          bolded scan anchors LoopPlayer gets from the same strings. */}
+      {active.note && (
+        <p className="node-note">
+          <Anchored text={active.note} />
+        </p>
+      )}
     </div>
   )
 
@@ -141,14 +156,21 @@ export function SequenceView({ spec, scenarioId, onScenarioChange }: Props) {
     <section className="seq-view">
       <div className="compare-controls">{controls}</div>
 
+      {/* Same scenario sentence the loop view leads with, so switching tabs
+          keeps the reader oriented on what is being stepped through. */}
+      {scenario && (
+        <p className="scenario-title">
+          <Anchored text={scenario.title} />
+        </p>
+      )}
+
       <div className="seq-body">
-        <div className="card graph-pane">
-          <ExpandButton onClick={() => setExpanded(true)} />
+        <GraphViewport label={`${spec.displayName} sequence diagram`} onExpand={() => setExpanded(true)}>
           {diagram}
-        </div>
+        </GraphViewport>
 
         <aside className="inspector">
-          <div className="harness-meta" style={{ margin: 0 }}>
+          <div className="harness-meta harness-meta--flush">
             <span className="lang-badge">{spec.language}</span>
             <span className="loop-style">{spec.loopStyle}</span>
           </div>
