@@ -51,6 +51,33 @@ export function DisclosureView() {
       </section>
 
       <section className="stack stack--xs">
+        <h2 className="t-headline-md">Analytics &amp; hosting</h2>
+        <p className="t-body-md">
+          This site uses{' '}
+          <a
+            className="anchor"
+            href="https://www.cloudflare.com/web-analytics/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Cloudflare Web Analytics
+          </a>{' '}
+          — <b className="anchor">cookieless</b>, aggregate page-view counts only; no cookies are
+          set and no visitor profiles are built. Hosting is <b className="anchor">GitHub Pages</b>,
+          which logs visitor IP addresses per{' '}
+          <a
+            className="anchor"
+            href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub&rsquo;s privacy statement
+          </a>
+          .
+        </p>
+      </section>
+
+      <section className="stack stack--xs">
         <h2 className="t-headline-md">Affiliations &amp; marks</h2>
         <p className="t-body-md">
           No affiliation with, sponsorship by, or endorsement from any project shown. The author
