@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#292c33"></rect>
+
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#4a4f5c" stroke-width="1"></rect>
+  <rect x="48" y="48" width="1104" height="534" fill="none" stroke="#5a3a9a" stroke-width="0.5"></rect>
+
+  <text x="80" y="106" fill="#b8cad4" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="18" letter-spacing="3">
+    HOW CODING AGENTS RUN THEIR LOOPS
+  </text>
+
+  <text x="80" y="236" fill="#e8e6e1" font-family="'JetBrains Mono', ui-monospace, monospace" font-weight="700" font-size="82" letter-spacing="-2">
+    Agentic Harness
+  </text>
+  <text x="80" y="326" fill="#e8e6e1" font-family="'JetBrains Mono', ui-monospace, monospace" font-weight="700" font-size="82" letter-spacing="-2">
+    Loops<tspan fill="#dbbb6f">.</tspan>
+  </text>
+
+  <text x="80" y="400" fill="#c5c8c6" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="27" letter-spacing="0">
+    <tspan fill="#dbbb6f">Eight</tspan> harnesses — run loops, tool
+  </text>
+  <text x="80" y="438" fill="#c5c8c6" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="27" letter-spacing="0">
+    dispatch, and approval gates, all
+  </text>
+  <text x="80" y="476" fill="#c5c8c6" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="27" letter-spacing="0">
+    reconstructed from <tspan fill="#c4808a">pinned source</tspan>.
+  </text>
+
+  <g font-family="'JetBrains Mono', monospace" font-size="15" letter-spacing="1" fill="#b8cad4">
+    <text x="80" y="524">Claude Code</text>
+    <text x="80" y="552">OpenCode</text>
+    <text x="272" y="524">Code Puppy</text>
+    <text x="272" y="552">Claw Code</text>
+    <text x="464" y="524">Hermes Agent</text>
+    <text x="464" y="552">llm-tui</text>
+    <text x="656" y="524">claux</text>
+    <text x="656" y="552">pi</text>
+  </g>
+
+  <g transform="translate(852, 150)">
+    <rect x="0" y="0" width="220" height="330" rx="6" fill="#313540"></rect>
+    <rect x="2" y="2" width="216" height="326" rx="5" fill="none" stroke="#5a3a9a" stroke-width="1"></rect>
+
+    <g stroke="#5a7a8a" stroke-width="2.5" fill="none" stroke-linecap="square">
+      <path d="M 110 74 V 110"></path>
+      <path d="M 110 152 V 188"></path>
+      <path d="M 110 230 V 266"></path>
+    </g>
+    <g fill="#5a7a8a">
+      <path d="M 110 116 l -5 -9 h 10 z"></path>
+      <path d="M 110 194 l -5 -9 h 10 z"></path>
+      <path d="M 110 272 l -5 -9 h 10 z"></path>
+    </g>
+
+    <path d="M 158 278 h 30 a 8 8 0 0 0 8 -8 V 54 a 8 8 0 0 0 -8 -8 h -30"
+          fill="none" stroke="#dbbb6f" stroke-width="2.5" stroke-linecap="square"></path>
+    <path d="M 164 46 l 9 -5 v 10 z" fill="#dbbb6f"></path>
+
+    <g stroke="#4a4f5c" stroke-width="1">
+      <rect x="40" y="32" width="118" height="42" rx="4" fill="#292c33"></rect>
+      <rect x="40" y="110" width="118" height="42" rx="4" fill="#292c33"></rect>
+      <rect x="40" y="188" width="118" height="42" rx="4" fill="#292c33"></rect>
+      <rect x="40" y="266" width="118" height="42" rx="4" fill="#292c33"></rect>
+    </g>
+
+    <g font-family="'JetBrains Mono', monospace" font-size="13" fill="#c5c8c6" text-anchor="middle">
+      <text x="99" y="58">prompt</text>
+      <text x="99" y="136">model</text>
+      <text x="99" y="214">tools</text>
+      <text x="99" y="292">result</text>
+    </g>
+
+    <circle cx="52" cy="53" r="3" fill="#4a8a5e"></circle>
+    <circle cx="52" cy="131" r="3" fill="#dbbb6f"></circle>
+    <circle cx="52" cy="209" r="3" fill="#c4808a"></circle>
+    <circle cx="52" cy="287" r="3" fill="#5a7a8a"></circle>
+  </g>
+</svg>

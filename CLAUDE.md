@@ -19,7 +19,14 @@ SPA renders loop / sequence / hooks / wire diagrams from JSON specs; `docs/` and
 - `site/public/artificer/` — Artificer design system (CSS + `<script>` helpers), **generated**
   from the pinned npm package `@cameronsjo/artificer` by `scripts/vendor-artificer.mjs`
   (runs on `predev`/`prebuild`). The `*.{css,js,json}` are gitignored; only `assets/`
-  (fonts, favicon, og) is committed. Bump the version in `site/package.json`, not the files.
+  (fonts, favicon) is committed. Bump the version in `site/package.json`, not the files.
+  Its `assets/og-image.svg` is the **design system's own** marketing card — not this
+  site's. Pointing the meta tags at it once shipped a social preview advertising
+  Artificer; this site's card is `site/public/og-image.{svg,png}`.
+- `site/public/og-image.{svg,png}` — this site's social preview. The SVG is the source;
+  the committed PNG is generated from it (`rsvg-convert -w 1200 -h 630`) because X and
+  LinkedIn reject SVG. Re-render the PNG whenever the SVG changes — the command is in a
+  comment beside the meta tags in `site/index.html`.
 - `sources/<harness>/` — pinned source clones the diagrams cite (`file:line`).
 - `docs/` — methodology, comparison, per-harness writeups.
 
