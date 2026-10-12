@@ -87,6 +87,13 @@ body {
   grid-template-columns: [bleed-start] 0 [content-start] minmax(0, 1fr) [content-end] 0 [bleed-end];
   column-gap: 0;
   padding-block-start: 0;
+  /* With the gutter gone, the content's own edge is also the edge of
+     artificer's `overflow-x: clip`, which cut the outer half of focus rings
+     on the leftmost controls. Widen the clip box (the padding box) by one ring
+     and pull it back with an equal negative margin: content stays put. */
+  --ring-room: calc(var(--focus-width) + var(--focus-offset));
+  padding-inline: var(--ring-room);
+  margin-inline: calc(-1 * var(--ring-room));
 }
 
 /* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
