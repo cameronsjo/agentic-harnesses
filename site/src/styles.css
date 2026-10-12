@@ -47,9 +47,15 @@ body {
 .intro {
   margin-block: var(--s-lg) var(--s-xl);
 }
+/* .lede is the page <h1> (App.tsx). Reset the browser/Artificer heading
+   face, size, and weight so it keeps reading as the body-lg sentence it is;
+   the bold anchor words carry the emphasis. */
 .lede {
   margin: 0;
   max-width: 64ch;
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: normal;
 }
 .masthead-meta {
   gap: var(--s-xs);
@@ -67,6 +73,21 @@ body {
    vendored sheet already does both correctly. Same bug/fix as
    spec-compare#33. .app-sidenav was a dead class from the pre-migration
    wrapper. */
+
+/* Zero the content gutter. Since 0.24 .app-shell__content is a bleed grid with
+   a fixed var(--s-lg) gutter track on each side, built for a full-page shell.
+   Here the shell sits inside .app (.container--lg), which already owns the
+   inline gutter, and AppShell's gap="var(--s-lg)" spaces it from the rail —
+   so the bleed gutter tripled the rail-to-content gap on desktop and narrowed
+   the phone column by 48px. The [bleed-*] lines stay, so .full-bleed works.
+   padding-block-start: 0 tops the content flush with the sidenav.
+   column-gap: 0 because App.tsx also puts .stack on this element, and .stack's
+   `gap` doubles as a column gap in a grid — 24px beside each gutter track. */
+.app .app-shell__content {
+  grid-template-columns: [bleed-start] 0 [content-start] minmax(0, 1fr) [content-end] 0 [bleed-end];
+  column-gap: 0;
+  padding-block-start: 0;
+}
 
 /* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
    switch SPA state rather than navigate, so they're <button>s. Replicate the
@@ -296,14 +317,10 @@ body {
    equal specificity means source order decides, and the desktop shorthand re-sets
    flex-basis. Mandatory snap is scoped here so it never fights the desktop filmstrip. */
 @media (max-width: 800px) {
-  /* Full-bleed: break the card scroller out of the container's inline gutter so
-     cards span the whole screen edge-to-edge (their own padding insets the
-     content). The negative margin exactly cancels .container's padding-inline, so
-     the element lands flush at the viewport edges — no page overflow. The controls,
-     title, and dots stay siblings outside this rule, keeping the 24px gutter. */
-  .compare-scroll {
-    margin-inline: calc(-1 * var(--s-lg));
-  }
+  /* No full-bleed breakout here: .app-shell__content clips overflow-x
+     (artificer.css), so a negative margin past the page gutter gets cut off and
+     the card loses its left padding. Each card fills the gutter-to-gutter
+     column instead, lined up with the controls above it. */
   .compare-grid {
     scroll-snap-type: x mandatory;
     /* One card per screen — drop the default stretch so each card is only as tall

@@ -224,12 +224,14 @@ export function App() {
       ) : (
         <>
           <section className="intro stack stack--sm">
-            <p className="lede t-body-lg">
+            {/* The page's one <h1>: the lede is what the page is about. Styled as
+                body text by .lede, not as a headline. */}
+            <h1 className="lede t-body-lg">
               Coding agents, one <b className="anchor">loop</b> apiece. See how each harness{' '}
               <b className="anchor">runs a turn</b>, <b className="anchor">dispatches tools</b>, and{' '}
               <b className="anchor">gates the dangerous ones</b> — all{' '}
               <b className="anchor">reconstructed from pinned source</b>.
-            </p>
+            </h1>
             <div className="masthead-meta cluster" aria-label="About this build">
               <span className="badge badge--ghost">v1</span>
               <span className="badge badge--ghost">{specs.length} harnesses</span>
@@ -337,40 +339,40 @@ export function App() {
  */
 function AppFooter() {
   return (
+    // No .container wrapper: .app is already .container--lg, and a second
+    // .container indents the footer 24px past the appbar rule.
     <footer className="colophon">
-      <div className="container">
-        <div className="colophon__spine">
-          <span>
-            Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
-            <a
-              className="anchor"
-              href="https://cameronsjo.github.io/artificer/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Artificer design system
-            </a>
-          </span>
-          {/* Seasonal greeting — Whimsy.greeting() swaps [data-whimsy-greeting] by date:
-              June → "happy pride" (rainbow wave); off-season → the inline fallback
-              (graceful with JS off). greeting() runs from a mount effect in App()
-              (Whimsy's DOMContentLoaded auto-init fires before React mounts this
-              footer). */}
-          <span data-whimsy-greeting data-whimsy-greeting-class="whimsy--glacial">
-            kindness is a choice.
-          </span>
-          <nav className="cluster" aria-label="About this site">
-            <a className="anchor" href="#about">
-              About
-            </a>
-            <a className="anchor" href="#disclosure">
-              Disclosure
-            </a>
-            <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
-              Open an issue
-            </a>
-          </nav>
-        </div>
+      <div className="colophon__spine">
+        <span>
+          Independent reconstruction · built with <b className="anchor">Claude&nbsp;Code</b> on the{' '}
+          <a
+            className="anchor"
+            href="https://cameronsjo.github.io/artificer/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Artificer design system
+          </a>
+        </span>
+        {/* Seasonal greeting — Whimsy.greeting() swaps [data-whimsy-greeting] by date:
+            June → "happy pride" (rainbow wave); off-season → the inline fallback
+            (graceful with JS off). greeting() runs from a mount effect in App()
+            (Whimsy's DOMContentLoaded auto-init fires before React mounts this
+            footer). */}
+        <span data-whimsy-greeting data-whimsy-greeting-class="whimsy--glacial">
+          kindness is a choice.
+        </span>
+        <nav className="cluster" aria-label="About this site">
+          <a className="anchor" href="#about">
+            About
+          </a>
+          <a className="anchor" href="#disclosure">
+            Disclosure
+          </a>
+          <a className="anchor" href="https://github.com/cameronsjo/agentic-harnesses/issues">
+            Open an issue
+          </a>
+        </nav>
       </div>
     </footer>
   )

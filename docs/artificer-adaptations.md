@@ -1,5 +1,13 @@
 # Artificer adaptations
 
+## 2026-10-12 — v0.24.2 → v0.27.0, facelift
+
+**Ledger walk.** `primitives.json` at 0.27.0 records no breaking events between 0.24.2 and 0.27.0. The only nearby event, 0.24.0's removal of the copy-consumed React `useTheme` hook, was crossed in the 0.24.1 migration above, and this repo uses the compiled `ThemeToggle`.
+
+**Local override, filed upstream.** `.app-shell__content` is a bleed grid with a fixed `var(--s-lg)` gutter track on each side and no knob to change it. Here the shell sits inside `.app.container--lg`, which already owns the inline gutter. `.stack`'s `gap` on the same element also became a 24px column gap. The two together put 72px between the rail and the content and cost the phone column 48px. `src/styles.css` zeroes the gutter tracks and the column gap under `.app .app-shell__content`. Upstream: cameronsjo/artificer-design-system#532.
+
+**Also fixed.** The phone compare-card breakout is gone: `.app-shell__content`'s `overflow-x: clip` cut it off. The transport's play button is `.btn--primary`; as a bare `.btn` it painted the UA grey fill. The lede is the page `<h1>`. The footer dropped its inner `.container`.
+
 ## 2026-08-19 — v0.23.0 → v0.24.1, chrome components adopted
 
 Migrated App.tsx onto `@cameronsjo/artificer/react`'s compiled chrome
