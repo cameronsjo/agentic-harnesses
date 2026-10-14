@@ -1,5 +1,17 @@
 # Artificer adaptations
 
+## 2026-10-14 — Remaining sidenav button shim retired (#19)
+
+Artificer 0.27.0 already ships the SPA button form of its sidenav grammar
+(#79). The local copy is removed, including its stale font override and
+unconditional hover rule; native styling now owns resting, hover, focus,
+and current-item states. The native hover rule is gated to hover-capable
+pointers instead of leaving a touch highlight latched.
+
+The hamburger (#114) and responsive shell (#116) shims were already retired
+in the August chrome-component adoption below. The app-specific content
+gutter correction from October (#532) stays; it is not a duplicated primitive.
+
 ## 2026-10-12 — v0.24.2 → v0.27.0, facelift
 
 **Ledger walk.** `primitives.json` at 0.27.0 records no breaking events between 0.24.2 and 0.27.0. The only nearby event, 0.24.0's removal of the copy-consumed React `useTheme` hook, was crossed in the 0.24.1 migration above, and this repo uses the compiled `ThemeToggle`.
