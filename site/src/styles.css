@@ -256,6 +256,14 @@ body {
 .compare-scroll {
   position: relative;
 }
+.view-tabs-scroll {
+  position: relative;
+}
+.view-tabs-scroll .view-tabs-fade {
+  bottom: 0;
+  width: var(--s-lg);
+  z-index: var(--z-raised);
+}
 .compare-fade {
   position: absolute;
   top: 0;
