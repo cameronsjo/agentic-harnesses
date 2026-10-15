@@ -96,45 +96,6 @@ body {
   margin-inline: calc(-1 * var(--ring-room));
 }
 
-/* Sidenav button shim — Artificer styles only `.sidenav a`, but these items
-   switch SPA state rather than navigate, so they're <button>s. Replicate the
-   link grammar (resting / hover / focus / active rail) with the same tokens.
-   (Filed upstream via /artificer-feedback — sidenav assumes nav <a>.) */
-.sidenav button {
-  display: flex;
-  align-items: center;
-  gap: var(--s-sm);
-  width: 100%;
-  min-height: 44px; /* 44px nav touch target (a11y) */
-  padding: 6px 10px;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  color: var(--fg-secondary);
-  font-family: var(--font-sans);
-  font-size: var(--t-label-md-size);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
-}
-.sidenav button > .label {
-  flex: 1;
-  min-width: 0;
-}
-.sidenav button:hover {
-  background: var(--bg);
-  color: var(--fg);
-}
-.sidenav button:focus-visible {
-  outline: var(--focus-width) solid var(--accent);
-  outline-offset: var(--focus-offset-inset);
-}
-.sidenav button[aria-current="page"] {
-  background: var(--bg);
-  color: var(--accent);
-  box-shadow: inset 2px 0 0 var(--accent); /* active rail — no layout shift */
-}
-
 /* ---- scenario / transport pill tabs (TabPicker) ---- */
 /* Inactive pills are .btn--ghost (transparent, fg-secondary). The active one
    reads as selected with a gold underline over the faint raised bg — enough. */

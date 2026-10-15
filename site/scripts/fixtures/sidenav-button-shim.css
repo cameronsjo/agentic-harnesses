@@ -1,0 +1,37 @@
+/* Known-bad pre-#19 button shim, kept as a local negative-control fixture.
+   Do not use this stylesheet in the app: it intentionally forces the old
+   font-family and unconditional hover behavior back onto the native buttons. */
+.sidenav button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--fg-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--t-label-md-size);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.sidenav button > .label {
+  flex: 1;
+  min-width: 0;
+}
+.sidenav button:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+.sidenav button:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--focus-offset-inset);
+}
+.sidenav button[aria-current="page"] {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}

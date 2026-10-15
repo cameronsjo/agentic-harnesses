@@ -26,7 +26,8 @@ All notable changes to this project are documented here. Format loosely follows
 
 ### Changed
 
-- Visualizer facelift on Artificer 0.27.0 (from 0.24.2; no breaking changes in that range):
+- **Removed the remaining sidenav-button CSS shim.** Artificer's native button grammar now owns its font, pointer-aware hover, focus, and current-item styling. Hamburger and shell shims had already been retired.
+- **Visualizer facelift on Artificer 0.27.0** (from 0.24.2; no breaking changes in that range):
   - Content lines up with the sidenav. Since 0.24, `.app-shell__content` is a bleed grid with a 24px gutter on each side. `.stack`'s `gap` added a 24px column gap on top. Inside the already-padded `.app` container, that left 72px between the rail and the content on desktop and cost 48px of the phone column. Both are zeroed locally.
   - The phone compare cards sit inside the page gutter. The old negative-margin breakout was clipped by `.app-shell__content`'s `overflow-x: clip`.
   - "Play" / "Play all" is `.btn--primary`. It was a bare `.btn`, so the browser's default grey fill painted it.
