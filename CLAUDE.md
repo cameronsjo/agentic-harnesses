@@ -11,6 +11,12 @@ SPA renders loop / sequence / hooks / wire diagrams from JSON specs; `docs/` and
 - `npm test` — vitest run
 - `npm run validate` — validate loop JSON specs against the schema
 
+For the manual native-sidenav browser regression, build and start a preview,
+then follow the recipe in `site/scripts/check-native-sidenav.cjs` (run from
+`site/`). It needs Playwright supplied through `NODE_PATH`; `CHROME_CHANNEL`
+optionally selects installed Chrome. `KNOWN_BAD=1` injects the committed old-shim
+fixture and must fail font inheritance, independent of the current main branch.
+
 ## Layout
 
 - `site/` — Vite + React 18 + TS SPA; source in `site/src/`.
