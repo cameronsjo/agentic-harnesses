@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Children, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react'
 import { tabScrollEdges } from './tab-scroll'
 
 export function ScrollableViewTabs({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const [edges, setEdges] = useState({ left: false, right: false })
+  const childKey = Children.toArray(children)
+    .map(child => (isValidElement(child) ? String(child.key ?? '') : String(child)))
+    .join('|')
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -21,7 +24,7 @@ export function ScrollableViewTabs({ children }: { children: ReactNode }) {
       observer.disconnect()
       el.removeEventListener('scroll', update)
     }
-  }, [children])
+  }, [childKey])
 
   return (
     <div className="view-tabs-scroll">

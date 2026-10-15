@@ -54,8 +54,7 @@ All notable changes to this project are documented here. Format loosely follows
 
 ### Fixed
 
-- View tabs show an edge fade when more labels are available by horizontal scrolling, including the phone's clipped Across the wire tab.
-
+- **View tabs show an edge fade** when more labels are available by horizontal scrolling, including the phone's clipped Across the wire tab.
 - **Social preview cards rendered with no image.** Both `og:image` and `twitter:image` pointed at an SVG, a format X and LinkedIn reject outright. Now a 1200×630 PNG at an absolute URL, with the `og:url` / `og:image:type` / `width` / `height` / `alt` tags that were missing.
 - **Site metadata still said four harnesses** in three places (`description`, `og:description`, `twitter:description`) and named only the original four, when eight ship in `site/src/data/loops/`. The pass that corrected stale counts in `CONTRIBUTING.md` and `docs/wire.md` missed `site/index.html`.
 - **The Sequence view printed literal `**` asterisks** in its message inspector. Its notes come from the loop spec's `node.note`, which carries anchor markers — the Loop view renders the identical strings through `Anchored`, so the two views disagreed on the same data.

@@ -259,6 +259,8 @@ body {
 .view-tabs-scroll {
   position: relative;
 }
+/* Intentional reuse: tabs share .compare-fade's geometry and gradients; this
+   selector only supplies their narrower, tab-specific fade width and height. */
 .view-tabs-scroll .view-tabs-fade {
   bottom: 0;
   width: var(--s-lg);
