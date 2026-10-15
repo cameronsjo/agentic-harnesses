@@ -18,6 +18,7 @@ import { WireView } from './WireView'
 import { SequenceView } from './SequenceView'
 import { AboutView } from './AboutView'
 import { DisclosureView } from './DisclosureView'
+import { ScrollableViewTabs } from './ScrollableViewTabs'
 
 // The view within a selected harness. Compare-all (harness === null) has no tabs —
 // the surface *is* the grid.
@@ -248,7 +249,7 @@ export function App() {
 
             <AppShellContent id="main" className="stack stack--lg">
               {availableTabs.length > 0 && (
-                <div className="tabs" role="tablist" aria-label="View">
+                <ScrollableViewTabs>
                   {availableTabs.map((t) => (
                     <button
                       key={t}
@@ -264,7 +265,7 @@ export function App() {
                       {TAB_LABELS[t]}
                     </button>
                   ))}
-                </div>
+                </ScrollableViewTabs>
               )}
 
               {showLegend && <Legend />}
